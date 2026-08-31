@@ -55,6 +55,30 @@ class ApiService {
     return body;
   }
 
+  static Future<Map<String, dynamic>> verifyOtp(String email, String otp) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/auth/verify-otp'),
+      headers: await _getHeaders(requireAuth: false),
+      body: jsonEncode({'email': email, 'otp': otp}),
+    );
+    final body = jsonDecode(res.body);
+    if (res.statusCode == 200 && body['token'] != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auth_token', body['token']);
+      await prefs.setString('user_data', jsonEncode(body['user']));
+    }
+    return body;
+  }
+
+  static Future<Map<String, dynamic>> resendOtp(String email) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/auth/resend-otp'),
+      headers: await _getHeaders(requireAuth: false),
+      body: jsonEncode({'email': email}),
+    );
+    return jsonDecode(res.body);
+  }
+
   static Future<Map<String, dynamic>> getMe() async {
     final res = await http.get(
       Uri.parse('$baseUrl/auth/me'),

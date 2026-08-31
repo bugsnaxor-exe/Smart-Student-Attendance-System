@@ -1,10 +1,13 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
-import 'student_register_screen.dart';
 import '../student/student_dashboard_screen.dart';
 import '../teacher/teacher_dashboard_screen.dart';
+
+enum AuthRole { student, faculty }
+enum AuthMode { login, register }
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,37 +17,176 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _identifierController = TextEditingController();
-  final _passwordController = TextEditingController();
+  AuthRole _selectedRole = AuthRole.student;
+  AuthMode _selectedMode = AuthMode.login;
+
+  // Student Controllers
+  final _studentIdentifierController = TextEditingController();
+  final _studentPasswordController = TextEditingController();
+  final _studentNameController = TextEditingController();
+  final _studentEmailController = TextEditingController();
+  final _studentClassRollController = TextEditingController();
+  final _studentUniRollController = TextEditingController();
+  final _studentRegNoController = TextEditingController();
+  int _studentSemester = 3;
+
+  // Faculty Controllers
+  final _facultyEmailController = TextEditingController();
+  final _facultyPasswordController = TextEditingController();
+  final _facultyNameController = TextEditingController();
+
   bool _obscurePassword = true;
 
-  void _handleLogin() async {
+  @override
+  void dispose() {
+    _studentIdentifierController.dispose();
+    _studentPasswordController.dispose();
+    _studentNameController.dispose();
+    _studentEmailController.dispose();
+    _studentClassRollController.dispose();
+    _studentUniRollController.dispose();
+    _studentRegNoController.dispose();
+    _facultyEmailController.dispose();
+    _facultyPasswordController.dispose();
+    _facultyNameController.dispose();
+    super.dispose();
+  }
+
+  void _handleStudentLogin() async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
-    final success = await auth.login(
-      _identifierController.text.trim(),
-      _passwordController.text,
+    final identifier = _studentIdentifierController.text.trim();
+    final password = _studentPasswordController.text;
+
+    if (identifier.isEmpty || password.isEmpty) {
+      _showSnackBar('Please enter your University Roll/Email and password.', isError: true);
+      return;
+    }
+
+    final result = await auth.login(identifier, password);
+
+    if (result.success && mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const StudentDashboardScreen()),
+      );
+    } else if (mounted) {
+      _showSnackBar(result.error ?? 'Student login failed. Please check credentials.', isError: true);
+    }
+  }
+
+  void _handleStudentRegister() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final name = _studentNameController.text.trim();
+    final email = _studentEmailController.text.trim();
+    final password = _studentPasswordController.text;
+    final classRoll = _studentClassRollController.text.trim();
+    final uniRoll = _studentUniRollController.text.trim();
+    final regNumber = _studentRegNoController.text.trim();
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty || classRoll.isEmpty || uniRoll.isEmpty || regNumber.isEmpty) {
+      _showSnackBar('Please fill in all student profile fields.', isError: true);
+      return;
+    }
+
+    final success = await auth.registerStudent(
+      name: name,
+      email: email,
+      password: password,
+      classRoll: classRoll,
+      universityRoll: uniRoll,
+      regNumber: regNumber,
+      departmentCode: 'MCA',
+      semester: _studentSemester,
     );
 
     if (success && mounted) {
-      if (auth.isStudent) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const StudentDashboardScreen()),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const TeacherDashboardScreen()),
-        );
-      }
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(auth.errorMessage ?? 'Login failed. Check your credentials.'),
-          backgroundColor: AppTheme.statusDanger,
-        ),
+      _showSnackBar('Profile registered successfully! Logging in...', isError: false);
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const StudentDashboardScreen()),
       );
+    } else if (mounted) {
+      _showSnackBar(auth.errorMessage ?? 'Student registration failed.', isError: true);
     }
+  }
+
+  void _handleFacultyLogin() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final email = _facultyEmailController.text.trim();
+    final password = _facultyPasswordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      _showSnackBar('Please enter your Faculty email and password.', isError: true);
+      return;
+    }
+
+    final result = await auth.login(email, password);
+
+    if (result.requiresOtp && mounted) {
+      _showFacultyOtpBottomSheet(result.email ?? email);
+    } else if (result.success && mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const TeacherDashboardScreen()),
+      );
+    } else if (mounted) {
+      _showSnackBar(result.error ?? 'Faculty login failed. Check email/password.', isError: true);
+    }
+  }
+
+  void _handleFacultyRegister() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final name = _facultyNameController.text.trim();
+    final email = _facultyEmailController.text.trim();
+    final password = _facultyPasswordController.text;
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+      _showSnackBar('Please fill in your name, email and password.', isError: true);
+      return;
+    }
+
+    final success = await auth.registerTeacher(
+      name: name,
+      email: email,
+      password: password,
+      departmentCode: 'MCA',
+    );
+
+    if (success && mounted) {
+      _showSnackBar('Faculty registered successfully! A 6-digit OTP has been sent for verification.', isError: false);
+      _showFacultyOtpBottomSheet(email);
+    } else if (mounted) {
+      _showSnackBar(auth.errorMessage ?? 'Faculty registration failed.', isError: true);
+    }
+  }
+
+  void _showFacultyOtpBottomSheet(String email) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _FacultyOtpSheet(
+        email: email,
+        onSuccess: () {
+          Navigator.pop(ctx);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const TeacherDashboardScreen()),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showSnackBar(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+        backgroundColor: isError ? AppTheme.statusDanger : AppTheme.seaGreen,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
   }
 
   @override
@@ -56,16 +198,15 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28.0),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Minimalist Emblem
                 Center(
                   child: Container(
-                    width: 64,
-                    height: 64,
+                    width: 60,
+                    height: 60,
                     decoration: BoxDecoration(
                       color: AppTheme.seaGreenTint,
                       shape: BoxShape.circle,
@@ -73,112 +214,650 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     child: const Icon(
                       Icons.school_outlined,
-                      size: 30,
+                      size: 28,
                       color: AppTheme.seaGreen,
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 const Text(
                   'AutoAttend',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 24,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
                     color: AppTheme.charcoal,
                     letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 const Text(
-                  'Student & Faculty Attendance Portal',
+                  'Department of Master of Computer Applications',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
                     color: AppTheme.charcoalMuted,
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
 
-                // Identifier Input
-                TextField(
-                  controller: _identifierController,
-                  style: const TextStyle(color: AppTheme.charcoal, fontSize: 14),
-                  decoration: const InputDecoration(
-                    labelText: 'Faculty Email / University Roll',
-                    prefixIcon: Icon(Icons.badge_outlined, color: AppTheme.charcoalMuted, size: 20),
-                    hintText: 'e.g. prof.sharma@college.edu or 12000123042',
+                // Top Primary Segmented Control: [ Student ] | [ Faculty ]
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.creamCard,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppTheme.creamBorder),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _selectedRole = AuthRole.student),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: _selectedRole == AuthRole.student ? AppTheme.charcoal : Colors.transparent,
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: _selectedRole == AuthRole.student
+                                  ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))]
+                                  : null,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.school_rounded,
+                                  size: 16,
+                                  color: _selectedRole == AuthRole.student ? Colors.white : AppTheme.charcoalMuted,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Student',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: _selectedRole == AuthRole.student ? Colors.white : AppTheme.charcoalMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _selectedRole = AuthRole.faculty),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: _selectedRole == AuthRole.faculty ? AppTheme.charcoal : Colors.transparent,
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: _selectedRole == AuthRole.faculty
+                                  ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))]
+                                  : null,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.badge_rounded,
+                                  size: 16,
+                                  color: _selectedRole == AuthRole.faculty ? Colors.white : AppTheme.charcoalMuted,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Faculty',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: _selectedRole == AuthRole.faculty ? Colors.white : AppTheme.charcoalMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 14),
 
-                // Password Input
-                TextField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  style: const TextStyle(color: AppTheme.charcoal, fontSize: 14),
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.charcoalMuted, size: 20),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                        color: AppTheme.charcoalMuted,
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 22),
-
-                // Primary Login Button (Sea Green)
-                ElevatedButton(
-                  onPressed: auth.isLoading ? null : _handleLogin,
-                  child: auth.isLoading
-                      ? const SizedBox(
-                          height: 18,
-                          width: 18,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                        )
-                      : const Text('Sign In'),
-                ),
-                const SizedBox(height: 24),
-
-                // Student Registration Link
+                // Sub-Action Selector: [ Sign In ] | [ Create Account ]
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
-                      "New student? ",
-                      style: TextStyle(color: AppTheme.charcoalMuted, fontSize: 13),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => setState(() => _selectedMode = AuthMode.login),
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: _selectedMode == AuthMode.login ? AppTheme.seaGreenTint : Colors.transparent,
+                          side: BorderSide(
+                            color: _selectedMode == AuthMode.login ? AppTheme.seaGreen : AppTheme.creamBorder,
+                            width: _selectedMode == AuthMode.login ? 1.5 : 1.0,
+                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                        child: Text(
+                          'Sign In',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: _selectedMode == AuthMode.login ? AppTheme.seaGreenDark : AppTheme.charcoalMuted,
+                          ),
+                        ),
+                      ),
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const StudentRegisterScreen()),
-                        );
-                      },
-                      child: const Text(
-                        'Register Profile',
-                        style: TextStyle(
-                          color: AppTheme.seaGreen,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => setState(() => _selectedMode = AuthMode.register),
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: _selectedMode == AuthMode.register ? AppTheme.seaGreenTint : Colors.transparent,
+                          side: BorderSide(
+                            color: _selectedMode == AuthMode.register ? AppTheme.seaGreen : AppTheme.creamBorder,
+                            width: _selectedMode == AuthMode.register ? 1.5 : 1.0,
+                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                        child: Text(
+                          'Create Account',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: _selectedMode == AuthMode.register ? AppTheme.seaGreenDark : AppTheme.charcoalMuted,
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 20),
+
+                // Form Container
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: AppTheme.creamBorder),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: _selectedRole == AuthRole.student
+                      ? (_selectedMode == AuthMode.login ? _buildStudentLoginForm(auth) : _buildStudentRegisterForm(auth))
+                      : (_selectedMode == AuthMode.login ? _buildFacultyLoginForm(auth) : _buildFacultyRegisterForm(auth)),
+                ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // --- 1. STUDENT LOGIN FORM ---
+  Widget _buildStudentLoginForm(AuthProvider auth) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          'Student Sign In',
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.charcoal),
+        ),
+        const SizedBox(height: 2),
+        const Text(
+          'Sign in with your University Roll or Email to verify presence.',
+          style: TextStyle(fontSize: 11, color: AppTheme.charcoalMuted),
+        ),
+        const SizedBox(height: 16),
+
+        TextField(
+          controller: _studentIdentifierController,
+          style: const TextStyle(fontSize: 13, color: AppTheme.charcoal),
+          decoration: const InputDecoration(
+            labelText: 'University Roll / Email',
+            prefixIcon: Icon(Icons.badge_outlined, size: 18),
+            hintText: 'e.g. 12000126042 or sayan@college.edu',
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        TextField(
+          controller: _studentPasswordController,
+          obscureText: _obscurePassword,
+          style: const TextStyle(fontSize: 13, color: AppTheme.charcoal),
+          decoration: InputDecoration(
+            labelText: 'Password',
+            prefixIcon: const Icon(Icons.lock_outline, size: 18),
+            suffixIcon: IconButton(
+              icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 18),
+              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+            ),
+          ),
+        ),
+        const SizedBox(height: 18),
+
+        ElevatedButton(
+          onPressed: auth.isLoading ? null : _handleStudentLogin,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.seaGreen,
+            padding: const EdgeInsets.symmetric(vertical: 13),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          child: auth.isLoading
+              ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+              : const Text('Sign In as Student', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+        ),
+      ],
+    );
+  }
+
+  // --- 2. STUDENT REGISTER FORM ---
+  Widget _buildStudentRegisterForm(AuthProvider auth) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          'Student Registration',
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.charcoal),
+        ),
+        const SizedBox(height: 2),
+        const Text(
+          'Enroll your real device with hardware geofencing.',
+          style: TextStyle(fontSize: 11, color: AppTheme.charcoalMuted),
+        ),
+        const SizedBox(height: 14),
+
+        TextField(
+          controller: _studentNameController,
+          style: const TextStyle(fontSize: 13),
+          decoration: const InputDecoration(labelText: 'Full Name', prefixIcon: Icon(Icons.person_outline, size: 18)),
+        ),
+        const SizedBox(height: 10),
+
+        TextField(
+          controller: _studentEmailController,
+          keyboardType: TextInputType.emailAddress,
+          style: const TextStyle(fontSize: 13),
+          decoration: const InputDecoration(labelText: 'Email Address', prefixIcon: Icon(Icons.email_outlined, size: 18)),
+        ),
+        const SizedBox(height: 10),
+
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _studentUniRollController,
+                style: const TextStyle(fontSize: 13),
+                decoration: const InputDecoration(labelText: 'Uni Roll', hintText: '12000126042'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                controller: _studentClassRollController,
+                style: const TextStyle(fontSize: 13),
+                decoration: const InputDecoration(labelText: 'Class Roll', hintText: 'MCA-26-042'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _studentRegNoController,
+                style: const TextStyle(fontSize: 13),
+                decoration: const InputDecoration(labelText: 'Reg Number', hintText: 'REG-2026-9042'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: DropdownButtonFormField<int>(
+                value: _studentSemester,
+                decoration: const InputDecoration(labelText: 'Semester'),
+                items: [1, 2, 3, 4].map((s) => DropdownMenuItem(value: s, child: Text('Sem $s', style: const TextStyle(fontSize: 12)))).toList(),
+                onChanged: (val) => setState(() => _studentSemester = val ?? 3),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+
+        TextField(
+          controller: _studentPasswordController,
+          obscureText: _obscurePassword,
+          style: const TextStyle(fontSize: 13),
+          decoration: const InputDecoration(labelText: 'Create Password', prefixIcon: Icon(Icons.lock_outline, size: 18)),
+        ),
+        const SizedBox(height: 16),
+
+        ElevatedButton(
+          onPressed: auth.isLoading ? null : _handleStudentRegister,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.seaGreen,
+            padding: const EdgeInsets.symmetric(vertical: 13),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          child: auth.isLoading
+              ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+              : const Text('Register Student Profile', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+        ),
+      ],
+    );
+  }
+
+  // --- 3. FACULTY LOGIN FORM ---
+  Widget _buildFacultyLoginForm(AuthProvider auth) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Faculty Sign In',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.charcoal),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppTheme.seaGreenTint,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: AppTheme.seaGreen.withOpacity(0.3)),
+              ),
+              child: const Text('🔐 2FA Email Protected', style: TextStyle(color: AppTheme.seaGreenDark, fontSize: 10, fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        const Text(
+          'Single-use 6-digit OTP will be dispatched to your email.',
+          style: TextStyle(fontSize: 11, color: AppTheme.charcoalMuted),
+        ),
+        const SizedBox(height: 16),
+
+        TextField(
+          controller: _facultyEmailController,
+          keyboardType: TextInputType.emailAddress,
+          style: const TextStyle(fontSize: 13, color: AppTheme.charcoal),
+          decoration: const InputDecoration(
+            labelText: 'Faculty Email',
+            prefixIcon: Icon(Icons.alternate_email, size: 18),
+            hintText: 'prof.sharma@college.edu',
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        TextField(
+          controller: _facultyPasswordController,
+          obscureText: _obscurePassword,
+          style: const TextStyle(fontSize: 13, color: AppTheme.charcoal),
+          decoration: InputDecoration(
+            labelText: 'Password',
+            prefixIcon: const Icon(Icons.lock_outline, size: 18),
+            suffixIcon: IconButton(
+              icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 18),
+              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+            ),
+          ),
+        ),
+        const SizedBox(height: 18),
+
+        ElevatedButton(
+          onPressed: auth.isLoading ? null : _handleFacultyLogin,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.charcoal,
+            padding: const EdgeInsets.symmetric(vertical: 13),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          child: auth.isLoading
+              ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+              : const Text('Sign In as Faculty (2FA)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+        ),
+      ],
+    );
+  }
+
+  // --- 4. FACULTY REGISTER FORM ---
+  Widget _buildFacultyRegisterForm(AuthProvider auth) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          'Faculty Account Registration',
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.charcoal),
+        ),
+        const SizedBox(height: 2),
+        const Text(
+          'Create your faculty account for MCA attendance sessions.',
+          style: TextStyle(fontSize: 11, color: AppTheme.charcoalMuted),
+        ),
+        const SizedBox(height: 14),
+
+        TextField(
+          controller: _facultyNameController,
+          style: const TextStyle(fontSize: 13),
+          decoration: const InputDecoration(labelText: 'Faculty Full Name', prefixIcon: Icon(Icons.person_outline, size: 18), hintText: 'Prof. R. K. Sharma'),
+        ),
+        const SizedBox(height: 10),
+
+        TextField(
+          controller: _facultyEmailController,
+          keyboardType: TextInputType.emailAddress,
+          style: const TextStyle(fontSize: 13),
+          decoration: const InputDecoration(labelText: 'Official Email Address', prefixIcon: Icon(Icons.email_outlined, size: 18), hintText: 'faculty@college.edu'),
+        ),
+        const SizedBox(height: 10),
+
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(color: const Color(0xFFF1EDE4), borderRadius: BorderRadius.circular(10)),
+          child: const Row(
+            children: [
+              Icon(Icons.business_outlined, size: 18, color: AppTheme.charcoalMuted),
+              SizedBox(width: 8),
+              Text('Department: MCA Department', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.charcoal)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        TextField(
+          controller: _facultyPasswordController,
+          obscureText: _obscurePassword,
+          style: const TextStyle(fontSize: 13),
+          decoration: const InputDecoration(labelText: 'Create Password', prefixIcon: Icon(Icons.lock_outline, size: 18)),
+        ),
+        const SizedBox(height: 16),
+
+        ElevatedButton(
+          onPressed: auth.isLoading ? null : _handleFacultyRegister,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.charcoal,
+            padding: const EdgeInsets.symmetric(vertical: 13),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          child: auth.isLoading
+              ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+              : const Text('Register Faculty Account', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+        ),
+      ],
+    );
+  }
+}
+
+// --- 2FA OTP BOTTOM SHEET ---
+class _FacultyOtpSheet extends StatefulWidget {
+  final String email;
+  final VoidCallback onSuccess;
+
+  const _FacultyOtpSheet({required this.email, required this.onSuccess});
+
+  @override
+  State<_FacultyOtpSheet> createState() => _FacultyOtpSheetState();
+}
+
+class _FacultyOtpSheetState extends State<_FacultyOtpSheet> {
+  final _otpController = TextEditingController();
+  int _secondsRemaining = 300;
+  Timer? _timer;
+  bool _isVerifying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    setState(() => _secondsRemaining = 300);
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_secondsRemaining > 0) {
+        setState(() => _secondsRemaining--);
+      } else {
+        _timer?.cancel();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _otpController.dispose();
+    super.dispose();
+  }
+
+  void _verifyOtp() async {
+    final otp = _otpController.text.trim();
+    if (otp.length != 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter the full 6-digit OTP code.'), backgroundColor: AppTheme.statusDanger),
+      );
+      return;
+    }
+
+    setState(() => _isVerifying = true);
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final success = await auth.verifyFacultyOtp(widget.email, otp);
+    setState(() => _isVerifying = false);
+
+    if (success && mounted) {
+      widget.onSuccess();
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(auth.errorMessage ?? 'Invalid or expired OTP.'), backgroundColor: AppTheme.statusDanger),
+      );
+    }
+  }
+
+  void _resendOtp() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final success = await auth.resendFacultyOtp(widget.email);
+    if (success && mounted) {
+      _startTimer();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Fresh OTP code dispatched to ${widget.email}'), backgroundColor: AppTheme.seaGreen),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final minutes = _secondsRemaining ~/ 60;
+    final seconds = _secondsRemaining % 60;
+    final timerText = '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppTheme.creamBg,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.only(
+        top: 20,
+        left: 24,
+        right: 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppTheme.creamBorder, borderRadius: BorderRadius.circular(2))),
+          ),
+          const SizedBox(height: 16),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.lock_rounded, size: 20, color: AppTheme.seaGreen),
+              SizedBox(width: 6),
+              Text('2FA Security Code', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.charcoal)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Enter the 6-digit OTP code dispatched to:\n${widget.email}',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12, color: AppTheme.charcoalMuted),
+          ),
+          const SizedBox(height: 16),
+
+          TextField(
+            controller: _otpController,
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: 8, color: AppTheme.charcoal),
+            decoration: InputDecoration(
+              counterText: '',
+              hintText: '••••••',
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.seaGreen, width: 2)),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.seaGreen, width: 2)),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('⏱️ Expires in $timerText', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.charcoalMuted)),
+              TextButton(
+                onPressed: _secondsRemaining <= 240 ? _resendOtp : null,
+                child: const Text('Resend Code', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.seaGreen)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          ElevatedButton(
+            onPressed: _isVerifying ? null : _verifyOtp,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.seaGreen,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: _isVerifying
+                ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                : const Text('Verify & Access Faculty Console', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+          ),
+        ],
       ),
     );
   }

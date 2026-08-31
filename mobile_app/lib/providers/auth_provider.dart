@@ -4,6 +4,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/services/api_service.dart';
 import '../models/user_model.dart';
 
+class LoginResult {
+  final bool success;
+  final bool requiresOtp;
+  final String? email;
+  final String? error;
+
+  LoginResult({
+    required this.success,
+    this.requiresOtp = false,
+    this.email,
+    this.error,
+  });
+}
+
 class AuthProvider extends ChangeNotifier {
   UserModel? _currentUser;
   bool _isLoading = false;
@@ -29,28 +43,72 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> login(String identifier, String password) async {
+  Future<LoginResult> login(String identifier, String password) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
       final res = await ApiService.login(identifier, password);
+      _isLoading = false;
+
+      if (res['requiresOtp'] == true) {
+        notifyListeners();
+        return LoginResult(
+          success: false,
+          requiresOtp: true,
+          email: res['email'] ?? identifier,
+        );
+      }
+
       if (res['user'] != null) {
         _currentUser = UserModel.fromJson(res['user']);
-        _isLoading = false;
+        notifyListeners();
+        return LoginResult(success: true);
+      } else {
+        _errorMessage = res['error'] ?? 'Login failed.';
+        notifyListeners();
+        return LoginResult(success: false, error: _errorMessage);
+      }
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString();
+      notifyListeners();
+      return LoginResult(success: false, error: _errorMessage);
+    }
+  }
+
+  Future<bool> verifyFacultyOtp(String email, String otp) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final res = await ApiService.verifyOtp(email, otp);
+      _isLoading = false;
+
+      if (res['user'] != null) {
+        _currentUser = UserModel.fromJson(res['user']);
         notifyListeners();
         return true;
       } else {
-        _errorMessage = res['error'] ?? 'Login failed.';
-        _isLoading = false;
+        _errorMessage = res['error'] ?? 'Invalid or expired OTP.';
         notifyListeners();
         return false;
       }
     } catch (e) {
-      _errorMessage = e.toString();
       _isLoading = false;
+      _errorMessage = e.toString();
       notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> resendFacultyOtp(String email) async {
+    try {
+      final res = await ApiService.resendOtp(email);
+      return res['success'] == true;
+    } catch (e) {
       return false;
     }
   }
@@ -82,11 +140,46 @@ class AuthProvider extends ChangeNotifier {
       });
 
       if (res['user'] != null) {
-        // Auto-login with credentials
-        return await login(email, password);
+        final loginRes = await login(universityRoll, password);
+        return loginRes.success;
       } else {
         _errorMessage = res['error'] ?? 'Registration failed.';
         _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> registerTeacher({
+    required String name,
+    required String email,
+    required String password,
+    String departmentCode = 'MCA',
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final res = await ApiService.registerTeacher({
+        'name': name,
+        'email': email,
+        'password': password,
+        'departmentCode': departmentCode,
+      });
+
+      _isLoading = false;
+      if (res['user'] != null) {
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = res['error'] ?? 'Faculty registration failed.';
         notifyListeners();
         return false;
       }
