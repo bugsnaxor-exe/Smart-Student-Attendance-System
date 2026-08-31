@@ -1,7 +1,7 @@
 class AppConstants {
   // Base URLs - Adjust to your local machine IP / deployed server URL
-  static const String defaultApiBaseUrl = 'https://backendserver-lake.vercel.app/api'; // Android Emulator
-  static const String defaultWsUrl = 'wss://backendserver-lake.vercel.app/ws';
+  static const String defaultApiBaseUrl = 'https://smart-student-attendance-system-x505.onrender.com/api'; // Android Emulator
+  static const String defaultWsUrl = 'wss://smart-student-attendance-system-x505.onrender.com/ws';
 
   // Physical Geofencing Rules
   static const double defaultDeptLatitude = 22.5726;

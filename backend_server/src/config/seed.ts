@@ -40,10 +40,9 @@ async function seed() {
   if (teacherUser.teacher) {
     await prisma.subject.upsert({
       where: {
-        code_semester_teacherId: {
+        code_semester: {
           code: 'CS501',
           semester: 5,
-          teacherId: teacherUser.teacher.id,
         },
       },
       create: {
@@ -60,10 +59,9 @@ async function seed() {
 
     await prisma.subject.upsert({
       where: {
-        code_semester_teacherId: {
+        code_semester: {
           code: 'CS502',
           semester: 5,
-          teacherId: teacherUser.teacher.id,
         },
       },
       create: {

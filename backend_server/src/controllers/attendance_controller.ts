@@ -277,7 +277,7 @@ export class AttendanceController {
           credits: sub.credits,
           weeklyHours: sub.weeklyHours,
           marks: sub.marks,
-          teacherName: sub.teacher.user.name,
+          teacherName: sub.teacher?.user?.name || 'Department Faculty',
           classesConducted: totalSubjectSessions,
           classesAttended: myScore,
           percentage: Math.round(percentage * 10) / 10,
@@ -416,7 +416,7 @@ export class AttendanceController {
           credits: subject.credits,
           weeklyHours: subject.weeklyHours,
           marks: subject.marks,
-          teacherName: subject.teacher.user.name,
+          teacherName: subject.teacher?.user?.name || 'Department Faculty',
         },
         stats: {
           classesConducted: totalSubjectSessions,
@@ -436,7 +436,7 @@ export class AttendanceController {
           verificationNote:
             r.status === 'Full'
               ? `GPS Check-in within ${r.distanceMeters?.toFixed(1) || '18.4'}m of Department (< 50m)`
-              : `Manual Override granted by Faculty (${subject.teacher.user.name})`,
+              : `Manual Override granted by Faculty (${subject.teacher?.user?.name || 'Department Faculty'})`,
         })),
       });
     } catch (error: any) {
