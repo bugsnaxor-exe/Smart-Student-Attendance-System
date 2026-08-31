@@ -1,3 +1,5 @@
+import nodemailer from 'nodemailer';
+
 export interface SendOtpOptions {
   toEmail: string;
   recipientName?: string;
@@ -8,15 +10,19 @@ export interface SendOtpOptions {
 export class EmailService {
   /**
    * Sends a beautifully branded 6-digit security OTP to the faculty member's email.
+   * Supports Brevo REST API (xkeysib-), Brevo SMTP (xsmtpsib-), Resend (re_), and Gmail SMTP.
    */
   public static async sendFacultyLoginOtp(options: SendOtpOptions): Promise<{ success: boolean; message: string }> {
     const { toEmail, recipientName = 'Faculty Member', otpCode, expiresInMinutes = 5 } = options;
 
-    const brevoApiKey = process.env.BREVO_API_KEY?.trim();
-    const resendApiKey = process.env.RESEND_API_KEY?.trim();
+    const brevoKey = process.env.BREVO_API_KEY?.trim() || '';
+    const brevoSmtpUser = process.env.BREVO_SMTP_USER?.trim() || process.env.EMAIL_USER?.trim() || 'sayantan05092004@gmail.com';
+    const resendApiKey = process.env.RESEND_API_KEY?.trim() || '';
+    const smtpUser = process.env.SMTP_USER?.trim() || process.env.EMAIL_USER?.trim();
+    const smtpPass = process.env.SMTP_PASS?.trim() || process.env.EMAIL_PASS?.trim();
 
     console.log('\n======================================================');
-    console.log(`🔐 [SECURITY 2FA] GENERATED OTP FOR: ${toEmail}`);
+    console.log(`🔐 [FACULTY 2FA] GENERATED OTP FOR: ${toEmail}`);
     console.log(`👉 6-DIGIT VERIFICATION CODE: [ ${otpCode} ]`);
     console.log(`⏳ VALID FOR: ${expiresInMinutes} MINUTES`);
     console.log('======================================================\n');
@@ -69,11 +75,11 @@ export class EmailService {
       </html>
     `;
 
-    // 1. Try Brevo API if key is present
-    if (brevoApiKey) {
+    // 1. If Brevo REST API Key (starts with xkeysib-)
+    if (brevoKey.startsWith('xkeysib-')) {
       try {
         const payload = JSON.stringify({
-          sender: { name: 'EduAttendance Security', email: 'security@smart-attendance.edu' },
+          sender: { name: 'EduAttendance Security', email: 'sayantan05092004@gmail.com' },
           to: [{ email: toEmail, name: recipientName }],
           subject: `🔐 Your Faculty Login OTP: ${otpCode}`,
           htmlContent: htmlContent,
@@ -83,25 +89,52 @@ export class EmailService {
           method: 'POST',
           headers: {
             'accept': 'application/json',
-            'api-key': brevoApiKey,
+            'api-key': brevoKey,
             'content-type': 'application/json',
           },
           body: payload,
         });
 
         if (res.ok) {
-          console.log(`✅ [Brevo] OTP Email successfully dispatched to ${toEmail}`);
+          console.log(`✅ [Brevo REST API] OTP Email dispatched to ${toEmail}`);
           return { success: true, message: `6-digit verification code sent to ${toEmail}` };
         } else {
           const errBody = await res.text();
-          console.warn(`⚠️ [Brevo API Error] ${res.status}: ${errBody}`);
+          console.warn(`⚠️ [Brevo REST Error] ${res.status}: ${errBody}`);
         }
       } catch (err: any) {
-        console.warn(`⚠️ [Brevo Network Error]: ${err.message}`);
+        console.warn(`⚠️ [Brevo REST Network Error]: ${err.message}`);
       }
     }
 
-    // 2. Try Resend API if key is present
+    // 2. If Brevo SMTP Key (starts with xsmtpsib-)
+    if (brevoKey.startsWith('xsmtpsib-') && brevoSmtpUser) {
+      try {
+        const transporter = nodemailer.createTransport({
+          host: 'smtp-relay.brevo.com',
+          port: 587,
+          secure: false,
+          auth: {
+            user: brevoSmtpUser,
+            pass: brevoKey,
+          },
+        });
+
+        const info = await transporter.sendMail({
+          from: `"EduAttendance Security" <${brevoSmtpUser}>`,
+          to: toEmail,
+          subject: `🔐 Your Faculty Login OTP: ${otpCode}`,
+          html: htmlContent,
+        });
+
+        console.log(`✅ [Brevo SMTP] OTP Email dispatched to ${toEmail} (ID: ${info.messageId})`);
+        return { success: true, message: `6-digit verification code sent to ${toEmail}` };
+      } catch (err: any) {
+        console.warn(`⚠️ [Brevo SMTP Error]: ${err.message}`);
+      }
+    }
+
+    // 3. If Resend Key (starts with re_)
     if (resendApiKey) {
       try {
         const payload = JSON.stringify({
@@ -121,18 +154,45 @@ export class EmailService {
         });
 
         if (res.ok) {
-          console.log(`✅ [Resend] OTP Email successfully dispatched to ${toEmail}`);
+          console.log(`✅ [Resend] OTP Email dispatched to ${toEmail}`);
           return { success: true, message: `6-digit verification code sent to ${toEmail}` };
+        } else {
+          const errBody = await res.text();
+          console.warn(`⚠️ [Resend Error] ${res.status}: ${errBody}`);
         }
       } catch (err: any) {
         console.warn(`⚠️ [Resend Network Error]: ${err.message}`);
       }
     }
 
-    // Fallback message (always logs code in console for development/fallback)
+    // 4. Standard Gmail / Custom SMTP
+    if (smtpUser && smtpPass) {
+      try {
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: smtpUser,
+            pass: smtpPass,
+          },
+        });
+
+        const info = await transporter.sendMail({
+          from: `"EduAttendance Security" <${smtpUser}>`,
+          to: toEmail,
+          subject: `🔐 Your Faculty Login OTP: ${otpCode}`,
+          html: htmlContent,
+        });
+
+        console.log(`✅ [Gmail SMTP] OTP Email dispatched to ${toEmail} (ID: ${info.messageId})`);
+        return { success: true, message: `6-digit verification code sent to ${toEmail}` };
+      } catch (err: any) {
+        console.warn(`⚠️ [Gmail SMTP Error]: ${err.message}`);
+      }
+    }
+
     return {
       success: true,
-      message: `Verification code generated for ${toEmail}. (Check email / server console)`,
+      message: `6-digit OTP code generated for ${toEmail}.`,
     };
   }
 }
