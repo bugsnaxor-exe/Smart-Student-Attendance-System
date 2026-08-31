@@ -379,11 +379,33 @@
 
       </div>
 
-      <!-- Two-Column Section: Late Comers Override + Sync Status -->
+      <!-- Live Google Sheet Connected Status Banner (Visible only when connected) -->
+      <div id="sheet-connected-banner" class="hidden flex items-center justify-between p-4 bg-emerald-50/90 border border-emerald-300 rounded-3xl device-shadow text-xs text-emerald-950 flex-wrap gap-3">
+        <div class="flex items-center space-x-3">
+          <span class="p-2 rounded-xl bg-emerald-600 text-white font-bold text-sm">✓</span>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="font-bold text-sm text-emerald-900">Google Sheet Active & Synced</span>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-200/60 text-emerald-800 text-[10px] font-bold">API v4 Live</span>
+            </div>
+            <p class="text-[11px] text-emerald-800 font-mono mt-0.5">Spreadsheet ID: <code id="banner-sheet-id" class="font-bold bg-white px-1.5 py-0.5 rounded border border-emerald-200"></code></p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="openExportReportModal()" class="px-3.5 py-2 bg-white hover:bg-cream-100 text-charcoal-900 rounded-xl border border-cream-200 text-xs font-bold transition shadow-sm">
+            View Audit Report
+          </button>
+          <button onclick="openSheetsConfigModal()" class="px-3.5 py-2 bg-charcoal-900 hover:bg-charcoal-800 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center space-x-1">
+            <span>⚙️ Change Sheet</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Two-Column Section: Late Comers Override + Google Sheet Setup Card -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         <!-- Left: Dedicated Late Comers Manual Override Section -->
-        <div class="lg:col-span-7 bg-white rounded-3xl p-6 border border-cream-200 device-shadow">
+        <div id="override-section-container" class="lg:col-span-7 bg-white rounded-3xl p-6 border border-cream-200 device-shadow transition-all duration-300">
           <div class="flex items-center space-x-2 mb-2">
             <span class="text-amber-600 text-base">⏱️</span>
             <h4 class="text-xs font-bold uppercase tracking-wider text-charcoal-900">Late Comers Manual Override (Half Attendance)</h4>
@@ -395,8 +417,8 @@
           </div>
         </div>
 
-        <!-- Right: Google Sheet Sync & Integration Card -->
-        <div class="lg:col-span-5 bg-white rounded-3xl p-6 border border-cream-200 device-shadow space-y-4">
+        <!-- Right: Google Sheet Setup Card (Disappears once connected) -->
+        <div id="sheet-setup-card" class="lg:col-span-5 bg-white rounded-3xl p-6 border border-cream-200 device-shadow space-y-4">
           <div class="flex items-center justify-between flex-wrap gap-2">
             <div class="flex items-center space-x-2">
               <span class="text-seagreen-600 text-base">📑</span>
@@ -1117,6 +1139,10 @@
     function updateSheetConnectionStatus(sheetId) {
       const badge = document.getElementById('sheet-status-badge');
       const msg = document.getElementById('sheet-connected-msg');
+      const setupCard = document.getElementById('sheet-setup-card');
+      const banner = document.getElementById('sheet-connected-banner');
+      const bannerId = document.getElementById('banner-sheet-id');
+      const overrideContainer = document.getElementById('override-section-container');
 
       if (sheetId && sheetId.trim().length > 5) {
         if (badge) {
@@ -1127,6 +1153,16 @@
           msg.classList.remove('hidden');
           msg.innerHTML = `<span>✅ Google Sheet Connected: <code class="font-mono">${sheetId.substring(0, 12)}...</code></span>`;
         }
+        if (banner) {
+          banner.classList.remove('hidden');
+          if (bannerId) bannerId.textContent = sheetId;
+        }
+        if (setupCard) {
+          setupCard.classList.add('hidden');
+        }
+        if (overrideContainer) {
+          overrideContainer.className = 'lg:col-span-12 bg-white rounded-3xl p-6 border border-cream-200 device-shadow transition-all duration-300';
+        }
       } else {
         if (badge) {
           badge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300 font-bold';
@@ -1134,6 +1170,15 @@
         }
         if (msg) {
           msg.classList.add('hidden');
+        }
+        if (banner) {
+          banner.classList.add('hidden');
+        }
+        if (setupCard) {
+          setupCard.classList.remove('hidden');
+        }
+        if (overrideContainer) {
+          overrideContainer.className = 'lg:col-span-7 bg-white rounded-3xl p-6 border border-cream-200 device-shadow transition-all duration-300';
         }
       }
     }

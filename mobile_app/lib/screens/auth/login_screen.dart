@@ -147,49 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         )
                       : const Text('Sign In'),
                 ),
-                const SizedBox(height: 16),
-
-                // Demo Autofill Shortcuts
-                const Center(
-                  child: Text(
-                    '⚡ Quick Demo Access',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.charcoalMuted),
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          _identifierController.text = '12000123042';
-                          _passwordController.text = 'Student@123';
-                        },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        child: const Text('Student', style: TextStyle(fontSize: 12)),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          _identifierController.text = 'prof.sharma@college.edu';
-                          _passwordController.text = 'Teacher@123';
-                        },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        child: const Text('Faculty (Teacher)', style: TextStyle(fontSize: 12)),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 22),
+                const SizedBox(height: 24),
 
                 // Student Registration Link
                 Row(
