@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTheme {
   // --- Classic Minimalist Palette ---
   // 1. Cream (Backgrounds & Soft Surfaces)
+  static const Color cream = Color(0xFFFAF7F0);
   static const Color creamBg = Color(0xFFFAF7F0);
   static const Color creamSurface = Color(0xFFFFFDF9);
   static const Color creamCard = Colors.white;
@@ -63,7 +64,7 @@ class AppTheme {
           letterSpacing: -0.3,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: creamCard,
         elevation: 0,
         shape: RoundedRectangleBorder(
