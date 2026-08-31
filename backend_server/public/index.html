@@ -168,7 +168,7 @@
         </div>
 
         <!-- Login Form -->
-        <form id="form-login" onsubmit="handleFacultyLogin(event)" class="space-y-4">
+        <form id="form-login" onsubmit="handleFacultyLogin(event)" class="space-y-3.5">
           <div>
             <label class="block text-xs font-bold text-charcoal-700 uppercase tracking-wider mb-1">Email Address</label>
             <input type="email" id="login-email" required placeholder="prof.sharma@college.edu" class="w-full px-3.5 py-2.5 bg-[#FAF7F0] border border-cream-200 rounded-xl text-xs font-medium text-charcoal-900 focus:outline-none focus:border-seagreen-600">
@@ -177,7 +177,24 @@
             <label class="block text-xs font-bold text-charcoal-700 uppercase tracking-wider mb-1">Password</label>
             <input type="password" id="login-password" required placeholder="••••••••" class="w-full px-3.5 py-2.5 bg-[#FAF7F0] border border-cream-200 rounded-xl text-xs font-medium text-charcoal-900 focus:outline-none focus:border-seagreen-600">
           </div>
-          <button type="submit" id="btn-login-submit" class="w-full py-3 bg-seagreen-600 hover:bg-seagreen-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center space-x-1.5">
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <div>
+              <label class="block text-[11px] font-bold text-charcoal-700 uppercase tracking-wider mb-1">Teaching Sem</label>
+              <select id="login-sem-select" onchange="onLoginSemesterChange()" class="w-full px-2.5 py-2 bg-[#FAF7F0] border border-cream-200 rounded-xl text-xs font-bold text-charcoal-900 focus:outline-none focus:border-seagreen-600 cursor-pointer">
+                <option value="1">Sem 1</option>
+                <option value="2">Sem 2</option>
+                <option value="3" selected>Sem 3 (Current)</option>
+                <option value="4">Sem 4</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-charcoal-700 uppercase tracking-wider mb-1">Assigned Subject</label>
+              <select id="login-course-select" class="w-full px-2.5 py-2 bg-[#FAF7F0] border border-cream-200 rounded-xl text-xs font-semibold text-charcoal-900 focus:outline-none focus:border-seagreen-600 cursor-pointer">
+                <!-- Dynamically populated via JS -->
+              </select>
+            </div>
+          </div>
+          <button type="submit" id="btn-login-submit" class="w-full py-3 bg-seagreen-600 hover:bg-seagreen-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center space-x-1.5 mt-2">
             <span>Sign In to Faculty Portal</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
           </button>
@@ -192,6 +209,23 @@
           <div>
             <label class="block text-xs font-bold text-charcoal-700 uppercase tracking-wider mb-1">Faculty Email</label>
             <input type="email" id="reg-email" required placeholder="ananya.sen@college.edu" class="w-full px-3.5 py-2.5 bg-[#FAF7F0] border border-cream-200 rounded-xl text-xs font-medium text-charcoal-900 focus:outline-none focus:border-seagreen-600">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-bold text-charcoal-700 uppercase tracking-wider mb-1">Teaching Sem</label>
+              <select id="reg-sem-select" onchange="onRegSemesterChange()" class="w-full px-2.5 py-2 bg-[#FAF7F0] border border-cream-200 rounded-xl text-xs font-bold text-charcoal-900 focus:outline-none focus:border-seagreen-600 cursor-pointer">
+                <option value="1">Sem 1</option>
+                <option value="2">Sem 2</option>
+                <option value="3" selected>Sem 3 (Current)</option>
+                <option value="4">Sem 4</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-charcoal-700 uppercase tracking-wider mb-1">Primary Subject</label>
+              <select id="reg-course-select" class="w-full px-2.5 py-2 bg-[#FAF7F0] border border-cream-200 rounded-xl text-xs font-semibold text-charcoal-900 focus:outline-none focus:border-seagreen-600 cursor-pointer">
+                <!-- Dynamically populated via JS -->
+              </select>
+            </div>
           </div>
           <div>
             <label class="block text-xs font-bold text-charcoal-700 uppercase tracking-wider mb-1">Department</label>
@@ -218,9 +252,10 @@
       <div class="bg-charcoal-900 text-white rounded-3xl p-6 sm:p-8 device-shadow relative overflow-hidden">
         <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div class="flex items-center space-x-2 mb-1">
+            <div class="flex items-center space-x-2 mb-1 flex-wrap gap-y-1">
               <span class="px-2.5 py-0.5 rounded-full bg-seagreen-600 text-white text-[11px] font-bold uppercase tracking-wider">Faculty Console</span>
               <span id="faculty-dept-badge" class="text-xs text-gray-300 font-medium">Master of Computer Applications</span>
+              <span id="faculty-course-badge" class="px-2.5 py-0.5 rounded-full bg-white/10 text-seagreen-300 text-[11px] font-mono border border-white/20">MCA-301</span>
             </div>
             <h2 id="faculty-welcome-name" class="text-2xl sm:text-3xl font-extrabold tracking-tight">Faculty Member</h2>
             <p id="faculty-email-display" class="text-xs text-gray-400 font-mono mt-1">faculty@college.edu</p>
@@ -628,9 +663,29 @@
 
     // Initialize on page load
     window.addEventListener('DOMContentLoaded', () => {
+      onLoginSemesterChange();
+      onRegSemesterChange();
       checkStoredAuth();
       loadServiceAccountInfo();
     });
+
+    function onLoginSemesterChange() {
+      const semSelect = document.getElementById('login-sem-select');
+      const courseSelect = document.getElementById('login-course-select');
+      if (!semSelect || !courseSelect) return;
+      const sem = parseInt(semSelect.value || '3', 10);
+      const courses = mcaSyllabus[sem] || [];
+      courseSelect.innerHTML = courses.map(c => `<option value="${c.code}" data-name="${c.name}">${c.code}: ${c.name}</option>`).join('');
+    }
+
+    function onRegSemesterChange() {
+      const semSelect = document.getElementById('reg-sem-select');
+      const courseSelect = document.getElementById('reg-course-select');
+      if (!semSelect || !courseSelect) return;
+      const sem = parseInt(semSelect.value || '3', 10);
+      const courses = mcaSyllabus[sem] || [];
+      courseSelect.innerHTML = courses.map(c => `<option value="${c.code}" data-name="${c.name}">${c.code}: ${c.name}</option>`).join('');
+    }
 
     // --- AUTHENTICATION FUNCTIONS ---
     function checkStoredAuth() {
@@ -670,6 +725,8 @@
       e.preventDefault();
       const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
+      const selectedSem = document.getElementById('login-sem-select')?.value || '3';
+      const selectedCourse = document.getElementById('login-course-select')?.value || 'MCA-301';
 
       try {
         const res = await fetch('/api/auth/login', {
@@ -682,6 +739,8 @@
           loggedInFaculty = data.user;
           localStorage.setItem('edu_faculty_token', data.token);
           localStorage.setItem('edu_faculty_user', JSON.stringify(data.user));
+          localStorage.setItem('faculty_active_sem', selectedSem);
+          localStorage.setItem('faculty_active_subject', selectedCourse);
           showDashboardView();
         } else {
           alert(data.error || 'Invalid email or password. Please check your credentials.');
@@ -696,6 +755,8 @@
       const name = document.getElementById('reg-name').value.trim();
       const email = document.getElementById('reg-email').value.trim();
       const password = document.getElementById('reg-password').value;
+      const selectedSem = document.getElementById('reg-sem-select')?.value || '3';
+      const selectedCourse = document.getElementById('reg-course-select')?.value || 'MCA-301';
 
       try {
         const res = await fetch('/api/auth/register-teacher', {
@@ -713,6 +774,8 @@
           loggedInFaculty = data.user;
           localStorage.setItem('edu_faculty_token', data.token);
           localStorage.setItem('edu_faculty_user', JSON.stringify(data.user));
+          localStorage.setItem('faculty_active_sem', selectedSem);
+          localStorage.setItem('faculty_active_subject', selectedCourse);
           showDashboardView();
         } else {
           alert(data.error || 'Registration failed. Please try again.');
@@ -731,6 +794,8 @@
       }
       localStorage.removeItem('edu_faculty_user');
       localStorage.removeItem('edu_faculty_token');
+      localStorage.removeItem('faculty_active_sem');
+      localStorage.removeItem('faculty_active_subject');
       loggedInFaculty = null;
       showAuthView();
     }
@@ -748,7 +813,7 @@
       document.getElementById('dashboard-section').classList.remove('hidden');
       
       document.getElementById('faculty-welcome-name').textContent = loggedInFaculty.name;
-      document.getElementById('faculty-email-display').textContent = `${loggedInFaculty.email} • Emp ID: ${loggedInFaculty.employeeId || 'FAC-2026-042'}`;
+      document.getElementById('faculty-email-display').textContent = `${loggedInFaculty.email}`;
       
       document.getElementById('nav-auth-controls').innerHTML = `
         <span class="hidden sm:inline-block text-xs font-bold text-charcoal-900 bg-cream-100 px-3 py-1.5 rounded-xl border border-cream-200">
@@ -759,7 +824,25 @@
         </button>
       `;
 
+      const savedSem = localStorage.getItem('faculty_active_sem');
+      if (savedSem && document.getElementById('teacher-sem-select')) {
+        document.getElementById('teacher-sem-select').value = savedSem;
+      }
+
       onTeacherSemesterChange();
+
+      const savedCourse = localStorage.getItem('faculty_active_subject');
+      if (savedCourse && document.getElementById('teacher-course-select')) {
+        document.getElementById('teacher-course-select').value = savedCourse;
+      }
+
+      const courseBadge = document.getElementById('faculty-course-badge');
+      if (courseBadge) {
+        const activeCourse = document.getElementById('teacher-course-select')?.value || 'MCA-301';
+        courseBadge.textContent = activeCourse;
+      }
+
+      updateSessionCountDisplay();
       loadServiceAccountInfo();
     }
 
