@@ -74,7 +74,8 @@ export class AuthController {
 
   public static async login(req: Request, res: Response) {
     try {
-      const { identifier, password } = req.body;
+      const identifier = (req.body.identifier || req.body.email || req.body.rollNumber || req.body.universityRoll || '').trim();
+      const password = req.body.password;
 
       if (!identifier || !password) {
         return res.status(400).json({ error: 'Email/Roll Number and Password are required.' });
