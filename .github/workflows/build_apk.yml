@@ -28,9 +28,10 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Get Flutter Dependencies
+      - name: Configure Flutter Android Platform
         run: |
           cd mobile_app
+          flutter create . --platforms=android,web --org com.college.smartattendance
           flutter pub get
 
       - name: Build Release APK
