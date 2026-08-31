@@ -264,6 +264,13 @@
 
       <!-- Subject Selection & Session Toggle Card -->
       <div class="bg-white rounded-2xl p-4 sm:p-6 border border-cream-200">
+        <div class="flex items-center justify-between mb-3 border-b border-cream-100 pb-2">
+          <span class="text-xs font-bold text-charcoal-700 uppercase tracking-wider">Session Configuration</span>
+          <span class="text-xs font-bold text-charcoal-800 bg-cream-100 px-2.5 py-0.5 rounded-full border border-cream-200">
+            Sessions Today: <span id="session-count-num" class="text-seagreen-700 font-mono">0</span> / 3 (Max 3)
+          </span>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
           
           <!-- Faculty Semester Filter -->
@@ -272,7 +279,7 @@
             <select id="teacher-sem-select" onchange="onTeacherSemesterChange()" class="w-full bg-[#FAF7F0] border border-cream-200 rounded-xl px-3 py-2.5 text-xs font-bold text-charcoal-900 focus:outline-none focus:border-seagreen-600 cursor-pointer">
               <option value="1">Semester 1 (10 Subjects)</option>
               <option value="2">Semester 2 (9 Subjects)</option>
-              <option value="3">Semester 3 (10 Subjects)</option>
+              <option value="3" selected>Semester 3 (10 Subjects)</option>
               <option value="4">Semester 4 (2 Subjects)</option>
             </select>
           </div>
@@ -303,59 +310,55 @@
         <div id="teacher-active-banner" class="hidden mt-4 p-3 bg-seagreen-50 border border-seagreen-600/30 rounded-xl flex items-center justify-between text-xs">
           <div class="flex items-center space-x-2">
             <span class="w-2.5 h-2.5 rounded-full bg-seagreen-600 animate-pulse"></span>
-            <span class="font-bold text-seagreen-900">Attendance Session Active for <span id="active-subj-label">MCA-101</span></span>
+            <span class="font-bold text-seagreen-900">Live Attendance Session Active for <span id="active-subj-label">MCA-301</span></span>
           </div>
           <span id="teacher-timer-countdown" class="font-mono font-bold text-seagreen-800">14:59 Remaining</span>
         </div>
       </div>
 
-      <!-- Live Real-time Attendance & Google Sheet Mirror -->
+      <!-- Live Google Sheets Matrix Table Mirror -->
       <div class="bg-white rounded-2xl p-4 sm:p-6 border border-cream-200 flex-1 w-full overflow-hidden">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
           <div>
-            <h3 class="text-sm font-bold text-charcoal-900">📊 Live Attendance Records & Google Sheet Mirror</h3>
-            <p class="text-xs text-charcoal-700">Appends automatically to Teacher's Google Sheet with exact schema</p>
+            <div class="flex items-center space-x-2">
+              <h3 class="text-sm font-bold text-charcoal-900">📊 Live Matrix Google Sheet Mirror</h3>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-seagreen-50 text-seagreen-800 border border-seagreen-600/20 font-bold">P = Present • Blank = Absent</span>
+            </div>
+            <p class="text-xs text-charcoal-700 mt-0.5">Automated on-time check-in writes <strong class="text-seagreen-700">"P" (2 attendances)</strong>; Late comer override writes <strong class="text-amber-700">"H" (1 attendance)</strong>.</p>
           </div>
           <span class="text-xs font-mono font-bold text-charcoal-700 bg-cream-100 px-2.5 py-1 rounded border border-cream-200 self-start sm:self-auto">
-            Total Checked In: <span id="total-checked-in-count">1</span>
+            Checked In: <span id="total-checked-in-count">1</span>
           </span>
         </div>
 
-        <!-- Google Sheet Table Layout (Responsive touch scroll) -->
+        <!-- Google Sheet Matrix Table Layout (Responsive touch scroll) -->
         <div class="border border-cream-200 rounded-xl overflow-x-auto">
-          <table class="w-full text-left text-xs min-w-[540px]">
+          <table class="w-full text-left text-xs min-w-[580px]">
             <thead class="bg-[#FAF7F0] border-b border-cream-200 font-bold text-charcoal-700 font-mono">
               <tr>
-                <th class="py-2.5 px-3">Date</th>
                 <th class="py-2.5 px-3">Class Roll</th>
                 <th class="py-2.5 px-3">University Roll</th>
                 <th class="py-2.5 px-3">Registration No</th>
                 <th class="py-2.5 px-3">Student Name</th>
-                <th class="py-2.5 px-3">Status</th>
+                <th class="py-2.5 px-3 text-center bg-seagreen-50/50 border-x border-cream-200">2026-08-31</th>
+                <th class="py-2.5 px-3 text-right">Attendance Points</th>
               </tr>
             </thead>
             <tbody id="attendance-table-body" class="divide-y divide-cream-100 font-medium">
-              <!-- Seed row -->
-              <tr class="hover:bg-cream-50 transition">
-                <td class="py-2.5 px-3 font-mono text-charcoal-700">2026-08-31</td>
-                <td class="py-2.5 px-3 font-mono font-bold text-charcoal-900">MCA-26-042</td>
-                <td class="py-2.5 px-3 font-mono text-charcoal-700">12000126042</td>
-                <td class="py-2.5 px-3 font-mono text-charcoal-700">REG-2026-9042</td>
-                <td class="py-2.5 px-3 font-bold text-charcoal-900">Sayan Banerjee</td>
-                <td class="py-2.5 px-3">
-                  <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-seagreen-50 text-seagreen-800 border border-seagreen-600/20">Full</span>
-                </td>
-              </tr>
+              <!-- Populated dynamically via Matrix sync -->
             </tbody>
           </table>
         </div>
 
-        <!-- Latecomer / Manual Override Section -->
+        <!-- Dedicated Latecomer & Half Attendance Manual Override Section -->
         <div class="mt-6 pt-5 border-t border-cream-200">
           <div class="flex items-center justify-between mb-3">
             <div>
-              <h4 class="text-xs font-bold uppercase tracking-wider text-charcoal-700">⚡ Latecomer Manual Override</h4>
-              <p class="text-[11px] text-charcoal-700">Unmarked / Late students. Tap "Grant Half" to log manual half attendance to Google Sheet.</p>
+              <div class="flex items-center space-x-1.5">
+                <span class="text-amber-600 font-bold text-sm">⏱️</span>
+                <h4 class="text-xs font-bold uppercase tracking-wider text-charcoal-900">Late Comers Manual Override (Half Attendance)</h4>
+              </div>
+              <p class="text-[11px] text-charcoal-700 mt-0.5">Students who missed the 15-min window. Click <strong class="text-charcoal-900">"Grant Half"</strong> to record <strong class="text-amber-700">"H" (1.0 Attendance Point)</strong> in Google Sheets.</p>
             </div>
           </div>
 
@@ -845,6 +848,9 @@
     }
 
     // --- TEACHER SEMESTER & COURSE FILTERING ---
+    const sessionCountsByCourse = {};
+    const attendanceStatusByStudent = {}; // Key: uniRoll -> 'P' | 'H' | null
+
     function onTeacherSemesterChange() {
       const sem = parseInt(document.getElementById('teacher-sem-select').value, 10);
       currentTeacherSem = sem;
@@ -858,29 +864,95 @@
         </option>
       `).join('');
 
+      updateSessionCountDisplay();
       renderAbsentStudents(sem);
+      renderMatrixGoogleSheet(sem);
+    }
+
+    function updateSessionCountDisplay() {
+      const courseSelect = document.getElementById('teacher-course-select');
+      const courseCode = courseSelect.value || 'MCA-301';
+      const count = sessionCountsByCourse[courseCode] || 0;
+      document.getElementById('session-count-num').textContent = count;
+
+      const btn = document.getElementById('btn-trigger-session');
+      if (count >= 3 && !activeSession) {
+        btn.disabled = true;
+        btn.className = 'w-full py-2.5 bg-gray-300 text-gray-600 font-bold text-xs rounded-xl shadow-sm cursor-not-allowed';
+        document.getElementById('session-btn-text').textContent = 'Max Daily Limit (3/3 Done)';
+      } else if (!activeSession) {
+        btn.disabled = false;
+        btn.className = 'w-full py-2.5 bg-seagreen-600 hover:bg-seagreen-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center justify-center space-x-1.5';
+        document.getElementById('session-btn-text').textContent = 'Start 15-Min Session';
+      }
     }
 
     function renderAbsentStudents(sem) {
       const container = document.getElementById('absent-students-list');
       const absents = absentStudentsBySemester[sem] || [];
+      const unmarked = absents.filter(s => !attendanceStatusByStudent[s.uniRoll]);
 
-      if (absents.length === 0) {
-        container.innerHTML = `<p class="text-xs text-charcoal-700 py-2">No unmarked students for Semester ${sem}.</p>`;
+      if (unmarked.length === 0) {
+        container.innerHTML = `
+          <div class="p-3 bg-seagreen-50/60 border border-seagreen-600/20 rounded-xl text-center">
+            <p class="text-xs text-seagreen-800 font-bold">🎉 All students for Semester ${sem} have recorded attendance or been processed.</p>
+          </div>
+        `;
         return;
       }
 
-      container.innerHTML = absents.map(s => `
-        <div class="flex items-center justify-between p-3 rounded-xl bg-[#FAF7F0] border border-cream-200">
+      container.innerHTML = unmarked.map(s => `
+        <div class="flex items-center justify-between p-3 rounded-xl bg-[#FAF7F0] border border-cream-200 hover:border-cream-300 transition">
           <div>
-            <span class="font-bold text-xs text-charcoal-900">${s.name}</span>
-            <span class="text-xs text-charcoal-700 font-mono ml-2">Roll: ${s.classRoll} • Uni: ${s.uniRoll}</span>
+            <div class="flex items-center space-x-2">
+              <span class="font-bold text-xs text-charcoal-900">${s.name}</span>
+              <span class="text-[10px] font-bold px-1.5 py-0.5 bg-red-50 text-red-700 rounded border border-red-200">Unmarked (0 pts)</span>
+            </div>
+            <span class="text-[11px] text-charcoal-700 font-mono mt-0.5 block">Roll: ${s.classRoll} • Uni: ${s.uniRoll} • Reg: ${s.regNo}</span>
           </div>
-          <button onclick="grantHalfOverride('${s.classRoll}', '${s.uniRoll}', '${s.regNo}', '${s.name}')" class="px-3 py-1 bg-charcoal-900 hover:bg-charcoal-800 text-white text-xs font-bold rounded-lg transition">
-            Grant Half
+          <button onclick="grantHalfOverride('${s.classRoll}', '${s.uniRoll}', '${s.regNo}', '${s.name}')" class="px-3 py-1.5 bg-charcoal-900 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition flex items-center space-x-1 shadow-sm">
+            <span>⏱️ Grant Half (1.0)</span>
           </button>
         </div>
       `).join('');
+    }
+
+    function renderMatrixGoogleSheet(sem) {
+      const tbody = document.getElementById('attendance-table-body');
+      const primaryStudent = { name: 'Sayan Banerjee', classRoll: 'MCA-26-042', uniRoll: '12000126042', regNo: 'REG-2026-9042' };
+      const otherStudents = absentStudentsBySemester[sem] || [];
+
+      const allList = sem === 3 ? [primaryStudent, ...otherStudents] : otherStudents;
+      let presentCount = 0;
+
+      tbody.innerHTML = allList.map(s => {
+        const status = attendanceStatusByStudent[s.uniRoll];
+        if (status) presentCount++;
+
+        let cellMark = `<span class="text-gray-300 font-mono italic">—</span>`;
+        let scoreTag = `<span class="text-[11px] font-bold text-charcoal-700">0.0 (Absent)</span>`;
+
+        if (status === 'P') {
+          cellMark = `<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-seagreen-100 text-seagreen-800 border border-seagreen-300 shadow-sm">P</span>`;
+          scoreTag = `<span class="text-[11px] font-bold text-seagreen-700">2.0 (Full)</span>`;
+        } else if (status === 'H') {
+          cellMark = `<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 shadow-sm">H</span>`;
+          scoreTag = `<span class="text-[11px] font-bold text-amber-700">1.0 (Half)</span>`;
+        }
+
+        return `
+          <tr class="hover:bg-cream-50 transition ${status === 'P' ? 'bg-seagreen-50/30' : status === 'H' ? 'bg-amber-50/30' : ''}">
+            <td class="py-2.5 px-3 font-mono font-bold text-charcoal-900">${s.classRoll}</td>
+            <td class="py-2.5 px-3 font-mono text-charcoal-700">${s.uniRoll}</td>
+            <td class="py-2.5 px-3 font-mono text-charcoal-700">${s.regNo}</td>
+            <td class="py-2.5 px-3 font-bold text-charcoal-900">${s.name}</td>
+            <td class="py-2.5 px-3 text-center border-x border-cream-200">${cellMark}</td>
+            <td class="py-2.5 px-3 text-right">${scoreTag}</td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('total-checked-in-count').textContent = presentCount;
     }
 
     // --- START / STOP 15-MINUTE ATTENDANCE SESSION TOGGLE ---
@@ -898,6 +970,17 @@
       const courseCode = selectedOption.value;
       const courseName = selectedOption.getAttribute('data-name');
       const sem = parseInt(selectedOption.getAttribute('data-sem'), 10);
+
+      // Check max 3 sessions rule
+      const currentCount = sessionCountsByCourse[courseCode] || 0;
+      if (currentCount >= 3) {
+        alert(`⚠️ Maximum session limit reached (3 / 3 sessions conducted today for ${courseCode}). No further sessions can be started today.`);
+        updateSessionCountDisplay();
+        return;
+      }
+
+      sessionCountsByCourse[courseCode] = currentCount + 1;
+      updateSessionCountDisplay();
 
       activeSession = {
         code: courseCode,
@@ -953,6 +1036,7 @@
     function stopAttendanceSession() {
       if (timerInterval) clearInterval(timerInterval);
       activeSession = null;
+      sessionTimer = 0;
 
       const banner = document.getElementById('teacher-active-banner');
       const btn = document.getElementById('btn-trigger-session');
@@ -960,15 +1044,14 @@
       const btnText = document.getElementById('session-btn-text');
 
       banner.classList.add('hidden');
+      updateSessionCountDisplay();
       
-      btn.className = 'w-full py-2.5 bg-seagreen-600 hover:bg-seagreen-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center justify-center space-x-1.5';
       btnIcon.innerHTML = `
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
       `;
-      btnText.textContent = 'Start 15-Min Session';
 
       const studentCard = document.getElementById('student-session-card');
       if (studentCard) studentCard.classList.add('hidden');
@@ -1108,60 +1191,33 @@
       }
     }
 
-    // --- CONFIRM ATTENDANCE ---
+    // --- CONFIRM ATTENDANCE (FULL 'P' = 2 ATTENDANCES) ---
     function submitAttendance() {
       if (currentDistance > 50 || isMock || !activeSession) return;
 
       closeAttendanceModal();
       activeSession.marked = true;
-      const currentStudent = studentsBySemester[currentStudentSem];
+      const currentStudent = { name: 'Sayan Banerjee', classRoll: 'MCA-26-042', uniRoll: '12000126042', regNo: 'REG-2026-9042' };
+
+      // Mark status as 'P' in Matrix Google Sheet
+      attendanceStatusByStudent[currentStudent.uniRoll] = 'P';
 
       // Update student active card
       checkActiveSessionForStudent();
 
-      // Append row to Google Sheets Table Mirror
-      totalCheckedIn++;
-      document.getElementById('total-checked-in-count').textContent = totalCheckedIn;
-
-      const tbody = document.getElementById('attendance-table-body');
-      const tr = document.createElement('tr');
-      tr.className = 'hover:bg-cream-50 transition bg-seagreen-50/50';
-      tr.innerHTML = `
-        <td class="py-2.5 px-3 font-mono text-charcoal-700">2026-08-31</td>
-        <td class="py-2.5 px-3 font-mono font-bold text-charcoal-900">${currentStudent.classRoll}</td>
-        <td class="py-2.5 px-3 font-mono text-charcoal-700">${currentStudent.uniRoll}</td>
-        <td class="py-2.5 px-3 font-mono text-charcoal-700">${currentStudent.regNo}</td>
-        <td class="py-2.5 px-3 font-bold text-charcoal-900">${currentStudent.name} (${activeSession.code})</td>
-        <td class="py-2.5 px-3">
-          <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-seagreen-50 text-seagreen-800 border border-seagreen-600/20">Full</span>
-        </td>
-      `;
-      tbody.prepend(tr);
+      // Refresh Matrix Google Sheet Mirror
+      renderMatrixGoogleSheet(currentTeacherSem);
+      renderAbsentStudents(currentTeacherSem);
     }
 
+    // --- LATECOMER MANUAL OVERRIDE (HALF 'H' = 1 ATTENDANCE) ---
     function grantHalfOverride(classRoll, uniRoll, regNo, name) {
-      totalCheckedIn++;
-      document.getElementById('total-checked-in-count').textContent = totalCheckedIn;
+      // Mark status as 'H' (Half) in Matrix Google Sheet
+      attendanceStatusByStudent[uniRoll] = 'H';
 
-      const tbody = document.getElementById('attendance-table-body');
-      const tr = document.createElement('tr');
-      tr.className = 'hover:bg-cream-50 transition bg-amber-50/50';
-      tr.innerHTML = `
-        <td class="py-2.5 px-3 font-mono text-charcoal-700">2026-08-31</td>
-        <td class="py-2.5 px-3 font-mono font-bold text-charcoal-900">${classRoll}</td>
-        <td class="py-2.5 px-3 font-mono text-charcoal-700">${uniRoll}</td>
-        <td class="py-2.5 px-3 font-mono text-charcoal-700">${regNo}</td>
-        <td class="py-2.5 px-3 font-bold text-charcoal-900">${name}</td>
-        <td class="py-2.5 px-3">
-          <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-300">Half</span>
-        </td>
-      `;
-      tbody.prepend(tr);
-
-      // Remove from absent list
-      if (event && event.target) {
-        event.target.closest('div.flex').remove();
-      }
+      // Refresh Matrix Google Sheet Mirror & Latecomer list
+      renderMatrixGoogleSheet(currentTeacherSem);
+      renderAbsentStudents(currentTeacherSem);
     }
 
     // --- SUBJECT ATTENDANCE CALENDAR & PROOF LOG MODAL ---

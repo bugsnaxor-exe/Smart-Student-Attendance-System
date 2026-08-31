@@ -13,6 +13,26 @@ export class SessionService {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + durationMinutes * 60 * 1000);
 
+    // 0. Check daily session limit (Maximum 3 sessions per subject per day)
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+    const todaySessionsCount = await prisma.activeSession.count({
+      where: {
+        subjectId,
+        createdAt: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+    });
+
+    if (todaySessionsCount >= 3) {
+      throw new Error(
+        'Maximum daily limit reached (3 / 3 sessions conducted today for this class). No more sessions can be started.'
+      );
+    }
+
     // 1. Close any older active sessions for this subject
     await prisma.activeSession.updateMany({
       where: {
