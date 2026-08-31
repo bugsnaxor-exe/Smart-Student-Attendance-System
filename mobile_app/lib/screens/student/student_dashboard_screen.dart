@@ -402,7 +402,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                                     style: const TextStyle(color: AppTheme.charcoalLight, fontSize: 11),
                                   ),
                                   const Text(
-                                    'View Proof Logs ➔',
+                                    'See Details ➔',
                                     style: TextStyle(color: AppTheme.seaGreen, fontSize: 11, fontWeight: FontWeight.w700),
                                   ),
                                 ],
