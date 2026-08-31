@@ -29,6 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _studentUniRollController = TextEditingController();
   final _studentRegNoController = TextEditingController();
   int _studentSemester = 3;
+  String _studentBatchYear = '2024 - 2026';
 
   // Faculty Controllers
   final _facultyEmailController = TextEditingController();
@@ -428,7 +429,7 @@ class _LoginScreenState extends State<LoginScreen> {
           decoration: const InputDecoration(
             labelText: 'University Roll / Email',
             prefixIcon: Icon(Icons.badge_outlined, size: 18),
-            hintText: 'e.g. 12000126042 or sayan@college.edu',
+            hintText: 'e.g. 120/001/26042 or MCA/2026/042',
           ),
         ),
         const SizedBox(height: 12),
@@ -500,7 +501,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: TextField(
                 controller: _studentUniRollController,
                 style: const TextStyle(fontSize: 13),
-                decoration: const InputDecoration(labelText: 'Uni Roll', hintText: '12000126042'),
+                decoration: const InputDecoration(labelText: 'University Roll', hintText: '120/001/26042'),
               ),
             ),
             const SizedBox(width: 8),
@@ -508,7 +509,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: TextField(
                 controller: _studentClassRollController,
                 style: const TextStyle(fontSize: 13),
-                decoration: const InputDecoration(labelText: 'Class Roll', hintText: 'MCA-26-042'),
+                decoration: const InputDecoration(labelText: 'Class Roll', hintText: 'e.g. 42'),
               ),
             ),
           ],
@@ -518,10 +519,11 @@ class _LoginScreenState extends State<LoginScreen> {
         Row(
           children: [
             Expanded(
-              child: TextField(
-                controller: _studentRegNoController,
-                style: const TextStyle(fontSize: 13),
-                decoration: const InputDecoration(labelText: 'Reg Number', hintText: 'REG-2026-9042'),
+              child: DropdownButtonFormField<String>(
+                value: _studentBatchYear,
+                decoration: const InputDecoration(labelText: 'Batch (20__ to __)'),
+                items: ['2023 - 2025', '2024 - 2026', '2025 - 2027', '2026 - 2028', '2027 - 2029'].map((y) => DropdownMenuItem(value: y, child: Text(y, style: const TextStyle(fontSize: 11)))).toList(),
+                onChanged: (val) => setState(() => _studentBatchYear = val ?? '2024 - 2026'),
               ),
             ),
             const SizedBox(width: 8),
@@ -534,6 +536,13 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 10),
+
+        TextField(
+          controller: _studentRegNoController,
+          style: const TextStyle(fontSize: 13),
+          decoration: const InputDecoration(labelText: 'Reg Number', hintText: 'REG/2026/9042'),
         ),
         const SizedBox(height: 10),
 

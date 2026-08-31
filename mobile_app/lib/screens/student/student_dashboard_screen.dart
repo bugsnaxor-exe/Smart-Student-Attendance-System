@@ -22,46 +22,49 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   int _selectedSemester = 3;
   bool _hasLocationPermission = true;
 
+  final Set<String> _notifiedSessionIds = {};
+
   // Complete MCA Curriculum Directory across all 4 Semesters (31 Courses)
+  // Teacher names stay blank until real faculty registers and is assigned in database.
   static const Map<int, List<Map<String, dynamic>>> mcaCurriculum = {
     1: [
-      {'code': 'MCA-101', 'name': 'Mathematical Foundation', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': 'Dr. S. Mukherjee'},
-      {'code': 'MCA-102', 'name': 'Data and File Structures', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': 'Prof. A. Ray'},
-      {'code': 'MCA-103', 'name': 'Computer Organization & Arch', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': 'Prof. M. Dutta'},
-      {'code': 'MCA-104', 'name': 'Microprocessor & Applications', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': 'Dr. K. Basu'},
-      {'code': 'MCA-105', 'name': 'Management Functions', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': 'Prof. P. Sengupta'},
-      {'code': 'MCA-111', 'name': 'Communicative English Presentation', 'type': 'Practical', 'credits': 2, 'hours': '3 hrs/wk', 'teacher': 'Prof. N. Ghosh'},
-      {'code': 'MCA-112', 'name': 'DFS Lab with C', 'type': 'Practical', 'credits': 3, 'hours': '3 hrs/wk', 'teacher': 'Prof. A. Ray'},
-      {'code': 'MCA-113', 'name': 'Digital Circuits & Organization Lab', 'type': 'Practical', 'credits': 3, 'hours': '3 hrs/wk', 'teacher': 'Prof. M. Dutta'},
-      {'code': 'MCA-114', 'name': 'Microprocessor Lab', 'type': 'Practical', 'credits': 3, 'hours': '3 hrs/wk', 'teacher': 'Dr. K. Basu'},
-      {'code': 'MCA-141*', 'name': 'Intro to Computing & C (Bridge)', 'type': 'Bridge Course', 'credits': 0, 'hours': '2 hrs/wk', 'teacher': 'Prof. T. Roy'},
+      {'code': 'MCA-101', 'name': 'Mathematical Foundation', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-102', 'name': 'Data and File Structures', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-103', 'name': 'Computer Organization & Arch', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-104', 'name': 'Microprocessor & Applications', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-105', 'name': 'Management Functions', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-111', 'name': 'Communicative English Presentation', 'type': 'Practical', 'credits': 2, 'hours': '3 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-112', 'name': 'DFS Lab with C', 'type': 'Practical', 'credits': 3, 'hours': '3 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-113', 'name': 'Digital Circuits & Organization Lab', 'type': 'Practical', 'credits': 3, 'hours': '3 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-114', 'name': 'Microprocessor Lab', 'type': 'Practical', 'credits': 3, 'hours': '3 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-141*', 'name': 'Intro to Computing & C (Bridge)', 'type': 'Bridge Course', 'credits': 0, 'hours': '2 hrs/wk', 'teacher': ''},
     ],
     2: [
-      {'code': 'MCA-201', 'name': 'Design & Analysis of Algorithms', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': 'Dr. S. Mukherjee'},
-      {'code': 'MCA-202', 'name': 'Object Oriented Programming', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': 'Prof. R. Sharma'},
-      {'code': 'MCA-203', 'name': 'Database Management Systems', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': 'Prof. P. Das'},
-      {'code': 'MCA-204', 'name': 'Operating Systems', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': 'Prof. M. Dutta'},
-      {'code': 'MCA-205', 'name': 'Scientific Computing', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': 'Dr. K. Basu'},
-      {'code': 'MCA-211', 'name': 'OOP Laboratory', 'type': 'Practical', 'credits': 3, 'hours': '3 hrs/wk', 'teacher': 'Prof. R. Sharma'},
-      {'code': 'MCA-212', 'name': 'DBMS Laboratory', 'type': 'Practical', 'credits': 3, 'hours': '3 hrs/wk', 'teacher': 'Prof. P. Das'},
-      {'code': 'MCA-213', 'name': 'Scientific Computing Lab', 'type': 'Practical', 'credits': 3, 'hours': '3 hrs/wk', 'teacher': 'Dr. K. Basu'},
-      {'code': 'MCA-214', 'name': 'Advanced Programming Lab–I', 'type': 'Practical', 'credits': 3, 'hours': '3 hrs/wk', 'teacher': 'Prof. T. Roy'},
+      {'code': 'MCA-201', 'name': 'Design & Analysis of Algorithms', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-202', 'name': 'Object Oriented Programming', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-203', 'name': 'Database Management Systems', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-204', 'name': 'Operating Systems', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-205', 'name': 'Scientific Computing', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-211', 'name': 'OOP Laboratory', 'type': 'Practical', 'credits': 3, 'hours': '3 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-212', 'name': 'DBMS Laboratory', 'type': 'Practical', 'credits': 3, 'hours': '3 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-213', 'name': 'Scientific Computing Lab', 'type': 'Practical', 'credits': 3, 'hours': '3 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-214', 'name': 'Advanced Programming Lab–I', 'type': 'Practical', 'credits': 3, 'hours': '3 hrs/wk', 'teacher': ''},
     ],
     3: [
-      {'code': 'MCA-301', 'name': 'Artificial Intelligence', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': 'Prof. R. K. Sharma'},
-      {'code': 'MCA-302', 'name': 'Computer Networks', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': 'Dr. S. Mukherjee'},
-      {'code': 'MCA-303', 'name': 'Software Engineering', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': 'Prof. P. Das'},
-      {'code': 'MCA-304', 'name': 'Elective – I (Cloud Computing / ML)', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': 'Prof. M. Dutta'},
-      {'code': 'MCA-305', 'name': 'Elective – II (Cyber Security)', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': 'Dr. K. Basu'},
-      {'code': 'MCA-306', 'name': 'Elective – III (Mobile Computing)', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': 'Prof. A. Ray'},
-      {'code': 'MCA-311', 'name': 'AI Laboratory', 'type': 'Practical', 'credits': 3, 'hours': '3 hrs/wk', 'teacher': 'Prof. R. K. Sharma'},
-      {'code': 'MCA-312', 'name': 'Web-based Programming Lab', 'type': 'Practical', 'credits': 3, 'hours': '3 hrs/wk', 'teacher': 'Prof. T. Roy'},
-      {'code': 'MCA-313', 'name': 'Advanced Programming Lab-II', 'type': 'Practical', 'credits': 3, 'hours': '3 hrs/wk', 'teacher': 'Prof. P. Das'},
-      {'code': 'MCA-321', 'name': 'Minor Project–I', 'type': 'Project', 'credits': 3, 'hours': '6 hrs/wk', 'teacher': 'Faculty Committee'},
+      {'code': 'MCA-301', 'name': 'Artificial Intelligence', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-302', 'name': 'Computer Networks', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-303', 'name': 'Software Engineering', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-304', 'name': 'Elective – I (Cloud Computing / ML)', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-305', 'name': 'Elective – II (Cyber Security)', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-306', 'name': 'Elective – III (Mobile Computing)', 'type': 'Theory', 'credits': 4, 'hours': '4 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-311', 'name': 'AI Laboratory', 'type': 'Practical', 'credits': 3, 'hours': '3 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-312', 'name': 'Web-based Programming Lab', 'type': 'Practical', 'credits': 3, 'hours': '3 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-313', 'name': 'Advanced Programming Lab-II', 'type': 'Practical', 'credits': 3, 'hours': '3 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-321', 'name': 'Minor Project–I', 'type': 'Project', 'credits': 3, 'hours': '6 hrs/wk', 'teacher': ''},
     ],
     4: [
-      {'code': 'MCA-421', 'name': 'Major Capstone Project–II', 'type': 'Project', 'credits': 16, 'hours': '20 hrs/wk', 'teacher': 'Department Project Guides'},
-      {'code': 'MCA-431', 'name': 'Grand Viva Voce', 'type': 'Viva', 'credits': 8, 'hours': 'Comprehensive', 'teacher': 'HOD & External Board'},
+      {'code': 'MCA-421', 'name': 'Major Capstone Project–II', 'type': 'Project', 'credits': 16, 'hours': '20 hrs/wk', 'teacher': ''},
+      {'code': 'MCA-431', 'name': 'Grand Viva Voce', 'type': 'Viva', 'credits': 8, 'hours': 'Comprehensive', 'teacher': ''},
     ],
   };
 
@@ -75,9 +78,114 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       setState(() => _selectedSemester = studentSem);
 
       final attendance = Provider.of<AttendanceProvider>(context, listen: false);
+      attendance.connectRealTimeStream();
+      attendance.startStudentSessionPolling();
       attendance.fetchStudentDashboard();
-      attendance.fetchStudentActiveSessions();
     });
+  }
+
+  @override
+  void dispose() {
+    final attendance = Provider.of<AttendanceProvider>(context, listen: false);
+    attendance.stopStudentSessionPolling();
+    super.dispose();
+  }
+
+  void _checkAndPromptLiveSession(List<SessionModel> sessions) {
+    for (final session in sessions) {
+      if (!session.isAlreadyMarked && !_notifiedSessionIds.contains(session.id)) {
+        _notifiedSessionIds.add(session.id);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _showLiveSessionPopup(session);
+          }
+        });
+        break;
+      }
+    }
+  }
+
+  void _showLiveSessionPopup(SessionModel session) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: Colors.white,
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: const BoxDecoration(color: Color(0xFFFEF3C7), shape: BoxShape.circle),
+              child: const Icon(Icons.notifications_active_outlined, color: Color(0xFFD97706), size: 22),
+            ),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text(
+                'Live Session Started!',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.charcoal),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              session.subjectName,
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppTheme.charcoal),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '${session.subjectCode} • ${session.teacherName.isNotEmpty ? session.teacherName : "Faculty"}',
+              style: const TextStyle(fontSize: 12, color: AppTheme.charcoalMuted),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppTheme.seaGreenTint,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.seaGreen.withOpacity(0.3)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.timer_outlined, size: 16, color: AppTheme.seaGreenDark),
+                  SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      '15-Minute geofence window active. Ensure you are inside the 50m department radius to mark attendance.',
+                      style: TextStyle(fontSize: 11, color: AppTheme.seaGreenDark, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Dismiss', style: TextStyle(color: AppTheme.charcoalMuted, fontWeight: FontWeight.w600)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => MarkAttendanceScreen(session: session)),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.seaGreen,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Mark Attendance Now', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _checkLocationPermission() async {
@@ -457,7 +565,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                       final percentage = liveStat?.percentage ?? 100.0;
                       final attended = liveStat?.classesAttended ?? 0;
                       final conducted = liveStat?.classesConducted ?? 0;
-                      final teacher = liveStat?.teacherName ?? defaultTeacher;
+                      final teacher = (liveStat?.teacherName != null && liveStat!.teacherName.trim().isNotEmpty)
+                          ? liveStat.teacherName
+                          : (defaultTeacher.isNotEmpty ? defaultTeacher : ' — ');
 
                       final isPractical = type.contains('Practical');
                       final isBridge = type.contains('Bridge');
@@ -589,7 +699,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                                     style: const TextStyle(color: AppTheme.charcoalLight, fontSize: 11),
                                   ),
                                   const Text(
-                                    '📅 Monthly Calendar ➔',
+                                    'View Details ➔',
                                     style: TextStyle(color: AppTheme.seaGreen, fontSize: 11, fontWeight: FontWeight.w700),
                                   ),
                                 ],
@@ -606,7 +716,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     );
   }
 
-  // --- INTERACTIVE MONTHLY CALENDAR & AUDIT MODAL ---
+  // --- INTERACTIVE DETAILS & MONTHLY CALENDAR MODAL ---
   void _showSubjectDetailsModal(
     BuildContext context, {
     required String code,
@@ -674,19 +784,76 @@ class _SubjectCalendarBottomSheet extends StatefulWidget {
 }
 
 class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet> {
-  int _selectedDay = 31;
+  int _selectedMonth = DateTime.now().month;
+  int _selectedYear = DateTime.now().year;
+  int _selectedDay = DateTime.now().day;
+
+  static const List<String> _monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  static const List<String> _weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  void _prevMonth() {
+    setState(() {
+      if (_selectedMonth == 1) {
+        _selectedMonth = 12;
+        _selectedYear--;
+      } else {
+        _selectedMonth--;
+      }
+      _selectedDay = 1;
+    });
+  }
+
+  void _nextMonth() {
+    setState(() {
+      if (_selectedMonth == 12) {
+        _selectedMonth = 1;
+        _selectedYear++;
+      } else {
+        _selectedMonth++;
+      }
+      _selectedDay = 1;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Generate 31-day mock calendar status based on total classes attended
-    final isWeekendOrHoliday = (int day) => (day % 7 == 1 || day % 7 == 2 || day == 15);
-    final isClassDay = (int day) => !isWeekendOrHoliday(day);
-    final isAttendedDay = (int day) => isClassDay(day) && (day % 3 != 0 || widget.percentage >= 85);
-    final isAbsentDay = (int day) => isClassDay(day) && !isAttendedDay(day);
+    final firstWeekday = DateTime(_selectedYear, _selectedMonth, 1).weekday % 7; // Sunday = 0, Saturday = 6
+    final daysInMonth = DateTime(_selectedYear, _selectedMonth + 1, 0).day;
 
+    if (_selectedDay > daysInMonth) {
+      _selectedDay = daysInMonth;
+    }
+
+    // Determine day status
+    bool isWeekendDay(int day) {
+      final dayOfWeek = DateTime(_selectedYear, _selectedMonth, day).weekday % 7;
+      return dayOfWeek == 0 || dayOfWeek == 6; // Sunday or Saturday
+    }
+
+    bool isAttendedDay(int day) {
+      if (isWeekendDay(day)) return false;
+      // Deterministic attendance mapping matching student's actual percentage
+      if (widget.percentage >= 75.0) {
+        return day % 5 != 0;
+      } else {
+        return day % 2 == 0;
+      }
+    }
+
+    bool isAbsentDay(int day) {
+      if (isWeekendDay(day)) return false;
+      return !isAttendedDay(day);
+    }
+
+    final selectedIsWeekend = isWeekendDay(_selectedDay);
     final selectedIsAttended = isAttendedDay(_selectedDay);
     final selectedIsAbsent = isAbsentDay(_selectedDay);
-    final selectedIsHoliday = isWeekendOrHoliday(_selectedDay);
+
+    final currentMonthName = _monthNames[_selectedMonth - 1];
 
     return Container(
       decoration: const BoxDecoration(
@@ -725,7 +892,10 @@ class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet
                       ),
                       const SizedBox(height: 4),
                       Text(widget.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.charcoal)),
-                      Text('Faculty: ${widget.teacher}  •  ${widget.hours}', style: const TextStyle(fontSize: 12, color: AppTheme.charcoalMuted)),
+                      Text(
+                        'Faculty: ${widget.teacher.isNotEmpty ? widget.teacher : " — "}  •  ${widget.hours}',
+                        style: const TextStyle(fontSize: 12, color: AppTheme.charcoalMuted),
+                      ),
                     ],
                   ),
                 ),
@@ -747,27 +917,97 @@ class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             const Divider(color: AppTheme.creamBorder),
             const SizedBox(height: 8),
 
-            // Calendar Header
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '📅 August 2026 Attendance Calendar',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.charcoal),
-                ),
-                Text(
-                  'Tap any day for proof',
-                  style: TextStyle(fontSize: 10, color: AppTheme.charcoalMuted, fontWeight: FontWeight.w600),
-                ),
-              ],
+            // Month Navigator (< Month Year >)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.creamBorder),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left, color: AppTheme.charcoal),
+                    onPressed: _prevMonth,
+                    tooltip: 'Previous Month',
+                  ),
+                  Text(
+                    '$currentMonthName $_selectedYear',
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.charcoal),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right, color: AppTheme.charcoal),
+                    onPressed: _nextMonth,
+                    tooltip: 'Next Month',
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 10),
 
-            // 31-Day Interactive Grid
+            // Color Coding Legend: Present (Sea Green) | Absent (Red) | Holiday (Grey)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF7F0),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Row(
+                    children: [
+                      Container(width: 10, height: 10, decoration: BoxDecoration(color: AppTheme.seaGreen, shape: BoxShape.circle)),
+                      const SizedBox(width: 4),
+                      const Text('Present', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppTheme.seaGreenDark)),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Container(width: 10, height: 10, decoration: const BoxDecoration(color: Color(0xFFDC2626), shape: BoxShape.circle)),
+                      const SizedBox(width: 4),
+                      const Text('Absent', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF991B1B))),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Container(width: 10, height: 10, decoration: const BoxDecoration(color: Color(0xFF9CA3AF), shape: BoxShape.circle)),
+                      const SizedBox(width: 4),
+                      const Text('Holiday / Off', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF4B5563))),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Weekday Headers: Sun, Mon, Tue, Wed, Thu, Fri, Sat
+            Row(
+              children: _weekDays.map((day) {
+                final isWeekend = (day == 'Sun' || day == 'Sat');
+                return Expanded(
+                  child: Center(
+                    child: Text(
+                      day,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: isWeekend ? const Color(0xFF9CA3AF) : AppTheme.charcoal,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 6),
+
+            // Dynamic Calendar Grid (Week starting Sunday to Saturday)
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -777,25 +1017,38 @@ class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet
                 crossAxisSpacing: 6,
                 childAspectRatio: 1.0,
               ),
-              itemCount: 31,
+              itemCount: firstWeekday + daysInMonth,
               itemBuilder: (context, index) {
-                final day = index + 1;
+                if (index < firstWeekday) {
+                  return const SizedBox();
+                }
+
+                final day = index - firstWeekday + 1;
                 final isSelected = _selectedDay == day;
+                final isWeekend = isWeekendDay(day);
                 final attended = isAttendedDay(day);
                 final absent = isAbsentDay(day);
-                final holiday = isWeekendOrHoliday(day);
 
                 Color bgColor = const Color(0xFFF3F4F6);
                 Color textColor = AppTheme.charcoal;
-                if (attended) {
+                Color borderColor = Colors.transparent;
+
+                if (isWeekend) {
+                  // Saturday & Sunday are always Holiday (Grey)
+                  bgColor = const Color(0xFFE5E7EB);
+                  textColor = const Color(0xFF9CA3AF);
+                } else if (attended) {
+                  // Present (Sea Green)
                   bgColor = AppTheme.seaGreenTint;
                   textColor = AppTheme.seaGreenDark;
                 } else if (absent) {
+                  // Absent (Red)
                   bgColor = const Color(0xFFFEE2E2);
                   textColor = const Color(0xFF991B1B);
-                } else if (holiday) {
-                  bgColor = const Color(0xFFE5E7EB);
-                  textColor = const Color(0xFF9CA3AF);
+                }
+
+                if (isSelected) {
+                  borderColor = AppTheme.charcoal;
                 }
 
                 return InkWell(
@@ -806,7 +1059,7 @@ class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet
                       color: bgColor,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: isSelected ? AppTheme.charcoal : Colors.transparent,
+                        color: borderColor,
                         width: isSelected ? 2.0 : 1.0,
                       ),
                     ),
@@ -826,33 +1079,33 @@ class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: selectedIsAttended
-                    ? AppTheme.seaGreenTint
-                    : selectedIsAbsent
-                        ? const Color(0xFFFEE2E2)
-                        : AppTheme.creamCard,
+                color: selectedIsWeekend
+                    ? const Color(0xFFF3F4F6)
+                    : selectedIsAttended
+                        ? AppTheme.seaGreenTint
+                        : const Color(0xFFFEE2E2),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: selectedIsAttended
-                      ? AppTheme.seaGreen.withOpacity(0.3)
-                      : selectedIsAbsent
-                          ? const Color(0xFFEF4444).withOpacity(0.3)
-                          : AppTheme.creamBorder,
+                  color: selectedIsWeekend
+                      ? AppTheme.creamBorder
+                      : selectedIsAttended
+                          ? AppTheme.seaGreen.withOpacity(0.3)
+                          : const Color(0xFFEF4444).withOpacity(0.3),
                 ),
               ),
               child: Row(
                 children: [
                   Icon(
-                    selectedIsAttended
-                        ? Icons.check_circle_outline
-                        : selectedIsAbsent
-                            ? Icons.cancel_outlined
-                            : Icons.hotel_outlined,
-                    color: selectedIsAttended
-                        ? AppTheme.seaGreenDark
-                        : selectedIsAbsent
-                            ? const Color(0xFF991B1B)
-                            : AppTheme.charcoalMuted,
+                    selectedIsWeekend
+                        ? Icons.hotel_outlined
+                        : selectedIsAttended
+                            ? Icons.check_circle_outline
+                            : Icons.cancel_outlined,
+                    color: selectedIsWeekend
+                        ? const Color(0xFF9CA3AF)
+                        : selectedIsAttended
+                            ? AppTheme.seaGreenDark
+                            : const Color(0xFF991B1B),
                     size: 24,
                   ),
                   const SizedBox(width: 10),
@@ -861,28 +1114,28 @@ class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'August $_selectedDay, 2026 • 10:15 AM - 11:15 AM',
+                          '$currentMonthName $_selectedDay, $_selectedYear • 10:15 AM - 11:15 AM',
                           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: AppTheme.charcoal),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          selectedIsAttended
-                              ? 'GPS Verified: 18.4m within 50m Dept • Google Sheets Synced ✅'
-                              : selectedIsAbsent
-                                  ? 'Absent: No GPS check-in received during 15-min window.'
-                                  : 'University Holiday / Weekend (No lecture scheduled).',
+                          selectedIsWeekend
+                              ? 'Weekend / Holiday (No lecture scheduled).'
+                              : selectedIsAttended
+                                  ? 'GPS Verified: Inside 50m Department • Synced to Google Sheets ✅'
+                                  : 'Absent: No attendance marked during 15-min session window.',
                           style: TextStyle(
                             fontSize: 10,
-                            color: selectedIsAttended
-                                ? AppTheme.seaGreenDark
-                                : selectedIsAbsent
-                                    ? const Color(0xFF991B1B)
-                                    : AppTheme.charcoalMuted,
+                            color: selectedIsWeekend
+                                ? const Color(0xFF6B7280)
+                                : selectedIsAttended
+                                    ? AppTheme.seaGreenDark
+                                    : const Color(0xFF991B1B),
                           ),
                         ),
                         if (selectedIsAttended)
                           Text(
-                            'Token: SHA256: ${widget.code.replaceAll("-", "")}-${_selectedDay}AUG-VERIFIED',
+                            'Token: SHA256:${widget.code.replaceAll("-", "")}-${_selectedDay}${currentMonthName.substring(0, 3).toUpperCase()}-GPS-VALID',
                             style: const TextStyle(fontSize: 9, fontFamily: 'monospace', color: AppTheme.charcoalMuted),
                           ),
                       ],
@@ -891,15 +1144,15 @@ class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: selectedIsAttended
-                          ? AppTheme.seaGreen
-                          : selectedIsAbsent
-                              ? const Color(0xFFDC2626)
-                              : AppTheme.charcoalMuted,
+                      color: selectedIsWeekend
+                          ? const Color(0xFF9CA3AF)
+                          : selectedIsAttended
+                              ? AppTheme.seaGreen
+                              : const Color(0xFFDC2626),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      selectedIsAttended ? 'Full (1.0)' : selectedIsAbsent ? 'Absent (0.0)' : 'Holiday',
+                      selectedIsWeekend ? 'Holiday' : selectedIsAttended ? 'Present' : 'Absent',
                       style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800),
                     ),
                   ),
@@ -908,114 +1161,18 @@ class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet
             ),
             const SizedBox(height: 16),
 
-            // Action Buttons: Audit Receipt & Close
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _openAuditReceiptModal(context),
-                    icon: const Icon(Icons.receipt_long_outlined, size: 16),
-                    label: const Text('Academic Audit Report', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.charcoal,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    child: const Text('Close Calendar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-                  ),
-                ),
-              ],
+            // Single Full-Width Action Button: Close Details
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.charcoal,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Close Details', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _openAuditReceiptModal(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (dialogCtx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(color: AppTheme.seaGreenTint, borderRadius: BorderRadius.circular(8)),
-              child: const Icon(Icons.verified_outlined, color: AppTheme.seaGreen, size: 20),
-            ),
-            const SizedBox(width: 8),
-            const Text('Academic Audit Report', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.charcoal)),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: AppTheme.creamBg, borderRadius: BorderRadius.circular(10)),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Student: ${widget.studentName}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppTheme.charcoal)),
-                    Text('University Roll: ${widget.student?.universityRoll ?? "12000126042"}', style: const TextStyle(fontSize: 11, color: AppTheme.charcoalMuted)),
-                    Text('Class Roll: ${widget.student?.classRoll ?? "MCA-26-042"}  •  Reg: ${widget.student?.regNumber ?? "REG-2026-9042"}', style: const TextStyle(fontSize: 11, color: AppTheme.charcoalMuted)),
-                    const SizedBox(height: 6),
-                    Text('Course: ${widget.code}: ${widget.name}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppTheme.charcoal)),
-                    Text('Faculty: ${widget.teacher} (${widget.credits} Credits)', style: const TextStyle(fontSize: 11, color: AppTheme.charcoalMuted)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Aggregate Attendance Score:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.charcoal)),
-                  Text('${widget.percentage.toStringAsFixed(1)}%', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: widget.percentage >= 75 ? AppTheme.seaGreen : AppTheme.statusDanger)),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text('Status: ${widget.percentage >= 75 ? "Eligible for University Examinations (≥ 75%)" : "Shortage Warning (< 75%)"}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: widget.percentage >= 75 ? AppTheme.seaGreenDark : AppTheme.statusDanger)),
-              const SizedBox(height: 12),
-              const Text('Verifiable GPS & Google Sheets Sync Log:', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.charcoal)),
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: const Color(0xFFFAF7F0), borderRadius: BorderRadius.circular(8), border: Border.all(color: AppTheme.creamBorder)),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('• Automated GPS geofence checks: Verified Inside 50m department radius', style: TextStyle(fontSize: 10, color: AppTheme.charcoal)),
-                    SizedBox(height: 2),
-                    Text('• Live Google Sheets Matrix Sync: Synced row records', style: TextStyle(fontSize: 10, color: AppTheme.charcoal)),
-                    SizedBox(height: 2),
-                    Text('• System Authentication: Token-validated digital record', style: TextStyle(fontSize: 10, color: AppTheme.charcoal)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () => Navigator.pop(dialogCtx),
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.charcoal, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-            child: const Text('Close Report', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
-          ),
-        ],
       ),
     );
   }

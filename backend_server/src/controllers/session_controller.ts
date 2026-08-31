@@ -3,6 +3,13 @@ import { AuthRequest } from '../middleware/auth_middleware';
 import { SessionService } from '../services/session_service';
 import { prisma } from '../config/database';
 
+type SessionBroadcastCallback = (data: any) => void;
+let sessionBroadcastCallback: SessionBroadcastCallback | null = null;
+
+export function registerSessionBroadcaster(callback: SessionBroadcastCallback) {
+  sessionBroadcastCallback = callback;
+}
+
 export class SessionController {
   /**
    * Teacher starts a 15-minute active session for a subject.
@@ -34,6 +41,20 @@ export class SessionController {
         subject.semester,
         durationMinutes
       );
+
+      if (sessionBroadcastCallback) {
+        sessionBroadcastCallback({
+          type: 'SESSION_STARTED',
+          session: {
+            id: session.id,
+            subjectId: session.subjectId,
+            subjectName: session.subject.name,
+            subjectCode: session.subject.code,
+            semester: session.semester,
+            remainingSeconds: durationMinutes * 60,
+          },
+        });
+      }
 
       return res.status(201).json({
         message: `Attendance session started for ${subject.name}. Auto-expires in ${durationMinutes} minutes.`,

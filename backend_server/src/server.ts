@@ -6,7 +6,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { connectDB } from './config/database';
 import { requireAuth, requireRole } from './middleware/auth_middleware';
 import { AuthController } from './controllers/auth_controller';
-import { SessionController } from './controllers/session_controller';
+import { SessionController, registerSessionBroadcaster } from './controllers/session_controller';
 import { AttendanceController, registerAttendanceBroadcaster } from './controllers/attendance_controller';
 import { OverrideController } from './controllers/override_controller';
 import { GeofenceController } from './controllers/geofence_controller';
@@ -40,15 +40,19 @@ wss.on('connection', (ws: WebSocket) => {
   ws.send(JSON.stringify({ type: 'CONNECTED', message: 'Real-time attendance stream connected.' }));
 });
 
-// Register real-time broadcaster
-registerAttendanceBroadcaster((payload: any) => {
+// Helper to broadcast to all clients
+function broadcastToAll(payload: any) {
   const message = JSON.stringify(payload);
   for (const client of connectedClients) {
     if (client.readyState === WebSocket.OPEN) {
       client.send(message);
     }
   }
-});
+}
+
+// Register real-time broadcasters
+registerAttendanceBroadcaster(broadcastToAll);
+registerSessionBroadcaster(broadcastToAll);
 
 // Health check & System Info
 app.get('/api/status', (req, res) => {

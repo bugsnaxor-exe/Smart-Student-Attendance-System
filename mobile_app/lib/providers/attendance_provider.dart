@@ -31,6 +31,8 @@ class AttendanceProvider extends ChangeNotifier {
   String? get statusMessage => _statusMessage;
   String? get errorMessage => _errorMessage;
 
+  Timer? _studentPollingTimer;
+
   /// Connects to real-time WebSocket attendance broadcast stream
   void connectRealTimeStream() {
     try {
@@ -55,6 +57,9 @@ class AttendanceProvider extends ChangeNotifier {
                 ),
               );
               notifyListeners();
+            } else if (payload['type'] == 'SESSION_STARTED') {
+              // Immediately fetch active sessions when teacher starts a session
+              fetchStudentActiveSessions();
             }
           } catch (err) {
             // Ignore parse errors
@@ -67,6 +72,19 @@ class AttendanceProvider extends ChangeNotifier {
     } catch (e) {
       print('Could not connect to WebSocket: $e');
     }
+  }
+
+  /// Start 4-second background poller for live active sessions on student dashboard
+  void startStudentSessionPolling() {
+    _studentPollingTimer?.cancel();
+    fetchStudentActiveSessions();
+    _studentPollingTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      fetchStudentActiveSessions();
+    });
+  }
+
+  void stopStudentSessionPolling() {
+    _studentPollingTimer?.cancel();
   }
 
   /// Student: Fetches aggregate percentage and individual subject stats
