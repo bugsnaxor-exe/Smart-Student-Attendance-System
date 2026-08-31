@@ -74,6 +74,8 @@ app.get('/api/status', (req, res) => {
 app.post('/api/auth/register-student', AuthController.registerStudent);
 app.post('/api/auth/register-teacher', AuthController.registerTeacher);
 app.post('/api/auth/login', AuthController.login);
+app.post('/api/auth/verify-otp', AuthController.verifyOtp);
+app.post('/api/auth/resend-otp', AuthController.resendOtp);
 app.get('/api/auth/me', requireAuth, AuthController.getMe);
 
 // --- SESSION ROUTES (15-Minute Dynamic Window) ---

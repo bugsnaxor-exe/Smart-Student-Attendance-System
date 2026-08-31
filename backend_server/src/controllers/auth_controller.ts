@@ -83,20 +83,71 @@ export class AuthController {
 
       const result = await AuthService.login(identifier, password);
 
+      if (result.requiresOtp) {
+        return res.json({
+          requiresOtp: true,
+          email: result.email,
+          message: result.message,
+        });
+      }
+
       return res.json({
+        requiresOtp: false,
         message: 'Login successful.',
+        token: result.token,
+        user: {
+          id: result.user!.id,
+          name: result.user!.name,
+          email: result.user!.email,
+          role: result.user!.role,
+          student: result.user!.student,
+          teacher: result.user!.teacher,
+        },
+      });
+    } catch (error: any) {
+      return res.status(401).json({ error: error.message });
+    }
+  }
+
+  public static async verifyOtp(req: Request, res: Response) {
+    try {
+      const { email, otp } = req.body;
+
+      if (!email || !otp) {
+        return res.status(400).json({ error: 'Email and 6-digit OTP code are required.' });
+      }
+
+      const result = await AuthService.verifyFacultyOtp(email, otp);
+
+      return res.json({
+        message: '2FA Verification successful. Access granted.',
         token: result.token,
         user: {
           id: result.user.id,
           name: result.user.name,
           email: result.user.email,
           role: result.user.role,
-          student: result.user.student,
           teacher: result.user.teacher,
         },
       });
     } catch (error: any) {
       return res.status(401).json({ error: error.message });
+    }
+  }
+
+  public static async resendOtp(req: Request, res: Response) {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ error: 'Email is required.' });
+      }
+
+      const result = await AuthService.resendFacultyOtp(email);
+
+      return res.json(result);
+    } catch (error: any) {
+      return res.status(400).json({ error: error.message });
     }
   }
 

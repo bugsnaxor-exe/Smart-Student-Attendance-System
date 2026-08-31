@@ -240,6 +240,34 @@
           </button>
         </form>
 
+        <!-- 2FA 6-Digit OTP Verification Form (Hidden by default) -->
+        <form id="form-otp" onsubmit="handleVerifyOtp(event)" class="space-y-4 hidden">
+          <div class="p-3.5 bg-seagreen-50/70 border border-seagreen-600/30 rounded-2xl text-center">
+            <span class="text-xs font-bold text-seagreen-900 block">🔐 2-Factor Authentication</span>
+            <p class="text-[11px] text-seagreen-800 mt-0.5">A 6-digit security OTP was sent to:</p>
+            <p id="otp-target-email" class="font-mono text-xs font-bold text-charcoal-900 break-all mt-1 bg-white p-1.5 rounded-lg border border-seagreen-200"></p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-charcoal-700 uppercase tracking-wider text-center mb-1.5">Enter 6-Digit Security Code</label>
+            <input type="text" id="otp-code-input" maxlength="6" pattern="[0-9]{6}" required placeholder="••••••" autocomplete="one-time-code" class="w-full text-center py-3 bg-[#FAF7F0] border-2 border-seagreen-600 rounded-2xl text-2xl font-mono font-black text-charcoal-900 tracking-[10px] focus:outline-none focus:ring-2 focus:ring-seagreen-600/30">
+          </div>
+
+          <div class="flex items-center justify-between text-xs px-1">
+            <span id="otp-timer-display" class="font-mono text-charcoal-700 font-bold">⏱️ Expires in 05:00</span>
+            <button type="button" id="btn-resend-otp" onclick="resendOtpCode()" class="font-bold text-seagreen-700 hover:underline">Resend Code</button>
+          </div>
+
+          <button type="submit" id="btn-verify-otp" class="w-full py-3 bg-seagreen-600 hover:bg-seagreen-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center space-x-1.5">
+            <span>Verify & Access Console</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </button>
+
+          <button type="button" onclick="backToLogin()" class="w-full py-2 bg-cream-100 hover:bg-cream-200 text-charcoal-700 text-xs font-bold rounded-xl transition">
+            ← Back to Login
+          </button>
+        </form>
+
       </div>
     </div>
 
@@ -726,12 +754,22 @@
       }
     }
 
+    let pendingOtpEmail = '';
+    let pendingFacultySem = '3';
+    let pendingFacultyCourse = 'MCA-301';
+    let otpCountdown = 300;
+    let otpTimerInterval = null;
+
     async function handleFacultyLogin(e) {
       e.preventDefault();
       const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
       const selectedSem = document.getElementById('login-sem-select')?.value || '3';
       const selectedCourse = document.getElementById('login-course-select')?.value || 'MCA-301';
+      const btn = document.getElementById('btn-login-submit');
+
+      btn.disabled = true;
+      btn.innerHTML = `<span>Checking credentials...</span>`;
 
       try {
         const res = await fetch('/api/auth/login', {
@@ -740,18 +778,136 @@
           body: JSON.stringify({ identifier: email, email, password })
         });
         const data = await res.json();
-        if (res.ok && data.token) {
-          loggedInFaculty = data.user;
-          localStorage.setItem('edu_faculty_token', data.token);
-          localStorage.setItem('edu_faculty_user', JSON.stringify(data.user));
-          localStorage.setItem('faculty_active_sem', selectedSem);
-          localStorage.setItem('faculty_active_subject', selectedCourse);
-          showDashboardView();
+
+        if (res.ok) {
+          if (data.requiresOtp) {
+            pendingOtpEmail = data.email || email;
+            pendingFacultySem = selectedSem;
+            pendingFacultyCourse = selectedCourse;
+            showOtpScreen(pendingOtpEmail);
+          } else if (data.token) {
+            loggedInFaculty = data.user;
+            localStorage.setItem('edu_faculty_token', data.token);
+            localStorage.setItem('edu_faculty_user', JSON.stringify(data.user));
+            localStorage.setItem('faculty_active_sem', selectedSem);
+            localStorage.setItem('faculty_active_subject', selectedCourse);
+            showDashboardView();
+          }
         } else {
           alert(data.error || 'Invalid email or password. Please check your credentials.');
         }
       } catch (err) {
         alert('Server connection error. Please make sure backend is online.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>Sign In to Faculty Portal</span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>`;
+      }
+    }
+
+    function showOtpScreen(email) {
+      document.getElementById('form-login').classList.add('hidden');
+      document.getElementById('form-register').classList.add('hidden');
+      document.getElementById('tab-btn-login').parentElement.classList.add('hidden');
+      document.getElementById('form-otp').classList.remove('hidden');
+      document.getElementById('otp-target-email').textContent = email;
+      document.getElementById('otp-code-input').value = '';
+      document.getElementById('otp-code-input').focus();
+      startOtpTimer();
+    }
+
+    function backToLogin() {
+      clearInterval(otpTimerInterval);
+      document.getElementById('form-otp').classList.add('hidden');
+      document.getElementById('tab-btn-login').parentElement.classList.remove('hidden');
+      switchAuthTab('login');
+    }
+
+    function startOtpTimer() {
+      clearInterval(otpTimerInterval);
+      otpCountdown = 300; // 5 minutes
+      updateOtpTimerDisplay();
+
+      otpTimerInterval = setInterval(() => {
+        otpCountdown--;
+        updateOtpTimerDisplay();
+        if (otpCountdown <= 0) {
+          clearInterval(otpTimerInterval);
+          document.getElementById('otp-timer-display').textContent = '⚠️ Code Expired';
+        }
+      }, 1000);
+    }
+
+    function updateOtpTimerDisplay() {
+      const minutes = Math.floor(otpCountdown / 60);
+      const seconds = otpCountdown % 60;
+      const display = `⏱️ Expires in ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      document.getElementById('otp-timer-display').textContent = display;
+    }
+
+    async function handleVerifyOtp(e) {
+      e.preventDefault();
+      const otp = document.getElementById('otp-code-input').value.trim();
+      const btn = document.getElementById('btn-verify-otp');
+
+      if (otp.length !== 6) {
+        alert('Please enter the full 6-digit verification code.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = `<span>Verifying Security Code...</span>`;
+
+      try {
+        const res = await fetch('/api/auth/verify-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: pendingOtpEmail, otp })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.token) {
+          clearInterval(otpTimerInterval);
+          loggedInFaculty = data.user;
+          localStorage.setItem('edu_faculty_token', data.token);
+          localStorage.setItem('edu_faculty_user', JSON.stringify(data.user));
+          localStorage.setItem('faculty_active_sem', pendingFacultySem);
+          localStorage.setItem('faculty_active_subject', pendingFacultyCourse);
+          showDashboardView();
+        } else {
+          alert(data.error || 'Invalid or expired OTP code. Please check your email.');
+        }
+      } catch (err) {
+        alert('Network error verifying OTP code.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>Verify & Access Console</span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>`;
+      }
+    }
+
+    async function resendOtpCode() {
+      if (!pendingOtpEmail) return;
+      const resendBtn = document.getElementById('btn-resend-otp');
+      resendBtn.disabled = true;
+      resendBtn.textContent = 'Sending...';
+
+      try {
+        const res = await fetch('/api/auth/resend-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: pendingOtpEmail })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert(`✅ Fresh 6-digit OTP dispatched to ${pendingOtpEmail}`);
+          startOtpTimer();
+        } else {
+          alert(data.error || 'Could not resend OTP.');
+        }
+      } catch (err) {
+        alert('Network error resending OTP.');
+      } finally {
+        resendBtn.disabled = false;
+        resendBtn.textContent = 'Resend Code';
       }
     }
 

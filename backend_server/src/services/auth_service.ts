@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../config/database';
+import { EmailService } from './email_service';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'smart_attendance_secret_jwt_key_2026';
 
@@ -23,7 +24,16 @@ export interface RegisterTeacherInput {
   departmentCode: string;
 }
 
+interface StoredOtp {
+  otp: string;
+  expiresAt: number;
+  userId: string;
+  role: string;
+}
+
 export class AuthService {
+  private static otpStore = new Map<string, StoredOtp>();
+
   public static generateToken(payload: {
     userId: string;
     role: string;
@@ -205,6 +215,34 @@ export class AuthService {
       throw new Error('Invalid password.');
     }
 
+    // 🔒 2FA OTP PROTECTION FOR FACULTY & ADMIN (Stops unauthorized students)
+    if (user.role === 'TEACHER' || user.role === 'ADMIN') {
+      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = Date.now() + 5 * 60 * 1000; // 5 Minutes TTL
+
+      this.otpStore.set(user.email.toLowerCase(), {
+        otp: otpCode,
+        expiresAt,
+        userId: user.id,
+        role: user.role,
+      });
+
+      // Send OTP via Brevo / Resend
+      await EmailService.sendFacultyLoginOtp({
+        toEmail: user.email,
+        recipientName: user.name,
+        otpCode,
+        expiresInMinutes: 5,
+      });
+
+      return {
+        requiresOtp: true,
+        email: user.email,
+        message: `6-digit security code dispatched to ${user.email}`,
+      };
+    }
+
+    // Students log in with hardware UUID check
     const token = this.generateToken({
       userId: user.id,
       role: user.role,
@@ -213,6 +251,84 @@ export class AuthService {
       departmentId: user.student?.departmentId || user.teacher?.departmentId,
     });
 
+    return { requiresOtp: false, user, token };
+  }
+
+  /**
+   * Verifies the 6-digit OTP for faculty logins and issues the auth token.
+   */
+  public static async verifyFacultyOtp(email: string, otp: string) {
+    const cleanEmail = email.toLowerCase().trim();
+    const cleanOtp = otp.trim();
+
+    const stored = this.otpStore.get(cleanEmail);
+    if (!stored) {
+      throw new Error('No active OTP found for this email. Please log in again.');
+    }
+
+    if (Date.now() > stored.expiresAt) {
+      this.otpStore.delete(cleanEmail);
+      throw new Error('OTP has expired (valid for 5 minutes). Please request a new code.');
+    }
+
+    if (stored.otp !== cleanOtp) {
+      throw new Error('Invalid 6-digit OTP code. Please check your email.');
+    }
+
+    // OTP verified -> remove from store
+    this.otpStore.delete(cleanEmail);
+
+    const user = await prisma.user.findUnique({
+      where: { id: stored.userId },
+      include: {
+        teacher: { include: { department: true, subjects: true } },
+      },
+    });
+
+    if (!user) {
+      throw new Error('User account not found.');
+    }
+
+    const token = this.generateToken({
+      userId: user.id,
+      role: user.role,
+      teacherId: user.teacher?.id,
+      departmentId: user.teacher?.departmentId,
+    });
+
     return { user, token };
+  }
+
+  /**
+   * Resends a fresh 6-digit OTP to the faculty email.
+   */
+  public static async resendFacultyOtp(email: string) {
+    const cleanEmail = email.toLowerCase().trim();
+    const user = await prisma.user.findUnique({
+      where: { email: cleanEmail },
+    });
+
+    if (!user || (user.role !== 'TEACHER' && user.role !== 'ADMIN')) {
+      throw new Error('Faculty account not found.');
+    }
+
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 5 * 60 * 1000;
+
+    this.otpStore.set(cleanEmail, {
+      otp: otpCode,
+      expiresAt,
+      userId: user.id,
+      role: user.role,
+    });
+
+    await EmailService.sendFacultyLoginOtp({
+      toEmail: user.email,
+      recipientName: user.name,
+      otpCode,
+      expiresInMinutes: 5,
+    });
+
+    return { success: true, message: `New 6-digit OTP code sent to ${user.email}` };
   }
 }
