@@ -79,7 +79,7 @@ export class EmailService {
     if (brevoKey.startsWith('xkeysib-')) {
       try {
         const payload = JSON.stringify({
-          sender: { name: 'EduAttendance Security', email: 'sayantan05092004@gmail.com' },
+          sender: { name: 'AutoAttend Security', email: 'sayantan05092004@gmail.com' },
           to: [{ email: toEmail, name: recipientName }],
           subject: `🔐 Your Faculty Login OTP: ${otpCode}`,
           htmlContent: htmlContent,
@@ -121,7 +121,7 @@ export class EmailService {
         });
 
         const info = await transporter.sendMail({
-          from: `"EduAttendance Security" <${brevoSmtpUser}>`,
+          from: `"AutoAttend Security" <${brevoSmtpUser}>`,
           to: toEmail,
           subject: `🔐 Your Faculty Login OTP: ${otpCode}`,
           html: htmlContent,
@@ -138,7 +138,7 @@ export class EmailService {
     if (resendApiKey) {
       try {
         const payload = JSON.stringify({
-          from: 'EduAttendance <onboarding@resend.dev>',
+          from: 'AutoAttend <onboarding@resend.dev>',
           to: [toEmail],
           subject: `🔐 Your Faculty Login OTP: ${otpCode}`,
           html: htmlContent,
@@ -177,7 +177,7 @@ export class EmailService {
         });
 
         const info = await transporter.sendMail({
-          from: `"EduAttendance Security" <${smtpUser}>`,
+          from: `"AutoAttend Security" <${smtpUser}>`,
           to: toEmail,
           subject: `🔐 Your Faculty Login OTP: ${otpCode}`,
           html: htmlContent,

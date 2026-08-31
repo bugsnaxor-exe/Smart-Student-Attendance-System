@@ -21,18 +21,18 @@ void main() async {
         ChangeNotifierProvider<LocationProvider>(create: (_) => LocationProvider()),
         ChangeNotifierProvider<AttendanceProvider>(create: (_) => AttendanceProvider()),
       ],
-      child: const EduAttendanceApp(),
+      child: const AutoAttendApp(),
     ),
   );
 }
 
-class EduAttendanceApp extends StatelessWidget {
-  const EduAttendanceApp({super.key});
+class AutoAttendApp extends StatelessWidget {
+  const AutoAttendApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'EduAttendance',
+      title: 'AutoAttend',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       home: Consumer<AuthProvider>(
