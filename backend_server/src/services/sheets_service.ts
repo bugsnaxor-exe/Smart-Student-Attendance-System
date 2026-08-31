@@ -24,22 +24,34 @@ export class GoogleSheetsService {
     }
 
     // 1. Check for inline JSON string in GOOGLE_SERVICE_ACCOUNT_JSON (.env / Render)
-    const inlineJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+    let inlineJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim();
     if (inlineJson) {
+      // Check if it's base64 encoded
+      if (!inlineJson.startsWith('{') && !inlineJson.startsWith('"') && inlineJson.length > 100) {
+        try {
+          inlineJson = Buffer.from(inlineJson, 'base64').toString('utf8');
+        } catch (e) {}
+      }
+
       try {
         const credentials = JSON.parse(inlineJson);
-        this.serviceAccountEmail = credentials.client_email;
+        if (credentials.client_email && (credentials.private_key || credentials.private_key_id)) {
+          this.serviceAccountEmail = credentials.client_email;
 
-        const auth = new google.auth.GoogleAuth({
-          credentials,
-          scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-        });
+          const auth = new google.auth.GoogleAuth({
+            credentials,
+            scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+          });
 
-        this.sheetsClient = google.sheets({ version: 'v4', auth });
-        console.log(`✅ Google Sheets API initialized from GOOGLE_SERVICE_ACCOUNT_JSON with email: ${this.serviceAccountEmail}`);
-        return this.sheetsClient;
+          this.sheetsClient = google.sheets({ version: 'v4', auth });
+          console.log(`✅ Google Sheets API initialized from GOOGLE_SERVICE_ACCOUNT_JSON with email: ${this.serviceAccountEmail}`);
+          return this.sheetsClient;
+        } else if (credentials.client_email) {
+          this.serviceAccountEmail = credentials.client_email;
+          console.warn('⚠️ GOOGLE_SERVICE_ACCOUNT_JSON has client_email but is missing private_key.');
+        }
       } catch (err: any) {
-        console.warn('⚠️ Error parsing GOOGLE_SERVICE_ACCOUNT_JSON:', err.message);
+        console.warn('⚠️ Error parsing GOOGLE_SERVICE_ACCOUNT_JSON (must be a valid JSON key object):', err.message);
       }
     }
 
@@ -64,7 +76,7 @@ export class GoogleSheetsService {
         console.warn('⚠️ Error loading Google Service Account Key:', err.message);
       }
     } else {
-      console.log(`ℹ️ No live service-account-credentials.json found. Running in simulated Google Sheets mode.`);
+      console.log(`ℹ️ No live service-account-credentials.json found at ${resolvedPath}.`);
     }
 
     return null;
