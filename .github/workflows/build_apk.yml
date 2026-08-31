@@ -31,8 +31,10 @@ jobs:
       - name: Prepare Android Project & Dependencies
         run: |
           cd mobile_app
-          # Configure local.properties with CI Flutter SDK path
-          echo "flutter.sdk=" > android/local.properties
+          FLUTTER_PATH=$(dirname $(dirname $(which flutter)))
+          echo "Flutter SDK located at: $FLUTTER_PATH"
+          echo "flutter.sdk=$FLUTTER_PATH" > android/local.properties
+          cat android/local.properties
           flutter pub get
 
       - name: Build Release APK
