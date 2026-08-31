@@ -28,10 +28,11 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Configure Flutter Android Platform
+      - name: Prepare Android Project & Dependencies
         run: |
           cd mobile_app
-          flutter create . --platforms=android,web --org com.college.smartattendance
+          # Configure local.properties with CI Flutter SDK path
+          echo "flutter.sdk=" > android/local.properties
           flutter pub get
 
       - name: Build Release APK
