@@ -54,12 +54,18 @@
       50% { transform: scale(1.15); opacity: 0.3; }
       100% { transform: scale(0.95); opacity: 0.8; }
     }
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
+    /* Hide scrollbars globally across ALL elements, modals, cards, tabs, tables and containers while preserving full responsive smooth scrolling */
+    *, *::-webkit-scrollbar, html::-webkit-scrollbar, body::-webkit-scrollbar {
+      display: none !important;
+      width: 0px !important;
+      height: 0px !important;
+      background: transparent !important;
+      -ms-overflow-style: none !important;
+      scrollbar-width: none !important;
     }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
+    * {
+      -ms-overflow-style: none !important;
+      scrollbar-width: none !important;
     }
     @media print {
       body * { visibility: hidden !important; }
@@ -655,39 +661,39 @@
     // ==========================================
     const mcaSyllabus = {
       1: [
-        { code: 'MCA-101', name: 'Mathematical Foundation', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 90.0, attended: 18, total: 20 },
-        { code: 'MCA-102', name: 'Data and File Structures', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 85.0, attended: 17, total: 20 },
-        { code: 'MCA-103', name: 'Computer Organization and Architecture', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 95.0, attended: 19, total: 20 },
-        { code: 'MCA-104', name: 'Microprocessor and its Applications', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 80.0, attended: 16, total: 20 },
-        { code: 'MCA-105', name: 'Introduction to Management Functions', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 88.0, attended: 14, total: 16 },
-        { code: 'MCA-111', name: 'Communicative English and Business Presentation', type: 'Practical', credits: 2, hours: '0+0+2', marks: '50', pct: 100.0, attended: 10, total: 10 },
-        { code: 'MCA-112', name: 'Data and File Structures Laboratory with C', type: 'Practical', credits: 3, hours: '0+0+3', marks: '100', pct: 90.0, attended: 9, total: 10 },
-        { code: 'MCA-113', name: 'Digital Circuits and Computer Organization Lab', type: 'Practical', credits: 3, hours: '0+0+3', marks: '100', pct: 80.0, attended: 8, total: 10 },
-        { code: 'MCA-114', name: 'Microprocessor and its Applications Lab', type: 'Practical', credits: 3, hours: '0+0+3', marks: '100', pct: 100.0, attended: 10, total: 10 },
-        { code: 'MCA-141*', name: 'Introduction to Computing and C Programming (Bridge)', type: 'Bridge', credits: 0, hours: '2+0+2', marks: '100 (40+10+50)', pct: 100.0, attended: 8, total: 8 },
+        { code: 'MCA-101', name: 'Mathematical Foundation', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-102', name: 'Data and File Structures', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-103', name: 'Computer Organization and Architecture', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-104', name: 'Microprocessor and its Applications', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-105', name: 'Introduction to Management Functions', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-111', name: 'Communicative English and Business Presentation', type: 'Practical', credits: 2, hours: '0+0+2', marks: '50', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-112', name: 'Data and File Structures Laboratory with C', type: 'Practical', credits: 3, hours: '0+0+3', marks: '100', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-113', name: 'Digital Circuits and Computer Organization Lab', type: 'Practical', credits: 3, hours: '0+0+3', marks: '100', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-114', name: 'Microprocessor and its Applications Lab', type: 'Practical', credits: 3, hours: '0+0+3', marks: '100', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-141*', name: 'Introduction to Computing and C Programming (Bridge)', type: 'Bridge', credits: 0, hours: '2+0+2', marks: '100 (40+10+50)', pct: 0.0, attended: 0, total: 0 },
       ],
       2: [
-        { code: 'MCA-201', name: 'Design and Analysis of Algorithms', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 92.0, attended: 23, total: 25 },
-        { code: 'MCA-202', name: 'Object Oriented Programming', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 88.0, attended: 22, total: 25 },
-        { code: 'MCA-203', name: 'Database Management Systems', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 84.0, attended: 21, total: 25 },
-        { code: 'MCA-204', name: 'Operating Systems', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 96.0, attended: 24, total: 25 },
-        { code: 'MCA-205', name: 'Scientific Computing', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 80.0, attended: 20, total: 25 },
-        { code: 'MCA-211', name: 'Object Oriented Programming Laboratory', type: 'Practical', credits: 3, hours: '0+0+3', marks: '100', pct: 90.0, attended: 9, total: 10 },
-        { code: 'MCA-212', name: 'Database Management Systems Laboratory', type: 'Practical', credits: 3, hours: '0+0+3', marks: '100', pct: 100.0, attended: 10, total: 10 },
-        { code: 'MCA-213', name: 'Scientific Computing Laboratory', type: 'Practical', credits: 3, hours: '0+0+3', marks: '100', pct: 90.0, attended: 9, total: 10 },
-        { code: 'MCA-214', name: 'Advanced Programming Laboratory–I', type: 'Practical', credits: 3, hours: '0+0+3', marks: '100', pct: 100.0, attended: 10, total: 10 },
+        { code: 'MCA-201', name: 'Design and Analysis of Algorithms', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-202', name: 'Object Oriented Programming', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-203', name: 'Database Management Systems', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-204', name: 'Operating Systems', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-205', name: 'Scientific Computing', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-211', name: 'Object Oriented Programming Laboratory', type: 'Practical', credits: 3, hours: '0+0+3', marks: '100', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-212', name: 'Database Management Systems Laboratory', type: 'Practical', credits: 3, hours: '0+0+3', marks: '100', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-213', name: 'Scientific Computing Laboratory', type: 'Practical', credits: 3, hours: '0+0+3', marks: '100', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-214', name: 'Advanced Programming Laboratory–I', type: 'Practical', credits: 3, hours: '0+0+3', marks: '100', pct: 0.0, attended: 0, total: 0 },
       ],
       3: [
-        { code: 'MCA-301', name: 'Artificial Intelligence', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 85.0, attended: 17, total: 20 },
-        { code: 'MCA-302', name: 'Computer Networks', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 90.0, attended: 18, total: 20 },
-        { code: 'MCA-303', name: 'Software Engineering', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 95.0, attended: 19, total: 20 },
-        { code: 'MCA-304', name: 'Elective – I (Cloud Computing / ML)', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 80.0, attended: 16, total: 20 },
-        { code: 'MCA-305', name: 'Elective – II (Cyber Security)', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 85.0, attended: 17, total: 20 },
-        { code: 'MCA-306', name: 'Elective – III (Mobile Computing)', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 90.0, attended: 18, total: 20 },
-        { code: 'MCA-311', name: 'Artificial Intelligence Laboratory', type: 'Practical', credits: 3, hours: '0+0+3', marks: '100', pct: 100.0, attended: 10, total: 10 },
-        { code: 'MCA-312', name: 'Web-based Programming Laboratory', type: 'Practical', credits: 3, hours: '0+0+3', marks: '100', pct: 90.0, attended: 9, total: 10 },
-        { code: 'MCA-313', name: 'Advanced Programming Laboratory-II', type: 'Practical', credits: 3, hours: '0+0+3', marks: '100', pct: 100.0, attended: 10, total: 10 },
-        { code: 'MCA-321', name: 'Project–I (Minor Project)', type: 'Project', credits: 3, hours: '0+0+3', marks: '100', pct: 100.0, attended: 10, total: 10 },
+        { code: 'MCA-301', name: 'Artificial Intelligence', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-302', name: 'Computer Networks', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-303', name: 'Software Engineering', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-304', name: 'Elective – I (Cloud Computing / ML)', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-305', name: 'Elective – II (Cyber Security)', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-306', name: 'Elective – III (Mobile Computing)', type: 'Theory', credits: 4, hours: '3+1+0', marks: '100 (70+30)', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-311', name: 'Artificial Intelligence Laboratory', type: 'Practical', credits: 3, hours: '0+0+3', marks: '100', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-312', name: 'Web-based Programming Laboratory', type: 'Practical', credits: 3, hours: '0+0+3', marks: '100', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-313', name: 'Advanced Programming Laboratory-II', type: 'Practical', credits: 3, hours: '0+0+3', marks: '100', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-321', name: 'Project–I (Minor Project)', type: 'Project', credits: 3, hours: '0+0+3', marks: '100', pct: 0.0, attended: 0, total: 0 },
       ],
       4: [
         { code: 'MCA-421', name: 'Project–II (Major Capstone Project)', type: 'Project', credits: 16, hours: '0+0+24', marks: '400', pct: 0.0, attended: 0, total: 0 },
@@ -755,21 +761,21 @@
 
       if (sem === loggedInStudent.currentEnrolledSem) {
         badge.className = 'px-2.5 py-1 rounded-full bg-seagreen-600 text-white font-bold text-xs shadow-sm';
-        badge.textContent = `MCA Sem ${sem} (Active)`;
+        badge.textContent = `MCA Sem ${sem} (Current)`;
         lifecycleBanner.className = 'mb-3 px-3 py-1.5 rounded-xl bg-seagreen-50 border border-seagreen-600/30 text-seagreen-900 flex items-center justify-between text-xs';
-        lifecycleTitle.innerHTML = '<span class="w-2 h-2 rounded-full bg-seagreen-600 mr-1.5 animate-pulse"></span> Current Active Term (Ongoing)';
-        lifecycleNote.textContent = 'Session 2026-2027';
+        lifecycleTitle.innerHTML = '<span class="w-2 h-2 rounded-full bg-seagreen-600 mr-1.5 animate-pulse"></span> Current Active Term (Semester 3)';
+        lifecycleNote.textContent = 'Classes not started yet • 0 Classes';
       } else if (sem < loggedInStudent.currentEnrolledSem) {
         badge.className = 'px-2.5 py-1 rounded-full bg-charcoal-700 text-white font-bold text-xs';
         badge.textContent = `MCA Sem ${sem} (Past Archive)`;
         lifecycleBanner.className = 'mb-3 px-3 py-1.5 rounded-xl bg-cream-100 border border-cream-200 text-charcoal-800 flex items-center justify-between text-xs';
-        lifecycleTitle.innerHTML = '📁 Past Semester Record (Archived)';
-        lifecycleNote.textContent = 'Completed & Cleared ✅';
+        lifecycleTitle.innerHTML = '📁 Past Semester (Pre-App Launch)';
+        lifecycleNote.textContent = 'No digital app data for Sem ' + sem;
       } else {
         badge.className = 'px-2.5 py-1 rounded-full bg-amber-600 text-white font-bold text-xs';
         badge.textContent = `MCA Sem ${sem} (Upcoming)`;
         lifecycleBanner.className = 'mb-3 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 flex items-center justify-between text-xs';
-        lifecycleTitle.innerHTML = '⏳ Upcoming Term (Not Started)';
+        lifecycleTitle.innerHTML = '⏳ Upcoming Term (Spring 2027)';
         lifecycleNote.textContent = 'Commences Jan 2027';
       }
 
@@ -809,12 +815,12 @@
                 <p class="text-[10px] text-charcoal-700 mt-0.5">Weekly: ${c.hours} • ${c.attended}/${c.total} classes attended</p>
               </div>
               <div class="text-right flex-shrink-0">
-                <span class="text-xs font-bold ${c.pct >= 75 ? 'text-seagreen-600' : 'text-amber-600'}">${c.pct}%</span>
+                <span class="text-xs font-bold ${c.pct >= 75 && c.total > 0 ? 'text-seagreen-600' : 'text-charcoal-700'}">${c.pct}%</span>
                 <span class="block text-[9px] text-seagreen-600 font-bold mt-0.5">See Details ➔</span>
               </div>
             </div>
             <div class="w-full h-1 bg-cream-100 rounded-full mt-2 overflow-hidden">
-              <div class="h-full ${c.pct >= 75 ? 'bg-seagreen-600' : 'bg-amber-500'}" style="width: ${c.pct}%"></div>
+              <div class="h-full ${c.pct >= 75 && c.total > 0 ? 'bg-seagreen-600' : 'bg-gray-300'}" style="width: ${c.pct}%"></div>
             </div>
           </div>
         `;
@@ -822,12 +828,23 @@
 
       // Calculate Aggregate
       if (totalConducted === 0) {
-        document.getElementById('gauge-text').textContent = 'N/A';
-        document.getElementById('classes-count').textContent = '0 / 0 Classes Conducted (Upcoming Term)';
+        document.getElementById('gauge-text').textContent = '0.0%';
         document.getElementById('gauge-circle').style.strokeDashoffset = 251.2;
         const badge = document.getElementById('status-badge');
-        badge.className = 'inline-block mt-2 px-2 py-0.5 text-[11px] font-bold rounded bg-amber-50 text-amber-900 border border-amber-300';
-        badge.textContent = 'Enrolling Jan 2027';
+
+        if (sem < 3) {
+          document.getElementById('classes-count').textContent = '0 / 0 Classes • Pre-App Launch Term';
+          badge.className = 'inline-block mt-2 px-2 py-0.5 text-[11px] font-bold rounded bg-cream-100 text-charcoal-700 border border-cream-200';
+          badge.textContent = 'No App Data (Past Term)';
+        } else if (sem === 3) {
+          document.getElementById('classes-count').textContent = '0 / 0 Classes Conducted (Term Starting Soon)';
+          badge.className = 'inline-block mt-2 px-2 py-0.5 text-[11px] font-bold rounded bg-seagreen-50 text-seagreen-800 border border-seagreen-600/20';
+          badge.textContent = 'Classes Pending Launch';
+        } else {
+          document.getElementById('classes-count').textContent = '0 / 0 Classes (Commences Jan 2027)';
+          badge.className = 'inline-block mt-2 px-2 py-0.5 text-[11px] font-bold rounded bg-amber-50 text-amber-900 border border-amber-300';
+          badge.textContent = 'Enrolling Jan 2027';
+        }
       } else {
         const aggPct = ((totalAttended / totalConducted) * 100).toFixed(1);
         document.getElementById('gauge-text').textContent = `${aggPct}%`;
@@ -1377,9 +1394,17 @@
           token = 'WEEKEND';
         } else if (isUpcoming) {
           bgClass = 'bg-white border border-cream-200 text-charcoal-700 hover:bg-cream-100';
-          statusTag = 'Upcoming Scheduled Lecture';
-          note = 'Term begins January 2027. Real-time GPS attendance will record once faculty launches class session.';
-          time = 'Term Commences Jan 2027';
+          statusTag = currentStudentSem < 3
+            ? 'Past Term (Pre-App)'
+            : currentStudentSem === 3
+            ? 'Scheduled (Not Started)'
+            : 'Upcoming Lecture (2027)';
+          note = currentStudentSem < 3
+            ? `No digital attendance records in app for past Semester ${currentStudentSem} (Paper records only).`
+            : currentStudentSem === 3
+            ? 'Semester 3 classes have not started yet. Attendance will record live upon teacher session launch.'
+            : 'Term begins January 2027. Real-time GPS attendance will record once faculty launches class session.';
+          time = 'Pending Class Commencement';
           token = 'SCHEDULED';
         } else if (isAbsent) {
           bgClass = 'bg-red-600 text-white font-bold shadow hover:bg-red-700';
@@ -1446,9 +1471,9 @@
       token.textContent = `Token: ${data.token}`;
 
       if (data.isUpcoming) {
-        card.className = 'p-3 bg-amber-50/70 border border-amber-300 rounded-xl text-xs';
-        tag.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-amber-600 text-white shadow-sm flex-shrink-0';
-        tag.textContent = 'Scheduled';
+        card.className = 'p-3 bg-cream-100 border border-cream-200 rounded-xl text-xs';
+        tag.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-charcoal-700 text-white shadow-sm flex-shrink-0';
+        tag.textContent = currentStudentSem < 3 ? 'Pre-App' : currentStudentSem === 3 ? 'Not Started' : 'Scheduled';
       } else if (data.isAttended) {
         card.className = 'p-3 bg-seagreen-50/80 border border-seagreen-600/30 rounded-xl text-xs';
         tag.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-seagreen-600 text-white shadow-sm flex-shrink-0';
@@ -1468,7 +1493,7 @@
     function openExportReportModal() {
       if (!currentSubjectContext) return;
       const { code, name, credits, hours, pct, attended, total } = currentSubjectContext;
-      const faculty = currentTeacherSem <= 2 ? 'Prof. R. K. Sharma' : 'Dr. Ananya Sen';
+      const faculty = currentTeacherSem <= 2 ? 'Department Faculty (Prior Term)' : currentTeacherSem === 3 ? 'Prof. R. K. Sharma' : 'Dr. Ananya Sen';
 
       document.getElementById('report-student-name').textContent = loggedInStudent.name;
       document.getElementById('report-uni-roll').textContent = loggedInStudent.uniRoll;
@@ -1480,9 +1505,11 @@
 
       document.getElementById('report-pct-text').textContent = `${pct}%`;
       const termStatus = total === 0
-        ? 'Upcoming Academic Term • Classes Commence Jan 2027'
-        : currentStudentSem < loggedInStudent.currentEnrolledSem
-        ? 'Archived Past Record • Examination Cleared & Passed ✅'
+        ? currentStudentSem < loggedInStudent.currentEnrolledSem
+          ? `Past Semester ${currentStudentSem} Record • Prior to App Launch (Paper-based records)`
+          : currentStudentSem === 3
+          ? 'Current Active Term • Classes Pending Launch (0 Classes Conducted)'
+          : 'Upcoming Academic Term • Classes Commence Jan 2027'
         : 'Ongoing Academic Session • Eligible for University Exams (≥ 75%)';
       document.getElementById('report-stats-text').textContent = `Classes Attended: ${attended} / ${total} • ${termStatus}`;
 
@@ -1493,8 +1520,17 @@
       if (total === 0) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td colspan="6" class="py-6 text-center text-charcoal-700 italic">
-            🌱 No classes conducted yet. Attendance tracking will automatically open upon faculty session launch in Spring 2027.
+          <td colspan="6" class="py-8 px-4 text-center text-charcoal-700 italic">
+            🌱 No digital attendance records found for ${code}.<br/>
+            <span class="text-[11px] text-charcoal-500 font-normal">
+              ${
+                currentStudentSem < 3
+                  ? 'App was not in use during past Semester ' + currentStudentSem + ' (Paper records only).'
+                  : currentStudentSem === 3
+                  ? 'Semester 3 classes have not started yet. Real-time GPS attendance will record once faculty starts class sessions.'
+                  : 'Upcoming Semester 4 scheduled to commence in January 2027.'
+              }
+            </span>
           </td>
         `;
         tbody.appendChild(tr);
