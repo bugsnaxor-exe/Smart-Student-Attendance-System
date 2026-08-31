@@ -243,10 +243,33 @@ class AttendanceProvider extends ChangeNotifier {
     }
   }
 
+  /// Student: Fetches real database attendance history & records for a single subject
+  Future<Map<String, dynamic>?> fetchSubjectHistory(String subjectId) async {
+    try {
+      final res = await ApiService.getStudentSubjectHistory(subjectId);
+      return res;
+    } catch (e) {
+      print('Error fetching subject history: $e');
+      return null;
+    }
+  }
+
+  /// Teacher: Closes an active session
+  Future<bool> closeSession(String sessionId) async {
+    try {
+      final res = await ApiService.closeSession(sessionId);
+      notifyListeners();
+      return res['session'] != null;
+    } catch (e) {
+      return false;
+    }
+  }
+
   @override
   void dispose() {
     _wsChannel?.sink.close();
     _sessionCountdownTimer?.cancel();
+    _studentPollingTimer?.cancel();
     super.dispose();
   }
 }

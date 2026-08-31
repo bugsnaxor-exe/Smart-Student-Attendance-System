@@ -1171,7 +1171,9 @@
       }
     }
 
-    function startAttendanceSession() {
+    let activeSessionId = null;
+
+    async function startAttendanceSession() {
       const courseSelect = document.getElementById('teacher-course-select');
       if (!courseSelect || courseSelect.options.length === 0) {
         alert('Please select a course to start an attendance session.');
@@ -1198,6 +1200,27 @@
         name: courseName,
         sem: sem
       };
+
+      const token = localStorage.getItem('teacher_token');
+      try {
+        const res = await fetch('/api/sessions/start', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({
+            subjectId: courseCode,
+            durationMinutes: 15
+          })
+        });
+        const data = await res.json();
+        if (data.session) {
+          activeSessionId = data.session.id;
+        }
+      } catch (err) {
+        console.error('Error starting backend session:', err);
+      }
 
       sessionTimer = 900; // 15 mins
 
@@ -1238,8 +1261,20 @@
       }, 1000);
     }
 
-    function stopAttendanceSession() {
+    async function stopAttendanceSession() {
       if (timerInterval) clearInterval(timerInterval);
+      if (activeSessionId) {
+        try {
+          const token = localStorage.getItem('teacher_token');
+          await fetch(`/api/sessions/close/${activeSessionId}`, {
+            method: 'POST',
+            headers: {
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            }
+          });
+        } catch (e) {}
+      }
+      activeSessionId = null;
       activeSession = null;
       sessionTimer = 0;
 

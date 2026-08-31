@@ -31,15 +31,18 @@ class AuthProvider extends ChangeNotifier {
   bool get isTeacher => _currentUser?.role == 'TEACHER' || _currentUser?.role == 'ADMIN';
 
   Future<void> init() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userJson = prefs.getString('user_data');
-    if (userJson != null) {
-      try {
-        _currentUser = UserModel.fromJson(jsonDecode(userJson));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userJson = prefs.getString('user_data');
+      final token = prefs.getString('auth_token');
+
+      if (userJson != null && token != null && token.isNotEmpty) {
+        final Map<String, dynamic> decoded = jsonDecode(userJson);
+        _currentUser = UserModel.fromJson(decoded);
         notifyListeners();
-      } catch (e) {
-        await logout();
       }
+    } catch (e) {
+      debugPrint('Session restore note: $e');
     }
   }
 

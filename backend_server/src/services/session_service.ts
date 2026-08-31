@@ -147,9 +147,6 @@ export class SessionService {
         expiresAt: {
           gt: now,
         },
-        subject: {
-          departmentId,
-        },
       },
       include: {
         subject: {

@@ -181,6 +181,31 @@ class ApiService {
     return jsonDecode(res.body);
   }
 
+  // --- STUDENT ATTENDANCE HISTORY ---
+  static Future<Map<String, dynamic>> getStudentSubjectHistory(String subjectId) async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/attendance/student/subject-history/$subjectId'),
+      headers: await _getHeaders(),
+    );
+    return jsonDecode(res.body);
+  }
+
+  static Future<Map<String, dynamic>> getStudentsBySemester(int semester) async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/override/students/semester/$semester'),
+      headers: await _getHeaders(),
+    );
+    return jsonDecode(res.body);
+  }
+
+  static Future<Map<String, dynamic>> closeSession(String sessionId) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/sessions/close/$sessionId'),
+      headers: await _getHeaders(),
+    );
+    return jsonDecode(res.body);
+  }
+
   // --- GOOGLE SHEETS MANAGEMENT ---
   static Future<Map<String, dynamic>> getServiceAccountInfo() async {
     final res = await http.get(
@@ -197,6 +222,17 @@ class ApiService {
       body: jsonEncode({
         'googleSheetId': googleSheetId,
         'sheetTabName': tabName ?? 'Attendance',
+      }),
+    );
+    return jsonDecode(res.body);
+  }
+
+  static Future<Map<String, dynamic>> testSheetConnection(String spreadsheetId) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/sheets/test-connection'),
+      headers: await _getHeaders(),
+      body: jsonEncode({
+        'spreadsheetId': spreadsheetId,
       }),
     );
     return jsonDecode(res.body);

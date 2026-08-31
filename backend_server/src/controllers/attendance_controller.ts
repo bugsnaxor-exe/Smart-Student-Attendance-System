@@ -372,8 +372,13 @@ export class AttendanceController {
         return res.status(403).json({ error: 'Only registered students can view their attendance history.' });
       }
 
-      const subject = await prisma.subject.findUnique({
-        where: { id: subjectId },
+      const subject = await prisma.subject.findFirst({
+        where: {
+          OR: [
+            { id: subjectId },
+            { code: { equals: subjectId, mode: 'insensitive' } },
+          ],
+        },
         include: {
           teacher: {
             include: {
@@ -391,14 +396,15 @@ export class AttendanceController {
       const records = await prisma.attendanceRecord.findMany({
         where: {
           studentId,
-          subjectId,
+          subjectId: subject.id,
         },
         orderBy: {
           date: 'desc',
         },
       });
 
-      const totalSubjectSessions = new Set(subject.attendances.map((a) => a.date)).size;
+      const conductedDates = Array.from(new Set(subject.attendances.map((a) => a.date)));
+      const totalSubjectSessions = conductedDates.length;
       let myScore = 0;
       for (const record of records) {
         if (record.status === 'Full') myScore += 1.0;
@@ -416,7 +422,7 @@ export class AttendanceController {
           credits: subject.credits,
           weeklyHours: subject.weeklyHours,
           marks: subject.marks,
-          teacherName: subject.teacher?.user?.name || 'Department Faculty',
+          teacherName: subject.teacher?.user?.name || '',
         },
         stats: {
           classesConducted: totalSubjectSessions,
@@ -424,6 +430,7 @@ export class AttendanceController {
           percentage,
           statusCategory: percentage >= 75 ? 'Safe' : percentage >= 60 ? 'Warning' : 'Defaulter',
         },
+        conductedDates,
         history: records.map((r) => ({
           id: r.id,
           date: r.date,

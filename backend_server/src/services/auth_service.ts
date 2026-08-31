@@ -41,7 +41,7 @@ export class AuthService {
     teacherId?: string;
     departmentId?: string;
   }): string {
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+    return jwt.sign(payload, JWT_SECRET, { expiresIn: '180d' }); // 6 months persistent session
   }
 
   public static async registerStudent(input: RegisterStudentInput) {

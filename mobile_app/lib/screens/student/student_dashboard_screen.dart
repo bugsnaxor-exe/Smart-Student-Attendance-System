@@ -789,12 +789,68 @@ class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet
   int _selectedYear = DateTime.now().year;
   int _selectedDay = DateTime.now().day;
 
+  bool _isLoading = true;
+  final Map<String, Map<String, dynamic>> _recordsByDate = {};
+  final Set<String> _conductedDates = {};
+  String _realTeacherName = '';
+  double _realPercentage = 100.0;
+  num _realAttended = 0;
+  num _realConducted = 0;
+
   static const List<String> _monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
   static const List<String> _weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  @override
+  void initState() {
+    super.initState();
+    _realPercentage = widget.percentage;
+    _realAttended = widget.attended;
+    _realConducted = widget.conducted;
+    _realTeacherName = widget.teacher;
+    _fetchRealAttendanceHistory();
+  }
+
+  Future<void> _fetchRealAttendanceHistory() async {
+    setState(() => _isLoading = true);
+    try {
+      final res = await ApiService.getStudentSubjectHistory(widget.code);
+      if (res != null && mounted) {
+        final history = res['history'] as List? ?? [];
+        _recordsByDate.clear();
+        for (final item in history) {
+          final dateStr = item['date'] as String?;
+          if (dateStr != null) {
+            _recordsByDate[dateStr] = Map<String, dynamic>.from(item);
+          }
+        }
+
+        final conducted = res['conductedDates'] as List? ?? [];
+        _conductedDates.clear();
+        for (final c in conducted) {
+          _conductedDates.add(c.toString());
+        }
+
+        if (res['subject'] != null && res['subject']['teacherName'] != null) {
+          _realTeacherName = res['subject']['teacherName'];
+        }
+        if (res['stats'] != null) {
+          _realPercentage = (res['stats']['percentage'] as num?)?.toDouble() ?? widget.percentage;
+          _realAttended = (res['stats']['classesAttended'] as num?) ?? widget.attended;
+          _realConducted = (res['stats']['classesConducted'] as num?) ?? widget.conducted;
+        }
+
+        setState(() => _isLoading = false);
+      } else if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   void _prevMonth() {
     setState(() {
@@ -820,6 +876,10 @@ class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet
     });
   }
 
+  String _getDateKey(int day) {
+    return '$_selectedYear-${_selectedMonth.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final firstWeekday = DateTime(_selectedYear, _selectedMonth, 1).weekday % 7; // Sunday = 0, Saturday = 6
@@ -829,29 +889,36 @@ class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet
       _selectedDay = daysInMonth;
     }
 
-    // Determine day status
     bool isWeekendDay(int day) {
       final dayOfWeek = DateTime(_selectedYear, _selectedMonth, day).weekday % 7;
       return dayOfWeek == 0 || dayOfWeek == 6; // Sunday or Saturday
     }
 
-    bool isAttendedDay(int day) {
+    bool isPresentDay(int day) {
       if (isWeekendDay(day)) return false;
-      // Deterministic attendance mapping matching student's actual percentage
-      if (widget.percentage >= 75.0) {
-        return day % 5 != 0;
-      } else {
-        return day % 2 == 0;
-      }
+      final key = _getDateKey(day);
+      final rec = _recordsByDate[key];
+      return rec != null && rec['status'] == 'Full';
+    }
+
+    bool isHalfDay(int day) {
+      if (isWeekendDay(day)) return false;
+      final key = _getDateKey(day);
+      final rec = _recordsByDate[key];
+      return rec != null && rec['status'] == 'Half';
     }
 
     bool isAbsentDay(int day) {
       if (isWeekendDay(day)) return false;
-      return !isAttendedDay(day);
+      final key = _getDateKey(day);
+      return _conductedDates.contains(key) && !_recordsByDate.containsKey(key);
     }
 
+    final selectedKey = _getDateKey(_selectedDay);
     final selectedIsWeekend = isWeekendDay(_selectedDay);
-    final selectedIsAttended = isAttendedDay(_selectedDay);
+    final selectedRecord = _recordsByDate[selectedKey];
+    final selectedIsPresent = selectedRecord != null && selectedRecord['status'] == 'Full';
+    final selectedIsHalf = selectedRecord != null && selectedRecord['status'] == 'Half';
     final selectedIsAbsent = isAbsentDay(_selectedDay);
 
     final currentMonthName = _monthNames[_selectedMonth - 1];
@@ -894,7 +961,7 @@ class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet
                       const SizedBox(height: 4),
                       Text(widget.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.charcoal)),
                       Text(
-                        'Faculty: ${widget.teacher.isNotEmpty ? widget.teacher : " — "}  •  ${widget.hours}',
+                        'Faculty: ${_realTeacherName.isNotEmpty ? _realTeacherName : " — "}  •  ${widget.hours}',
                         style: const TextStyle(fontSize: 12, color: AppTheme.charcoalMuted),
                       ),
                     ],
@@ -908,11 +975,11 @@ class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet
                     border: Border.all(color: AppTheme.creamBorder),
                   ),
                   child: Text(
-                    '${widget.percentage.toStringAsFixed(1)}%',
+                    '${_realPercentage.toStringAsFixed(1)}%',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
-                      color: widget.percentage >= 75 ? AppTheme.seaGreen : AppTheme.statusDanger,
+                      color: _realPercentage >= 75 ? AppTheme.seaGreen : AppTheme.statusDanger,
                     ),
                   ),
                 ),
@@ -966,14 +1033,14 @@ class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet
                     children: [
                       Container(width: 10, height: 10, decoration: BoxDecoration(color: AppTheme.seaGreen, shape: BoxShape.circle)),
                       const SizedBox(width: 4),
-                      const Text('Present', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppTheme.seaGreenDark)),
+                      const Text('Present (1.0)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppTheme.seaGreenDark)),
                     ],
                   ),
                   Row(
                     children: [
                       Container(width: 10, height: 10, decoration: const BoxDecoration(color: Color(0xFFDC2626), shape: BoxShape.circle)),
                       const SizedBox(width: 4),
-                      const Text('Absent', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF991B1B))),
+                      const Text('Absent (0.0)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF991B1B))),
                     ],
                   ),
                   Row(
@@ -1009,71 +1076,83 @@ class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet
             const SizedBox(height: 6),
 
             // Dynamic Calendar Grid (Week starting Sunday to Saturday)
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 7,
-                mainAxisSpacing: 6,
-                crossAxisSpacing: 6,
-                childAspectRatio: 1.0,
+            if (_isLoading)
+              const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator()))
+            else
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 7,
+                  mainAxisSpacing: 6,
+                  crossAxisSpacing: 6,
+                  childAspectRatio: 1.0,
+                ),
+                itemCount: firstWeekday + daysInMonth,
+                itemBuilder: (context, index) {
+                  if (index < firstWeekday) {
+                    return const SizedBox();
+                  }
+
+                  final day = index - firstWeekday + 1;
+                  final isSelected = _selectedDay == day;
+                  final isWeekend = isWeekendDay(day);
+                  final attended = isPresentDay(day);
+                  final half = isHalfDay(day);
+                  final absent = isAbsentDay(day);
+
+                  Color bgColor = const Color(0xFFF3F4F6);
+                  Color textColor = AppTheme.charcoalMuted;
+                  Color borderColor = Colors.transparent;
+
+                  if (isWeekend) {
+                    // Saturday & Sunday are always Holiday (Grey)
+                    bgColor = const Color(0xFFE5E7EB);
+                    textColor = const Color(0xFF9CA3AF);
+                  } else if (attended) {
+                    // Present (Sea Green)
+                    bgColor = AppTheme.seaGreenTint;
+                    textColor = AppTheme.seaGreenDark;
+                  } else if (half) {
+                    // Half Attendance (Amber)
+                    bgColor = const Color(0xFFFEF3C7);
+                    textColor = const Color(0xFFB45309);
+                  } else if (absent) {
+                    // Absent (Red)
+                    bgColor = const Color(0xFFFEE2E2);
+                    textColor = const Color(0xFF991B1B);
+                  }
+
+                  if (isSelected) {
+                    borderColor = AppTheme.charcoal;
+                  }
+
+                  return InkWell(
+                    onTap: () => setState(() => _selectedDay = day),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: bgColor,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: borderColor,
+                          width: isSelected ? 2.0 : 1.0,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '$day',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: (attended || half || absent) ? textColor : AppTheme.charcoalMuted,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
-              itemCount: firstWeekday + daysInMonth,
-              itemBuilder: (context, index) {
-                if (index < firstWeekday) {
-                  return const SizedBox();
-                }
-
-                final day = index - firstWeekday + 1;
-                final isSelected = _selectedDay == day;
-                final isWeekend = isWeekendDay(day);
-                final attended = isAttendedDay(day);
-                final absent = isAbsentDay(day);
-
-                Color bgColor = const Color(0xFFF3F4F6);
-                Color textColor = AppTheme.charcoal;
-                Color borderColor = Colors.transparent;
-
-                if (isWeekend) {
-                  // Saturday & Sunday are always Holiday (Grey)
-                  bgColor = const Color(0xFFE5E7EB);
-                  textColor = const Color(0xFF9CA3AF);
-                } else if (attended) {
-                  // Present (Sea Green)
-                  bgColor = AppTheme.seaGreenTint;
-                  textColor = AppTheme.seaGreenDark;
-                } else if (absent) {
-                  // Absent (Red)
-                  bgColor = const Color(0xFFFEE2E2);
-                  textColor = const Color(0xFF991B1B);
-                }
-
-                if (isSelected) {
-                  borderColor = AppTheme.charcoal;
-                }
-
-                return InkWell(
-                  onTap: () => setState(() => _selectedDay = day),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: bgColor,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: borderColor,
-                        width: isSelected ? 2.0 : 1.0,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '$day',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: textColor),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
             const SizedBox(height: 14),
 
             // Selected Date Proof Card
@@ -1082,16 +1161,24 @@ class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet
               decoration: BoxDecoration(
                 color: selectedIsWeekend
                     ? const Color(0xFFF3F4F6)
-                    : selectedIsAttended
+                    : selectedIsPresent
                         ? AppTheme.seaGreenTint
-                        : const Color(0xFFFEE2E2),
+                        : selectedIsHalf
+                            ? const Color(0xFFFEF3C7)
+                            : selectedIsAbsent
+                                ? const Color(0xFFFEE2E2)
+                                : const Color(0xFFF9FAFB),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: selectedIsWeekend
                       ? AppTheme.creamBorder
-                      : selectedIsAttended
+                      : selectedIsPresent
                           ? AppTheme.seaGreen.withOpacity(0.3)
-                          : const Color(0xFFEF4444).withOpacity(0.3),
+                          : selectedIsHalf
+                              ? const Color(0xFFF59E0B).withOpacity(0.3)
+                              : selectedIsAbsent
+                                  ? const Color(0xFFEF4444).withOpacity(0.3)
+                                  : AppTheme.creamBorder,
                 ),
               ),
               child: Row(
@@ -1099,14 +1186,22 @@ class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet
                   Icon(
                     selectedIsWeekend
                         ? Icons.hotel_outlined
-                        : selectedIsAttended
+                        : selectedIsPresent
                             ? Icons.check_circle_outline
-                            : Icons.cancel_outlined,
+                            : selectedIsHalf
+                                ? Icons.timelapse_outlined
+                                : selectedIsAbsent
+                                    ? Icons.cancel_outlined
+                                    : Icons.event_busy_outlined,
                     color: selectedIsWeekend
                         ? const Color(0xFF9CA3AF)
-                        : selectedIsAttended
+                        : selectedIsPresent
                             ? AppTheme.seaGreenDark
-                            : const Color(0xFF991B1B),
+                            : selectedIsHalf
+                                ? const Color(0xFFB45309)
+                                : selectedIsAbsent
+                                    ? const Color(0xFF991B1B)
+                                    : AppTheme.charcoalMuted,
                     size: 24,
                   ),
                   const SizedBox(width: 10),
@@ -1115,26 +1210,34 @@ class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '$currentMonthName $_selectedDay, $_selectedYear • 10:15 AM - 11:15 AM',
+                          '$currentMonthName $_selectedDay, $_selectedYear • ${selectedRecord?['time'] ?? '10:15 AM'}',
                           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: AppTheme.charcoal),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           selectedIsWeekend
                               ? 'Weekend / Holiday (No lecture scheduled).'
-                              : selectedIsAttended
-                                  ? 'GPS Verified: Inside 50m Department • Synced to Google Sheets ✅'
-                                  : 'Absent: No attendance marked during 15-min session window.',
+                              : selectedIsPresent
+                                  ? 'GPS Verified: ${selectedRecord?['distanceMeters'] != null ? "${selectedRecord!['distanceMeters'].toStringAsFixed(1)}m within 50m Dept" : "Inside 50m Dept"} • Google Sheets Synced ✅'
+                                  : selectedIsHalf
+                                      ? 'Manual Override granted by Faculty • Synced to Google Sheets (H) ✅'
+                                      : selectedIsAbsent
+                                          ? 'Absent: No attendance marked during 15-min session window.'
+                                          : 'No lecture conducted on this date.',
                           style: TextStyle(
                             fontSize: 10,
                             color: selectedIsWeekend
                                 ? const Color(0xFF6B7280)
-                                : selectedIsAttended
+                                : selectedIsPresent
                                     ? AppTheme.seaGreenDark
-                                    : const Color(0xFF991B1B),
+                                    : selectedIsHalf
+                                        ? const Color(0xFFB45309)
+                                        : selectedIsAbsent
+                                            ? const Color(0xFF991B1B)
+                                            : AppTheme.charcoalMuted,
                           ),
                         ),
-                        if (selectedIsAttended)
+                        if (selectedIsPresent || selectedIsHalf)
                           Text(
                             'Token: SHA256:${widget.code.replaceAll("-", "")}-${_selectedDay}${currentMonthName.substring(0, 3).toUpperCase()}-GPS-VALID',
                             style: const TextStyle(fontSize: 9, fontFamily: 'monospace', color: AppTheme.charcoalMuted),
@@ -1147,13 +1250,25 @@ class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet
                     decoration: BoxDecoration(
                       color: selectedIsWeekend
                           ? const Color(0xFF9CA3AF)
-                          : selectedIsAttended
+                          : selectedIsPresent
                               ? AppTheme.seaGreen
-                              : const Color(0xFFDC2626),
+                              : selectedIsHalf
+                                  ? const Color(0xFFD97706)
+                                  : selectedIsAbsent
+                                      ? const Color(0xFFDC2626)
+                                      : const Color(0xFF9CA3AF),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      selectedIsWeekend ? 'Holiday' : selectedIsAttended ? 'Present' : 'Absent',
+                      selectedIsWeekend
+                          ? 'Holiday'
+                          : selectedIsPresent
+                              ? 'Present'
+                              : selectedIsHalf
+                                  ? 'Half'
+                                  : selectedIsAbsent
+                                      ? 'Absent'
+                                      : 'Off',
                       style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800),
                     ),
                   ),
