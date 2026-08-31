@@ -75,7 +75,11 @@ export class GoogleSheetsService {
    */
   public static getServiceAccountEmail(): string {
     this.getClient();
-    return this.serviceAccountEmail || 'attendance-sync-sa@smart-attendance-system.iam.gserviceaccount.com';
+    return (
+      process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ||
+      this.serviceAccountEmail ||
+      'attendance-sync-sa@smart-attendance-system.iam.gserviceaccount.com'
+    );
   }
 
   /**

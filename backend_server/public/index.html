@@ -187,43 +187,24 @@
         <form id="form-register" onsubmit="handleFacultyRegister(event)" class="space-y-3.5 hidden">
           <div>
             <label class="block text-xs font-bold text-charcoal-700 uppercase tracking-wider mb-1">Full Name</label>
-            <input type="text" id="reg-name" required placeholder="Dr. Ananya Sen" class="w-full px-3.5 py-2 bg-[#FAF7F0] border border-cream-200 rounded-xl text-xs font-medium text-charcoal-900 focus:outline-none focus:border-seagreen-600">
+            <input type="text" id="reg-name" required placeholder="Dr. Ananya Sen" class="w-full px-3.5 py-2.5 bg-[#FAF7F0] border border-cream-200 rounded-xl text-xs font-medium text-charcoal-900 focus:outline-none focus:border-seagreen-600">
           </div>
           <div>
             <label class="block text-xs font-bold text-charcoal-700 uppercase tracking-wider mb-1">Faculty Email</label>
-            <input type="email" id="reg-email" required placeholder="ananya.sen@college.edu" class="w-full px-3.5 py-2 bg-[#FAF7F0] border border-cream-200 rounded-xl text-xs font-medium text-charcoal-900 focus:outline-none focus:border-seagreen-600">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-charcoal-700 uppercase tracking-wider mb-1">Employee ID / Faculty Code</label>
-            <input type="text" id="reg-empid" required placeholder="FAC-2026-088" class="w-full px-3.5 py-2 bg-[#FAF7F0] border border-cream-200 rounded-xl text-xs font-medium text-charcoal-900 focus:outline-none focus:border-seagreen-600 font-mono">
+            <input type="email" id="reg-email" required placeholder="ananya.sen@college.edu" class="w-full px-3.5 py-2.5 bg-[#FAF7F0] border border-cream-200 rounded-xl text-xs font-medium text-charcoal-900 focus:outline-none focus:border-seagreen-600">
           </div>
           <div>
             <label class="block text-xs font-bold text-charcoal-700 uppercase tracking-wider mb-1">Department</label>
-            <input type="text" disabled value="Master of Computer Applications (MCA)" class="w-full px-3.5 py-2 bg-cream-100 border border-cream-200 rounded-xl text-xs font-bold text-charcoal-700 cursor-not-allowed">
+            <input type="text" disabled value="Master of Computer Applications (MCA)" class="w-full px-3.5 py-2.5 bg-cream-100 border border-cream-200 rounded-xl text-xs font-bold text-charcoal-700 cursor-not-allowed">
           </div>
           <div>
             <label class="block text-xs font-bold text-charcoal-700 uppercase tracking-wider mb-1">Create Password</label>
-            <input type="password" id="reg-password" required placeholder="Minimum 6 characters" minlength="6" class="w-full px-3.5 py-2 bg-[#FAF7F0] border border-cream-200 rounded-xl text-xs font-medium text-charcoal-900 focus:outline-none focus:border-seagreen-600">
+            <input type="password" id="reg-password" required placeholder="Minimum 6 characters" minlength="6" class="w-full px-3.5 py-2.5 bg-[#FAF7F0] border border-cream-200 rounded-xl text-xs font-medium text-charcoal-900 focus:outline-none focus:border-seagreen-600">
           </div>
           <button type="submit" id="btn-reg-submit" class="w-full py-3 bg-charcoal-900 hover:bg-charcoal-800 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center space-x-1.5 mt-2">
             <span>Register Faculty Account</span>
           </button>
         </form>
-
-        <!-- Quick 1-Click Evaluation Login -->
-        <div class="mt-6 pt-5 border-t border-cream-200">
-          <p class="text-[11px] font-bold uppercase tracking-wider text-charcoal-700 text-center mb-2.5">⚡ Quick Instant Demo Login</p>
-          <div class="grid grid-cols-2 gap-2">
-            <button onclick="fillAndLogin('prof.sharma@college.edu', 'faculty123')" class="px-2.5 py-2 rounded-xl bg-[#FAF7F0] hover:bg-cream-100 border border-cream-200 text-left transition">
-              <span class="block text-xs font-bold text-charcoal-900">Prof. R. K. Sharma</span>
-              <span class="block text-[10px] text-charcoal-700">MCA Faculty</span>
-            </button>
-            <button onclick="fillAndLogin('dr.ananya@college.edu', 'faculty123')" class="px-2.5 py-2 rounded-xl bg-[#FAF7F0] hover:bg-cream-100 border border-cream-200 text-left transition">
-              <span class="block text-xs font-bold text-charcoal-900">Dr. Ananya Sen</span>
-              <span class="block text-[10px] text-charcoal-700">HOD / Faculty</span>
-            </button>
-          </div>
-        </div>
 
       </div>
     </div>
@@ -241,8 +222,8 @@
               <span class="px-2.5 py-0.5 rounded-full bg-seagreen-600 text-white text-[11px] font-bold uppercase tracking-wider">Faculty Console</span>
               <span id="faculty-dept-badge" class="text-xs text-gray-300 font-medium">Master of Computer Applications</span>
             </div>
-            <h2 id="faculty-welcome-name" class="text-2xl sm:text-3xl font-extrabold tracking-tight">Prof. R. K. Sharma</h2>
-            <p id="faculty-email-display" class="text-xs text-gray-400 font-mono mt-1">prof.sharma@college.edu • Emp ID: FAC-2026-042</p>
+            <h2 id="faculty-welcome-name" class="text-2xl sm:text-3xl font-extrabold tracking-tight">Faculty Member</h2>
+            <p id="faculty-email-display" class="text-xs text-gray-400 font-mono mt-1">faculty@college.edu</p>
           </div>
 
           <!-- Quick Action Buttons -->
@@ -381,17 +362,17 @@
 
         <!-- Right: Google Sheet Sync & Integration Card -->
         <div class="lg:col-span-5 bg-white rounded-3xl p-6 border border-cream-200 device-shadow space-y-4">
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between flex-wrap gap-2">
             <div class="flex items-center space-x-2">
               <span class="text-seagreen-600 text-base">📑</span>
               <h4 class="text-xs font-bold uppercase tracking-wider text-charcoal-900">Google Sheet Connection</h4>
             </div>
-            <span class="text-[10px] px-2 py-0.5 rounded-full bg-seagreen-50 text-seagreen-800 border border-seagreen-600/20 font-bold">API v4 Active</span>
+            <span id="sheet-status-badge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300 font-bold">⚠️ Not Connected</span>
           </div>
 
           <div class="p-3.5 bg-[#FAF7F0] rounded-2xl border border-cream-200 space-y-2 text-xs">
             <div class="flex items-center justify-between">
-              <span class="text-charcoal-700 font-medium">Service Account:</span>
+              <span class="text-charcoal-700 font-medium">Service Account Email:</span>
               <button onclick="copyServiceEmail()" class="text-[10px] font-bold text-seagreen-700 hover:underline">Copy Email 📋</button>
             </div>
             <p id="sa-email-display" class="font-mono text-[11px] text-charcoal-900 break-all bg-white p-2 rounded-lg border border-cream-200">
@@ -404,6 +385,9 @@
             <div class="flex items-center space-x-2">
               <input type="text" id="sheet-id-input" placeholder="Paste 44-character Sheet ID here" class="flex-1 px-3 py-1.5 bg-white border border-cream-200 rounded-lg text-xs font-mono text-charcoal-900 focus:outline-none focus:border-seagreen-600">
               <button onclick="saveSpreadsheetId()" class="px-3 py-1.5 bg-charcoal-900 hover:bg-charcoal-800 text-white text-xs font-bold rounded-lg transition">Save</button>
+            </div>
+            <div id="sheet-connected-msg" class="hidden p-2.5 rounded-xl bg-emerald-50 border border-emerald-300 text-[11px] font-bold text-emerald-800 flex items-center space-x-1.5 mt-1.5">
+              <span>✅ Google Sheet Connected</span>
             </div>
           </div>
 
@@ -700,10 +684,10 @@
           localStorage.setItem('edu_faculty_user', JSON.stringify(data.user));
           showDashboardView();
         } else {
-          fillAndLogin(email, password);
+          alert(data.error || 'Invalid email or password. Please check your credentials.');
         }
       } catch (err) {
-        fillAndLogin(email, password);
+        alert('Server connection error. Please make sure backend is online.');
       }
     }
 
@@ -712,18 +696,15 @@
       const name = document.getElementById('reg-name').value.trim();
       const email = document.getElementById('reg-email').value.trim();
       const password = document.getElementById('reg-password').value;
-      const employeeId = document.getElementById('reg-empid').value.trim();
 
       try {
-        const res = await fetch('/api/auth/register', {
+        const res = await fetch('/api/auth/register-teacher', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name,
             email,
             password,
-            role: 'TEACHER',
-            employeeId,
             departmentCode: 'MCA'
           })
         });
@@ -734,29 +715,11 @@
           localStorage.setItem('edu_faculty_user', JSON.stringify(data.user));
           showDashboardView();
         } else {
-          loggedInFaculty = { name, email, employeeId, role: 'TEACHER' };
-          localStorage.setItem('edu_faculty_user', JSON.stringify(loggedInFaculty));
-          showDashboardView();
+          alert(data.error || 'Registration failed. Please try again.');
         }
       } catch (err) {
-        loggedInFaculty = { name, email, employeeId, role: 'TEACHER' };
-        localStorage.setItem('edu_faculty_user', JSON.stringify(loggedInFaculty));
-        showDashboardView();
+        alert('Server connection error during registration.');
       }
-    }
-
-    function fillAndLogin(email, password) {
-      const name = email.includes('ananya') ? 'Dr. Ananya Sen' : 'Prof. R. K. Sharma';
-      const employeeId = email.includes('ananya') ? 'FAC-2026-001' : 'FAC-2026-042';
-      
-      loggedInFaculty = {
-        name,
-        email,
-        employeeId,
-        role: 'TEACHER'
-      };
-      localStorage.setItem('edu_faculty_user', JSON.stringify(loggedInFaculty));
-      showDashboardView();
     }
 
     function logoutFaculty() {
@@ -1058,6 +1021,30 @@
       }
     }
 
+    function updateSheetConnectionStatus(sheetId) {
+      const badge = document.getElementById('sheet-status-badge');
+      const msg = document.getElementById('sheet-connected-msg');
+
+      if (sheetId && sheetId.trim().length > 5) {
+        if (badge) {
+          badge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold';
+          badge.textContent = '✅ Google Sheet Connected';
+        }
+        if (msg) {
+          msg.classList.remove('hidden');
+          msg.innerHTML = `<span>✅ Google Sheet Connected: <code class="font-mono">${sheetId.substring(0, 12)}...</code></span>`;
+        }
+      } else {
+        if (badge) {
+          badge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300 font-bold';
+          badge.textContent = '⚠️ Not Connected';
+        }
+        if (msg) {
+          msg.classList.add('hidden');
+        }
+      }
+    }
+
     // --- GOOGLE SHEETS MODAL & SETTINGS ---
     async function loadServiceAccountInfo() {
       try {
@@ -1081,6 +1068,9 @@
       if (storedSheetId) {
         if (document.getElementById('sheet-id-input')) document.getElementById('sheet-id-input').value = storedSheetId;
         if (document.getElementById('modal-sheet-id-input')) document.getElementById('modal-sheet-id-input').value = storedSheetId;
+        updateSheetConnectionStatus(storedSheetId);
+      } else {
+        updateSheetConnectionStatus(null);
       }
     }
 
@@ -1105,7 +1095,8 @@
         return;
       }
       localStorage.setItem('teacher_sheet_id', sheetId);
-      alert(`✅ Google Sheet ID (${sheetId}) linked successfully!`);
+      updateSheetConnectionStatus(sheetId);
+      alert(`✅ Google Sheet Connected successfully! ID: ${sheetId}`);
     }
 
     function saveModalSpreadsheetId() {
@@ -1116,8 +1107,9 @@
       }
       localStorage.setItem('teacher_sheet_id', sheetId);
       document.getElementById('sheet-id-input').value = sheetId;
+      updateSheetConnectionStatus(sheetId);
       closeSheetsConfigModal();
-      alert(`✅ Google Sheet ID linked successfully! All check-ins and late overrides will sync automatically.`);
+      alert(`✅ Google Sheet Connected successfully! All check-ins and late overrides will sync automatically.`);
     }
 
     // --- EXPORT AUDIT REPORT MODAL ---
