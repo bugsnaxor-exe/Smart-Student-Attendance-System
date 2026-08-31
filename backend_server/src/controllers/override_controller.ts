@@ -171,4 +171,54 @@ export class OverrideController {
       return res.status(500).json({ error: error.message });
     }
   }
+
+  /**
+   * Directly syncs a student's attendance mark to the Matrix Google Sheet from the web portal.
+   */
+  public static async grantHalfAttendanceMatrix(req: any, res: Response) {
+    try {
+      const {
+        spreadsheetId,
+        classRoll,
+        universityRoll,
+        registrationNumber,
+        studentName,
+        status = 'Half',
+        date,
+      } = req.body;
+
+      const targetDate = date || new Date().toISOString().split('T')[0];
+
+      let sheetSyncSuccess = false;
+      let sheetMessage = '';
+
+      if (spreadsheetId) {
+        const sheetRes = await GoogleSheetsService.recordStudentAttendanceInMatrix(
+          spreadsheetId,
+          {
+            date: targetDate,
+            classRoll: classRoll || 'MCA-26-042',
+            universityRoll: universityRoll || '12000126042',
+            registrationNumber: registrationNumber || 'REG-2026-9042',
+            studentName: studentName || 'Student',
+            status: status === 'Full' ? 'Full' : 'Half',
+          }
+        );
+        sheetSyncSuccess = sheetRes.success;
+        sheetMessage = sheetRes.message;
+      } else {
+        sheetMessage = 'No Google Spreadsheet ID provided.';
+      }
+
+      return res.json({
+        success: true,
+        message: `Attendance mark '${status === 'Full' ? 'P' : 'H'}' recorded for ${studentName}.`,
+        sheetSynced: sheetSyncSuccess,
+        sheetMessage,
+        date: targetDate,
+      });
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
 }

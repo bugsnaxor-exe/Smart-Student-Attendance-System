@@ -161,8 +161,21 @@ export class GoogleSheetsService {
     }
 
     try {
+      // 0. Auto-resolve tab name from Google Spreadsheet metadata
+      let resolvedTab = tabName;
+      try {
+        const meta = await sheets.spreadsheets.get({ spreadsheetId });
+        const existingTabs = meta.data.sheets || [];
+        const hasTab = existingTabs.some((s: any) => s.properties?.title === tabName);
+        if (!hasTab && existingTabs.length > 0 && existingTabs[0].properties?.title) {
+          resolvedTab = existingTabs[0].properties.title;
+        }
+      } catch (metaErr: any) {
+        console.warn(`Could not inspect spreadsheet metadata: ${metaErr.message}`);
+      }
+
       // 1. Read all current values from sheet
-      const range = `${tabName}!A1:ZZ1000`;
+      const range = `${resolvedTab}!A1:ZZ1000`;
       const response = await sheets.spreadsheets.values.get({
         spreadsheetId,
         range,
@@ -173,11 +186,19 @@ export class GoogleSheetsService {
       // If empty sheet, initialize header row
       if (values.length === 0 || values[0].length === 0) {
         values = [['Class Roll', 'University Roll', 'Registration Number', 'Student Name']];
+        await sheets.spreadsheets.values.update({
+          spreadsheetId,
+          range: `${resolvedTab}!A1:D1`,
+          valueInputOption: 'USER_ENTERED',
+          requestBody: {
+            values: [['Class Roll', 'University Roll', 'Registration Number', 'Student Name']],
+          },
+        });
       }
 
       const headers = values[0];
 
-      // 2. Find or create the Date Column (e.g. "2026-08-31")
+      // 2. Find or create the Date Column (e.g. "2026-08-31", "2026-09-02", etc.)
       let dateColIndex = headers.indexOf(rowData.date);
       if (dateColIndex === -1) {
         dateColIndex = headers.length;
@@ -187,7 +208,7 @@ export class GoogleSheetsService {
         const headerColLetter = this.colIndexToLetter(dateColIndex);
         await sheets.spreadsheets.values.update({
           spreadsheetId,
-          range: `${tabName}!${headerColLetter}1`,
+          range: `${resolvedTab}!${headerColLetter}1`,
           valueInputOption: 'USER_ENTERED',
           requestBody: {
             values: [[rowData.date]],
@@ -225,7 +246,7 @@ export class GoogleSheetsService {
 
         await sheets.spreadsheets.values.append({
           spreadsheetId,
-          range: `${tabName}!A:Z`,
+          range: `${resolvedTab}!A:Z`,
           valueInputOption: 'USER_ENTERED',
           insertDataOption: 'INSERT_ROWS',
           requestBody: {
@@ -235,7 +256,7 @@ export class GoogleSheetsService {
       } else {
         // Update specific cell: Row `studentRowIndex`, Column `dateColIndex`
         const cellLetter = this.colIndexToLetter(dateColIndex);
-        const cellRange = `${tabName}!${cellLetter}${studentRowIndex}`;
+        const cellRange = `${resolvedTab}!${cellLetter}${studentRowIndex}`;
 
         await sheets.spreadsheets.values.update({
           spreadsheetId,
@@ -248,11 +269,11 @@ export class GoogleSheetsService {
       }
 
       console.log(
-        `✅ Synced Matrix Google Sheet: ${spreadsheetId} | Cell (${studentRowIndex}, ${dateColIndex}) set to '${mark}' for ${rowData.studentName}`
+        `✅ Synced Matrix Google Sheet: ${spreadsheetId} [${resolvedTab}] | Cell (${studentRowIndex}, ${dateColIndex}) set to '${mark}' for ${rowData.studentName} on ${rowData.date}`
       );
       return {
         success: true,
-        message: `Successfully marked '${mark}' in Google Sheet.`,
+        message: `Successfully marked '${mark}' in Google Sheet [${resolvedTab}] on ${rowData.date}.`,
       };
     } catch (error: any) {
       console.error(`❌ Failed to update Matrix Google Sheet (${spreadsheetId}):`, error.message);

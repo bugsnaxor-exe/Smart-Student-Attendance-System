@@ -91,6 +91,7 @@ app.get('/api/attendance/teacher/:subjectId', requireAuth, requireRole(['TEACHER
 // --- TEACHER OVERRIDE ROUTES (Full / Half Attendance) ---
 app.get('/api/override/absent/:subjectId', requireAuth, requireRole(['TEACHER', 'ADMIN']), OverrideController.getAbsentStudentsForSubject);
 app.post('/api/override/grant-half', requireAuth, requireRole(['TEACHER', 'ADMIN']), OverrideController.grantHalfAttendance);
+app.post('/api/override/grant-half-matrix', OverrideController.grantHalfAttendanceMatrix);
 
 // --- GEOFENCE CONFIG ROUTES ---
 app.get('/api/geofence/:departmentId', requireAuth, GeofenceController.getDepartmentGeofence);

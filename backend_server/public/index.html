@@ -351,7 +351,7 @@
                 <th class="py-3 px-4">University Roll</th>
                 <th class="py-3 px-4">Registration No</th>
                 <th class="py-3 px-4">Student Name</th>
-                <th class="py-3 px-4 text-center bg-seagreen-50/50 border-x border-cream-200">2026-08-31 (Today)</th>
+                <th id="th-today-date" class="py-3 px-4 text-center bg-seagreen-50/50 border-x border-cream-200">2026-08-31 (Today)</th>
                 <th class="py-3 px-4 text-right">Attendance Count</th>
               </tr>
             </thead>
@@ -633,9 +633,19 @@
     const sessionCountsByCourse = {};
     const attendanceStatusByStudent = {}; // Key: uniRoll -> 'P' | 'H' | null
 
+    // Get current local date in YYYY-MM-DD format
+    function getTodayDateStr() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
     // Initialize on page load
     window.addEventListener('DOMContentLoaded', () => {
       checkStoredAuth();
+      loadServiceAccountInfo();
     });
 
     // --- AUTHENTICATION FUNCTIONS ---
@@ -690,7 +700,6 @@
           localStorage.setItem('edu_faculty_user', JSON.stringify(data.user));
           showDashboardView();
         } else {
-          // Fallback login for evaluation
           fillAndLogin(email, password);
         }
       } catch (err) {
@@ -725,7 +734,6 @@
           localStorage.setItem('edu_faculty_user', JSON.stringify(data.user));
           showDashboardView();
         } else {
-          // Fallback registration
           loggedInFaculty = { name, email, employeeId, role: 'TEACHER' };
           localStorage.setItem('edu_faculty_user', JSON.stringify(loggedInFaculty));
           showDashboardView();
@@ -752,6 +760,12 @@
     }
 
     function logoutFaculty() {
+      if (activeSession) {
+        if (!confirm('An attendance session is currently active. Are you sure you want to stop the session and log out?')) {
+          return;
+        }
+        stopAttendanceSession();
+      }
       localStorage.removeItem('edu_faculty_user');
       localStorage.removeItem('edu_faculty_token');
       loggedInFaculty = null;
@@ -783,10 +797,18 @@
       `;
 
       onTeacherSemesterChange();
+      loadServiceAccountInfo();
     }
 
     // --- TEACHER SEMESTER & COURSE LOGIC ---
     function onTeacherSemesterChange() {
+      // Prevent changing semester if an attendance session is active
+      if (activeSession) {
+        alert(`⚠️ An attendance session for "${activeSession.code}" (Semester ${activeSession.sem}) is currently running!\n\nPlease stop the active session before switching semesters.`);
+        document.getElementById('teacher-sem-select').value = activeSession.sem;
+        return;
+      }
+
       const sem = parseInt(document.getElementById('teacher-sem-select').value, 10);
       currentTeacherSem = sem;
 
@@ -799,6 +821,12 @@
         </option>
       `).join('');
 
+      // Update date in table header dynamically
+      const dateTh = document.getElementById('th-today-date');
+      if (dateTh) {
+        dateTh.textContent = `${getTodayDateStr()} (Today)`;
+      }
+
       updateSessionCountDisplay();
       renderAbsentStudents(sem);
       renderMatrixGoogleSheet(sem);
@@ -806,7 +834,7 @@
 
     function updateSessionCountDisplay() {
       const courseSelect = document.getElementById('teacher-course-select');
-      const courseCode = courseSelect.value || 'MCA-301';
+      const courseCode = courseSelect?.value || 'MCA-301';
       const count = sessionCountsByCourse[courseCode] || 0;
       document.getElementById('session-count-num').textContent = count;
 
@@ -898,6 +926,10 @@
 
     function startAttendanceSession() {
       const courseSelect = document.getElementById('teacher-course-select');
+      if (!courseSelect || courseSelect.options.length === 0) {
+        alert('Please select a course to start an attendance session.');
+        return;
+      }
       const selectedOption = courseSelect.options[courseSelect.selectedIndex];
       const courseCode = selectedOption.value;
       const courseName = selectedOption.getAttribute('data-name');
@@ -922,13 +954,19 @@
 
       sessionTimer = 900; // 15 mins
 
+      // Lock dropdowns during active session
+      document.getElementById('teacher-sem-select').disabled = true;
+      document.getElementById('teacher-course-select').disabled = true;
+      document.getElementById('teacher-sem-select').classList.add('opacity-60', 'cursor-not-allowed');
+      document.getElementById('teacher-course-select').classList.add('opacity-60', 'cursor-not-allowed');
+
       const banner = document.getElementById('teacher-active-banner');
       const btn = document.getElementById('btn-trigger-session');
       const btnIcon = document.getElementById('session-btn-icon');
       const btnText = document.getElementById('session-btn-text');
 
       banner.classList.remove('hidden');
-      document.getElementById('active-subj-label').textContent = `${courseCode}: ${courseName}`;
+      document.getElementById('active-subj-label').textContent = `${courseCode}: ${courseName} (Sem ${sem})`;
       
       btn.className = 'w-full py-3 bg-charcoal-900 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center space-x-2 border border-red-500/30';
       btnIcon.innerHTML = `
@@ -958,6 +996,12 @@
       activeSession = null;
       sessionTimer = 0;
 
+      // Unlock dropdowns
+      document.getElementById('teacher-sem-select').disabled = false;
+      document.getElementById('teacher-course-select').disabled = false;
+      document.getElementById('teacher-sem-select').classList.remove('opacity-60', 'cursor-not-allowed');
+      document.getElementById('teacher-course-select').classList.remove('opacity-60', 'cursor-not-allowed');
+
       const banner = document.getElementById('teacher-active-banner');
       const btnIcon = document.getElementById('session-btn-icon');
 
@@ -972,14 +1016,74 @@
       `;
     }
 
-    // --- LATE COMER HALF ATTENDANCE OVERRIDE (1 COUNT) ---
-    function grantHalfOverride(classRoll, uniRoll, regNo, name) {
+    // --- LATE COMER HALF ATTENDANCE OVERRIDE (1 COUNT) & REAL GOOGLE SHEET SYNC ---
+    async function grantHalfOverride(classRoll, uniRoll, regNo, name) {
       attendanceStatusByStudent[uniRoll] = 'H';
       renderMatrixGoogleSheet(currentTeacherSem);
       renderAbsentStudents(currentTeacherSem);
+
+      const sheetId = localStorage.getItem('teacher_sheet_id') || document.getElementById('sheet-id-input')?.value.trim();
+      const todayDateStr = getTodayDateStr();
+      const courseSelect = document.getElementById('teacher-course-select');
+      const courseCode = courseSelect?.value || 'MCA-301';
+
+      if (!sheetId) {
+        console.log('ℹ️ No Google Spreadsheet ID linked. Marked locally.');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/override/grant-half-matrix', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            spreadsheetId: sheetId,
+            classRoll,
+            universityRoll: uniRoll,
+            registrationNumber: regNo,
+            studentName: name,
+            status: 'Half',
+            date: todayDateStr,
+            subjectCode: courseCode
+          })
+        });
+        const data = await res.json();
+        if (data.sheetSynced) {
+          console.log(`✅ Google Sheet synced successfully for ${name}: ${data.sheetMessage}`);
+        } else {
+          console.log(`ℹ️ Google Sheet response: ${data.sheetMessage}`);
+        }
+      } catch (err) {
+        console.error('Error calling /api/override/grant-half-matrix:', err);
+      }
     }
 
     // --- GOOGLE SHEETS MODAL & SETTINGS ---
+    async function loadServiceAccountInfo() {
+      try {
+        const res = await fetch('/api/sheets/service-account', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('edu_faculty_token') || ''}`
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.serviceAccountEmail) {
+            document.getElementById('sa-email-display').textContent = data.serviceAccountEmail;
+            document.getElementById('modal-sa-email').value = data.serviceAccountEmail;
+          }
+        }
+      } catch (e) {
+        console.warn('Could not fetch live Service Account email:', e);
+      }
+
+      const storedSheetId = localStorage.getItem('teacher_sheet_id');
+      if (storedSheetId) {
+        if (document.getElementById('sheet-id-input')) document.getElementById('sheet-id-input').value = storedSheetId;
+        if (document.getElementById('modal-sheet-id-input')) document.getElementById('modal-sheet-id-input').value = storedSheetId;
+      }
+    }
+
     function openSheetsConfigModal() {
       document.getElementById('sheets-config-modal').classList.remove('hidden');
     }
@@ -989,9 +1093,9 @@
     }
 
     function copyServiceEmail() {
-      const email = 'attendance-sync-sa@smart-attendance-system.iam.gserviceaccount.com';
+      const email = document.getElementById('sa-email-display')?.textContent.trim() || 'attendance-sync-sa@smart-attendance-system.iam.gserviceaccount.com';
       navigator.clipboard.writeText(email);
-      alert('✅ Service Account email copied to clipboard!\nShare your Google Sheet with this email as Editor.');
+      alert(`✅ Service Account email copied to clipboard!\n\nEmail: ${email}\n\nShare your Google Sheet with this email as Editor.`);
     }
 
     function saveSpreadsheetId() {
@@ -1013,7 +1117,7 @@
       localStorage.setItem('teacher_sheet_id', sheetId);
       document.getElementById('sheet-id-input').value = sheetId;
       closeSheetsConfigModal();
-      alert(`✅ Google Sheet ID linked successfully! All check-ins will sync automatically.`);
+      alert(`✅ Google Sheet ID linked successfully! All check-ins and late overrides will sync automatically.`);
     }
 
     // --- EXPORT AUDIT REPORT MODAL ---
