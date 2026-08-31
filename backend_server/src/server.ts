@@ -100,6 +100,7 @@ app.put('/api/geofence/:departmentId', requireAuth, requireRole(['ADMIN']), Geof
 // --- GOOGLE SHEETS ROUTES ---
 app.get('/api/sheets/service-account', requireAuth, SheetsController.getServiceAccountInfo);
 app.post('/api/sheets/link/:subjectId', requireAuth, requireRole(['TEACHER', 'ADMIN']), SheetsController.linkSubjectSheet);
+app.post('/api/sheets/test-connection', SheetsController.testConnection);
 
 const PORT = process.env.PORT || 4000;
 

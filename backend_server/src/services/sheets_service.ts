@@ -298,5 +298,73 @@ export class GoogleSheetsService {
   ) {
     return this.recordStudentAttendanceInMatrix(spreadsheetId, rowData, tabName);
   }
+
+  /**
+   * Diagnostic test method that inspects Google Sheet permissions and connectivity.
+   */
+  public static async testConnection(spreadsheetId: string): Promise<{
+    success: boolean;
+    serviceAccountEmail: string | null;
+    isLiveClient: boolean;
+    sheetTitle?: string;
+    tabs?: string[];
+    error?: string;
+    fixSuggestion?: string;
+  }> {
+    const sheets = this.getClient();
+    const email = this.getServiceAccountEmail();
+
+    if (!sheets) {
+      return {
+        success: false,
+        serviceAccountEmail: email,
+        isLiveClient: false,
+        error: 'No Google Cloud Service Account credentials JSON found on the server.',
+        fixSuggestion:
+          'Please place service-account-credentials.json in your backend_server directory or set GOOGLE_SERVICE_ACCOUNT_JSON in .env / Render Environment Variables.',
+      };
+    }
+
+    try {
+      const meta = await sheets.spreadsheets.get({ spreadsheetId });
+      const sheetTitle = meta.data.properties?.title || 'Untitled Spreadsheet';
+      const tabs = (meta.data.sheets || []).map((s: any) => s.properties?.title || 'Unknown');
+
+      const primaryTab = tabs[0] || 'Sheet1';
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `${primaryTab}!A1:D1`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [['Class Roll', 'University Roll', 'Registration Number', 'Student Name']],
+        },
+      });
+
+      return {
+        success: true,
+        serviceAccountEmail: email,
+        isLiveClient: true,
+        sheetTitle,
+        tabs,
+      };
+    } catch (err: any) {
+      let fix = 'Please verify that the Google Spreadsheet is shared with the Service Account email as Editor.';
+      if (err.message.includes('403') || err.message.includes('permission') || err.message.includes('PERMISSION_DENIED')) {
+        fix = `Permission Denied. Open your Google Sheet -> Click 'Share' -> Add '${email}' with 'Editor' permissions.`;
+      } else if (err.message.includes('404') || err.message.includes('not found') || err.message.includes('NOT_FOUND')) {
+        fix = 'Spreadsheet ID not found. Please verify the ID from your Google Sheet URL: /d/[ID]/edit';
+      } else if (err.message.includes('API has not been used') || err.message.includes('disabled')) {
+        fix = 'Google Sheets API is disabled. Please enable "Google Sheets API" in your Google Cloud Console.';
+      }
+
+      return {
+        success: false,
+        serviceAccountEmail: email,
+        isLiveClient: true,
+        error: err.message,
+        fixSuggestion: fix,
+      };
+    }
+  }
 }
 

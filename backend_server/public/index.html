@@ -420,10 +420,14 @@
             <div class="flex items-center space-x-2">
               <input type="text" id="sheet-id-input" placeholder="Paste 44-character Sheet ID here" class="flex-1 px-3 py-1.5 bg-white border border-cream-200 rounded-lg text-xs font-mono text-charcoal-900 focus:outline-none focus:border-seagreen-600">
               <button onclick="saveSpreadsheetId()" class="px-3 py-1.5 bg-charcoal-900 hover:bg-charcoal-800 text-white text-xs font-bold rounded-lg transition">Save</button>
+              <button onclick="testSheetConnection()" id="btn-test-sheet" class="px-3 py-1.5 bg-seagreen-600 hover:bg-seagreen-700 text-white text-xs font-bold rounded-lg transition flex items-center space-x-1">
+                <span>🔍 Test</span>
+              </button>
             </div>
             <div id="sheet-connected-msg" class="hidden p-2.5 rounded-xl bg-emerald-50 border border-emerald-300 text-[11px] font-bold text-emerald-800 flex items-center space-x-1.5 mt-1.5">
               <span>✅ Google Sheet Connected</span>
             </div>
+            <div id="sheet-test-result" class="hidden p-3 rounded-xl text-xs space-y-1 mt-2"></div>
           </div>
 
           <div class="pt-2">
@@ -470,11 +474,17 @@
           <p class="text-[11px]">Copy the ID from your browser URL: <code class="bg-white px-1 py-0.5 rounded border border-cream-200">/d/<strong>[SPREADSHEET_ID]</strong>/edit</code></p>
           <input type="text" id="modal-sheet-id-input" placeholder="e.g. 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms" class="w-full px-3 py-2 bg-white border border-cream-200 rounded-lg font-mono text-xs text-charcoal-900 focus:outline-none focus:border-seagreen-600">
         </div>
+        <div id="modal-test-result" class="hidden p-3 rounded-xl text-xs space-y-1"></div>
       </div>
 
-      <div class="flex items-center justify-end space-x-2 pt-3 border-t border-cream-200">
-        <button onclick="closeSheetsConfigModal()" class="px-4 py-2 bg-cream-100 text-charcoal-700 text-xs font-bold rounded-xl hover:bg-cream-200">Cancel</button>
-        <button onclick="saveModalSpreadsheetId()" class="px-5 py-2 bg-seagreen-600 text-white text-xs font-bold rounded-xl hover:bg-seagreen-700">Save & Link Sheet</button>
+      <div class="flex items-center justify-between pt-3 border-t border-cream-200">
+        <button onclick="testModalSheetConnection()" class="px-3 py-2 bg-charcoal-900 text-white text-xs font-bold rounded-xl hover:bg-charcoal-800 transition flex items-center space-x-1">
+          <span>🔍 Test & Verify</span>
+        </button>
+        <div class="flex items-center space-x-2">
+          <button onclick="closeSheetsConfigModal()" class="px-4 py-2 bg-cream-100 text-charcoal-700 text-xs font-bold rounded-xl hover:bg-cream-200">Cancel</button>
+          <button onclick="saveModalSpreadsheetId()" class="px-5 py-2 bg-seagreen-600 text-white text-xs font-bold rounded-xl hover:bg-seagreen-700">Save & Link Sheet</button>
+        </div>
       </div>
 
     </div>
@@ -1180,6 +1190,111 @@
       localStorage.setItem('teacher_sheet_id', sheetId);
       updateSheetConnectionStatus(sheetId);
       alert(`✅ Google Sheet Connected successfully! ID: ${sheetId}`);
+    }
+
+    async function testSheetConnection() {
+      const sheetId = document.getElementById('sheet-id-input')?.value.trim() || localStorage.getItem('teacher_sheet_id');
+      const resultBox = document.getElementById('sheet-test-result');
+      const testBtn = document.getElementById('btn-test-sheet');
+
+      if (!sheetId) {
+        alert('Please enter a Google Spreadsheet ID first.');
+        return;
+      }
+
+      if (testBtn) testBtn.innerHTML = '<span>⏳ Testing...</span>';
+      if (resultBox) {
+        resultBox.classList.remove('hidden');
+        resultBox.className = 'p-3 rounded-xl text-xs space-y-1 bg-amber-50 border border-amber-200 text-amber-900 mt-2';
+        resultBox.innerHTML = '<p>🔄 Testing connection to Google Sheets API...</p>';
+      }
+
+      try {
+        const res = await fetch('/api/sheets/test-connection', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ spreadsheetId: sheetId })
+        });
+        const data = await res.json();
+
+        if (testBtn) testBtn.innerHTML = '<span>🔍 Test</span>';
+
+        if (data.success) {
+          resultBox.className = 'p-3 rounded-xl text-xs space-y-1 bg-emerald-50 border border-emerald-300 text-emerald-900 mt-2';
+          resultBox.innerHTML = `
+            <div class="font-bold flex items-center space-x-1">
+              <span>✅ Google Sheet Verified & Connected!</span>
+            </div>
+            <p><strong>Document:</strong> ${data.sheetTitle}</p>
+            <p><strong>Tabs Found:</strong> ${data.tabs.join(', ')}</p>
+            <p class="text-[11px] text-emerald-700">All live GPS check-ins & late overrides will sync seamlessly.</p>
+          `;
+          updateSheetConnectionStatus(sheetId);
+        } else {
+          resultBox.className = 'p-3 rounded-xl text-xs space-y-1.5 bg-rose-50 border border-rose-300 text-rose-900 mt-2';
+          resultBox.innerHTML = `
+            <div class="font-bold flex items-center space-x-1 text-rose-700">
+              <span>❌ Google Sheet Connection Issue</span>
+            </div>
+            <p class="text-[11px] font-mono bg-white p-2 rounded border border-rose-200 break-words">${data.error}</p>
+            <p class="text-[11px] font-bold text-charcoal-900">👉 Recommended Fix:</p>
+            <p class="text-[11px] text-charcoal-700">${data.fixSuggestion}</p>
+          `;
+        }
+      } catch (err) {
+        if (testBtn) testBtn.innerHTML = '<span>🔍 Test</span>';
+        resultBox.className = 'p-3 rounded-xl text-xs space-y-1 bg-rose-50 border border-rose-300 text-rose-900 mt-2';
+        resultBox.innerHTML = `<p class="font-bold text-rose-700">❌ Network or server error while testing connection.</p>`;
+      }
+    }
+
+    async function testModalSheetConnection() {
+      const sheetId = document.getElementById('modal-sheet-id-input')?.value.trim();
+      const resultBox = document.getElementById('modal-test-result');
+
+      if (!sheetId) {
+        alert('Please enter a Google Spreadsheet ID first.');
+        return;
+      }
+
+      if (resultBox) {
+        resultBox.classList.remove('hidden');
+        resultBox.className = 'p-3 rounded-xl text-xs space-y-1 bg-amber-50 border border-amber-200 text-amber-900';
+        resultBox.innerHTML = '<p>🔄 Testing connection to Google Sheets API...</p>';
+      }
+
+      try {
+        const res = await fetch('/api/sheets/test-connection', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ spreadsheetId: sheetId })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          resultBox.className = 'p-3 rounded-xl text-xs space-y-1 bg-emerald-50 border border-emerald-300 text-emerald-900';
+          resultBox.innerHTML = `
+            <div class="font-bold flex items-center space-x-1 text-emerald-800">
+              <span>✅ Google Sheet Verified!</span>
+            </div>
+            <p><strong>Document:</strong> ${data.sheetTitle}</p>
+            <p><strong>Tabs:</strong> ${data.tabs.join(', ')}</p>
+          `;
+          updateSheetConnectionStatus(sheetId);
+        } else {
+          resultBox.className = 'p-3 rounded-xl text-xs space-y-1.5 bg-rose-50 border border-rose-300 text-rose-900';
+          resultBox.innerHTML = `
+            <div class="font-bold flex items-center space-x-1 text-rose-700">
+              <span>❌ Connection Failed</span>
+            </div>
+            <p class="text-[11px] font-mono bg-white p-2 rounded border border-rose-200 break-words">${data.error}</p>
+            <p class="text-[11px] text-charcoal-800"><strong>👉 Fix:</strong> ${data.fixSuggestion}</p>
+          `;
+        }
+      } catch (err) {
+        resultBox.className = 'p-3 rounded-xl text-xs space-y-1 bg-rose-50 border border-rose-300 text-rose-900';
+        resultBox.innerHTML = `<p class="font-bold text-rose-700">❌ Network or server error.</p>`;
+      }
     }
 
     function saveModalSpreadsheetId() {

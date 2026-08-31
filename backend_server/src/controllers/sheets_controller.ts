@@ -60,4 +60,25 @@ export class SheetsController {
       return res.status(500).json({ error: error.message });
     }
   }
+
+  /**
+   * Diagnostic test endpoint to verify Google Sheet permissions and connectivity.
+   */
+  public static async testConnection(req: any, res: Response) {
+    try {
+      const { spreadsheetId } = req.body;
+      if (!spreadsheetId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Spreadsheet ID is required to run test.',
+          fixSuggestion: 'Please enter your 44-character Google Spreadsheet ID.',
+        });
+      }
+
+      const result = await GoogleSheetsService.testConnection(spreadsheetId);
+      return res.json(result);
+    } catch (error: any) {
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  }
 }
