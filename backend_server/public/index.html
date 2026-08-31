@@ -129,10 +129,10 @@
         <div class="flex items-center space-x-1.5 bg-white p-1 rounded-lg border border-cream-200">
           <label class="text-[11px] font-bold text-charcoal-700 ml-1">Sem:</label>
           <select id="student-sem-select" onchange="onStudentSemesterChange()" class="text-xs font-bold bg-[#FAF7F0] border-0 rounded px-2 py-0.5 text-charcoal-900 cursor-pointer focus:outline-none">
-            <option value="1">Semester 1</option>
-            <option value="2">Semester 2</option>
-            <option value="3">Semester 3</option>
-            <option value="4">Semester 4</option>
+            <option value="1">Semester 1 (Past Archive)</option>
+            <option value="2">Semester 2 (Past Archive)</option>
+            <option value="3" selected>Semester 3 (Current Active)</option>
+            <option value="4">Semester 4 (Upcoming)</option>
           </select>
         </div>
       </div>
@@ -143,7 +143,7 @@
         <div class="w-28 h-4 bg-charcoal-900 rounded-full mx-auto mb-3 opacity-90"></div>
 
         <!-- Student Profile Card -->
-        <div class="bg-charcoal-900 text-white rounded-2xl p-4 mb-4">
+        <div class="bg-charcoal-900 text-white rounded-2xl p-4 mb-3">
           <div class="flex items-center justify-between">
             <div>
               <h2 id="student-name" class="font-bold text-base tracking-tight">Sayan Banerjee</h2>
@@ -151,9 +151,18 @@
               <p id="student-reg" class="text-[11px] text-gray-500 font-mono">Reg: REG-2026-9042</p>
             </div>
             <span id="student-sem-badge" class="px-2.5 py-1 rounded-full bg-seagreen-600 text-white font-bold text-xs">
-              MCA Sem 1
+              MCA Sem 3 (Active)
             </span>
           </div>
+        </div>
+
+        <!-- Semester Lifecycle Status Banner -->
+        <div id="semester-lifecycle-badge" class="mb-3 px-3 py-1.5 rounded-xl bg-seagreen-50 border border-seagreen-600/30 text-seagreen-900 flex items-center justify-between text-xs">
+          <span id="semester-lifecycle-title" class="font-bold flex items-center">
+            <span class="w-2 h-2 rounded-full bg-seagreen-600 mr-1.5 animate-pulse"></span>
+            Current Active Term (Ongoing)
+          </span>
+          <span id="semester-lifecycle-note" class="text-[10px] font-mono text-seagreen-800 font-medium">Session 2026-2027</span>
         </div>
 
         <!-- Live Active Session Alert (Lights up when teacher starts session) -->
@@ -670,11 +679,17 @@
       ]
     };
 
-    const studentsBySemester = {
-      1: { name: 'Sayan Banerjee', classRoll: 'MCA-26-042', uniRoll: '12000126042', regNo: 'REG-2026-9042', sem: 1 },
-      2: { name: 'Priya Das', classRoll: 'MCA-25-018', uniRoll: '12000125018', regNo: 'REG-2025-8818', sem: 2 },
-      3: { name: 'Aakash Roy', classRoll: 'MCA-24-007', uniRoll: '12000124007', regNo: 'REG-2024-7707', sem: 3 },
-      4: { name: 'Rohit Sen', classRoll: 'MCA-23-001', uniRoll: '12000123001', regNo: 'REG-2023-6601', sem: 4 },
+    // ==========================================
+    // LOGGED-IN STUDENT PROFILE & ACADEMIC LIFECYCLE
+    // ==========================================
+    const loggedInStudent = {
+      name: 'Sayan Banerjee',
+      classRoll: 'MCA-26-042',
+      uniRoll: '12000126042',
+      regNo: 'REG-2026-9042',
+      currentEnrolledSem: 3, // Sayan is currently actively studying in Semester 3
+      batch: '2025-2027',
+      program: 'Master of Computer Applications (MCA)'
     };
 
     const absentStudentsBySemester = {
@@ -696,8 +711,8 @@
     };
 
     // State Variables
-    let currentStudentSem = 1;
-    let currentTeacherSem = 1;
+    let currentStudentSem = 3; // Default to current active semester 3
+    let currentTeacherSem = 3;
     let activeSession = null;
     let sessionTimer = 900;
     let timerInterval = null;
@@ -710,13 +725,37 @@
       const sem = parseInt(document.getElementById('student-sem-select').value, 10);
       currentStudentSem = sem;
 
-      const student = studentsBySemester[sem];
-      document.getElementById('student-name').textContent = student.name;
-      document.getElementById('student-rolls').textContent = `Roll: ${student.classRoll} • Uni: ${student.uniRoll}`;
-      document.getElementById('student-reg').textContent = `Reg: ${student.regNo}`;
-      document.getElementById('student-sem-badge').textContent = `MCA Sem ${sem}`;
+      // Maintain Sayan Banerjee's authenticated real profile
+      document.getElementById('student-name').textContent = loggedInStudent.name;
+      document.getElementById('student-rolls').textContent = `Roll: ${loggedInStudent.classRoll} • Uni: ${loggedInStudent.uniRoll}`;
+      document.getElementById('student-reg').textContent = `Reg: ${loggedInStudent.regNo}`;
       document.getElementById('current-sem-tag').textContent = `Semester ${sem}`;
       document.getElementById('semester-heading').textContent = `Semester ${sem} Subjects`;
+
+      const badge = document.getElementById('student-sem-badge');
+      const lifecycleBanner = document.getElementById('semester-lifecycle-badge');
+      const lifecycleTitle = document.getElementById('semester-lifecycle-title');
+      const lifecycleNote = document.getElementById('semester-lifecycle-note');
+
+      if (sem === loggedInStudent.currentEnrolledSem) {
+        badge.className = 'px-2.5 py-1 rounded-full bg-seagreen-600 text-white font-bold text-xs shadow-sm';
+        badge.textContent = `MCA Sem ${sem} (Active)`;
+        lifecycleBanner.className = 'mb-3 px-3 py-1.5 rounded-xl bg-seagreen-50 border border-seagreen-600/30 text-seagreen-900 flex items-center justify-between text-xs';
+        lifecycleTitle.innerHTML = '<span class="w-2 h-2 rounded-full bg-seagreen-600 mr-1.5 animate-pulse"></span> Current Active Term (Ongoing)';
+        lifecycleNote.textContent = 'Session 2026-2027';
+      } else if (sem < loggedInStudent.currentEnrolledSem) {
+        badge.className = 'px-2.5 py-1 rounded-full bg-charcoal-700 text-white font-bold text-xs';
+        badge.textContent = `MCA Sem ${sem} (Past Archive)`;
+        lifecycleBanner.className = 'mb-3 px-3 py-1.5 rounded-xl bg-cream-100 border border-cream-200 text-charcoal-800 flex items-center justify-between text-xs';
+        lifecycleTitle.innerHTML = '📁 Past Semester Record (Archived)';
+        lifecycleNote.textContent = 'Completed & Cleared ✅';
+      } else {
+        badge.className = 'px-2.5 py-1 rounded-full bg-amber-600 text-white font-bold text-xs';
+        badge.textContent = `MCA Sem ${sem} (Upcoming)`;
+        lifecycleBanner.className = 'mb-3 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 flex items-center justify-between text-xs';
+        lifecycleTitle.innerHTML = '⏳ Upcoming Term (Not Started)';
+        lifecycleNote.textContent = 'Commences Jan 2027';
+      }
 
       renderStudentCourses(sem);
       checkActiveSessionForStudent();
@@ -1330,20 +1369,22 @@
     // --- DETAILED EXPORT REPORT GENERATOR ---
     function openExportReportModal() {
       if (!currentSubjectContext) return;
-      const student = studentsBySemester[currentStudentSem];
       const { code, name, credits, hours, pct, attended, total } = currentSubjectContext;
       const faculty = currentTeacherSem <= 2 ? 'Prof. R. K. Sharma' : 'Dr. Ananya Sen';
 
-      document.getElementById('report-student-name').textContent = student.name;
-      document.getElementById('report-uni-roll').textContent = student.uniRoll;
-      document.getElementById('report-class-roll').textContent = student.classRoll;
-      document.getElementById('report-reg-no').textContent = student.regNo;
-      document.getElementById('report-course-title').textContent = `${code}: ${name} (${credits} Credits)`;
+      document.getElementById('report-student-name').textContent = loggedInStudent.name;
+      document.getElementById('report-uni-roll').textContent = loggedInStudent.uniRoll;
+      document.getElementById('report-class-roll').textContent = loggedInStudent.classRoll;
+      document.getElementById('report-reg-no').textContent = loggedInStudent.regNo;
+      document.getElementById('report-course-title').textContent = `${code}: ${name} (${credits} Credits • Sem ${currentStudentSem})`;
       document.getElementById('report-faculty-name').textContent = faculty;
       document.getElementById('report-sign-faculty').textContent = faculty;
 
       document.getElementById('report-pct-text').textContent = `${pct}%`;
-      document.getElementById('report-stats-text').textContent = `Classes Attended: ${attended} / ${total} • Eligibility Status: ${pct >= 75 ? 'Eligible for Regular University Exams (≥ 75%)' : 'Warning: Condonation Required (< 75%)'}`;
+      const termStatus = currentStudentSem < loggedInStudent.currentEnrolledSem
+        ? 'Archived Past Record • Examination Cleared & Passed ✅'
+        : 'Ongoing Academic Session • Eligible for University Exams (≥ 75%)';
+      document.getElementById('report-stats-text').textContent = `Classes Attended: ${attended} / ${total} • ${termStatus}`;
 
       // Populate Chronological Classes Table
       const tbody = document.getElementById('report-table-body');
@@ -1396,8 +1437,8 @@
       openExportReportModal();
     }
 
-    // Initialize View
-    renderStudentCourses(1);
+    // Initialize View with default student active semester
+    onStudentSemesterChange();
     onTeacherSemesterChange();
   </script>
 </body>
