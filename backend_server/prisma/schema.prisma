@@ -1,0 +1,116 @@
+// Prisma schema for Smart Attendance System
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String          @id @default(uuid())
+  name         String
+  email        String          @unique
+  passwordHash String
+  role         String          @default("STUDENT") // STUDENT, TEACHER, ADMIN
+  student      StudentProfile?
+  teacher      TeacherProfile?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model Department {
+  id           String           @id @default(uuid())
+  name         String           // e.g. "Computer Science & Engineering"
+  code         String           @unique // e.g. "CSE"
+  latitude     Float            // Dept central latitude (e.g. 22.5726)
+  longitude    Float            // Dept central longitude (e.g. 88.3639)
+  radiusMeters Float            @default(50.0) // 50.0 meters
+  students     StudentProfile[]
+  teachers     TeacherProfile[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+}
+
+model StudentProfile {
+  id             String             @id @default(uuid())
+  userId         String             @unique
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classRoll      String             // e.g. "CSE-2023-042"
+  universityRoll String             @unique // e.g. "12000123042"
+  regNumber      String             @unique // e.g. "REG-2023-8891"
+  departmentId   String
+  department     Department         @relation(fields: [departmentId], references: [id])
+  semester       Int                // e.g. 5
+  deviceUuid     String?            // Device binding to prevent proxy
+  attendances    AttendanceRecord[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+}
+
+model TeacherProfile {
+  id           String       @id @default(uuid())
+  userId       String       @unique
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  departmentId String
+  department   Department   @relation(fields: [departmentId], references: [id])
+  subjects     Subject[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Subject {
+  id            String             @id @default(uuid())
+  code          String             // e.g. "MCA-101", "MCA-203"
+  name          String             // e.g. "Mathematical Foundation"
+  type          String             @default("Theory") // Theory, Practical, Bridge Course, Project, Viva
+  credits       Int                @default(4)
+  weeklyHours   String?            @default("3+1+0")  // L+T+P
+  marks         String?            @default("100 (70+30)")
+  semester      Int                // 1, 2, 3, 4
+  departmentId  String
+  teacherId     String
+  teacher       TeacherProfile     @relation(fields: [teacherId], references: [id])
+  googleSheetId String?            // Dedicated Google Sheet ID for this subject
+  sheetTabName  String             @default("Attendance")
+  sessions      ActiveSession[]
+  attendances   AttendanceRecord[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@unique([code, semester, teacherId])
+}
+
+model ActiveSession {
+  id           String             @id @default(uuid())
+  subjectId    String
+  subject      Subject            @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacherId    String
+  semester     Int
+  isActive     Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  expiresAt    DateTime           // Exactly createdAt + 15 minutes TTL
+  attendances  AttendanceRecord[]
+}
+
+model AttendanceRecord {
+  id             String         @id @default(uuid())
+  sessionId      String?
+  session        ActiveSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  studentId      String
+  student        StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subjectId      String
+  subject        Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  date           String         // YYYY-MM-DD (e.g. 2026-08-31)
+  time           String         // HH:MM AM/PM (e.g. 10:25 AM)
+  status         String         @default("Full") // "Full" (automated within 15 min), "Half" (teacher override)
+  latitude       Float?
+  longitude      Float?
+  distanceMeters Float?
+  isMockLocation Boolean        @default(false)
+  syncedToSheet  Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+
+  @@unique([studentId, subjectId, date])
+}
