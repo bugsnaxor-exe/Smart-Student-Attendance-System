@@ -221,4 +221,34 @@ export class OverrideController {
       return res.status(500).json({ error: error.message });
     }
   }
+
+  /**
+   * Returns all registered students enrolled in a particular semester from the database.
+   */
+  public static async getStudentsBySemester(req: any, res: Response) {
+    try {
+      const semester = parseInt(req.params.semester as string, 10) || 3;
+      const students = await prisma.studentProfile.findMany({
+        where: { semester },
+        include: { user: true },
+        orderBy: { classRoll: 'asc' },
+      });
+
+      return res.json({
+        semester,
+        total: students.length,
+        students: students.map((s) => ({
+          id: s.id,
+          name: s.user.name,
+          email: s.user.email,
+          classRoll: s.classRoll,
+          universityRoll: s.universityRoll,
+          regNo: s.regNumber,
+          semester: s.semester,
+        })),
+      });
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
 }

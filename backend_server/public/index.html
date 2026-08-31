@@ -654,25 +654,12 @@
       ]
     };
 
-    // Enrolled Student Roster
+    // Live Enrolled Student Roster (Populated from database)
     const enrolledStudents = {
-      1: [
-        { name: 'Sayan Banerjee', classRoll: 'MCA-26-042', uniRoll: '12000126042', regNo: 'REG-2026-9042' },
-        { name: 'Jane Smith', classRoll: 'MCA-26-015', uniRoll: '12000126015', regNo: 'REG-2026-9015' },
-        { name: 'Rahul Verma', classRoll: 'MCA-26-008', uniRoll: '12000126008', regNo: 'REG-2026-9008' },
-      ],
-      2: [
-        { name: 'Neha Gupta', classRoll: 'MCA-25-022', uniRoll: '12000125022', regNo: 'REG-2025-8822' },
-        { name: 'Vikram Malhotra', classRoll: 'MCA-25-004', uniRoll: '12000125004', regNo: 'REG-2025-8804' },
-      ],
-      3: [
-        { name: 'Sayan Banerjee', classRoll: 'MCA-26-042', uniRoll: '12000126042', regNo: 'REG-2026-9042' },
-        { name: 'Kavita Singh', classRoll: 'MCA-24-019', uniRoll: '12000124019', regNo: 'REG-2024-7719' },
-        { name: 'Deepak Dey', classRoll: 'MCA-24-031', uniRoll: '12000124031', regNo: 'REG-2024-7731' },
-      ],
-      4: [
-        { name: 'Tanmay Ghosh', classRoll: 'MCA-23-014', uniRoll: '12000123014', regNo: 'REG-2023-6614' },
-      ]
+      1: [],
+      2: [],
+      3: [],
+      4: []
     };
 
     // State Variables
@@ -906,6 +893,22 @@
       }
 
       updateSessionCountDisplay();
+      fetchAndRenderStudents(sem);
+    }
+
+    async function fetchAndRenderStudents(sem) {
+      try {
+        const res = await fetch(`/api/students/semester/${sem}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.students && Array.isArray(data.students)) {
+            enrolledStudents[sem] = data.students;
+          }
+        }
+      } catch (err) {
+        console.warn(`Could not fetch live students for semester ${sem}:`, err);
+      }
+
       renderAbsentStudents(sem);
       renderMatrixGoogleSheet(sem);
     }
@@ -931,6 +934,17 @@
     function renderAbsentStudents(sem) {
       const container = document.getElementById('absent-students-list');
       const roster = enrolledStudents[sem] || [];
+
+      if (roster.length === 0) {
+        container.innerHTML = `
+          <div class="p-6 bg-[#FAF7F0] border border-cream-200 rounded-2xl text-center">
+            <p class="text-xs text-charcoal-700 font-bold">🌱 No students registered yet for Semester ${sem}.</p>
+            <p class="text-[11px] text-charcoal-500 font-medium mt-1">Students will appear here automatically in real-time as they register their profiles in the mobile app.</p>
+          </div>
+        `;
+        return;
+      }
+
       const unmarked = roster.filter(s => !attendanceStatusByStudent[s.uniRoll]);
 
       if (unmarked.length === 0) {
@@ -961,6 +975,20 @@
     function renderMatrixGoogleSheet(sem) {
       const tbody = document.getElementById('attendance-table-body');
       const roster = enrolledStudents[sem] || [];
+
+      if (roster.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="py-8 px-4 text-center text-charcoal-500 italic bg-[#FAF7F0]/50">
+              🌱 No registered students found for Semester ${sem} in database.<br/>
+              <span class="text-[11px] text-charcoal-400 font-normal">Newly registered students from the mobile app will automatically populate this matrix.</span>
+            </td>
+          </tr>
+        `;
+        document.getElementById('total-checked-in-count').textContent = 0;
+        return;
+      }
+
       let presentCount = 0;
 
       tbody.innerHTML = roster.map(s => {
