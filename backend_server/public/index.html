@@ -269,12 +269,7 @@
             <span class="w-2.5 h-2.5 rounded-full bg-seagreen-600 animate-pulse"></span>
             <span class="font-bold text-seagreen-900">Attendance Session Active for <span id="active-subj-label">MCA-101</span></span>
           </div>
-          <div class="flex items-center space-x-3">
-            <span id="teacher-timer-countdown" class="font-mono font-bold text-seagreen-800">14:59 Remaining</span>
-            <button onclick="stopAttendanceSession()" class="text-xs text-red-600 hover:text-red-800 font-bold underline">
-              End Now
-            </button>
-          </div>
+          <span id="teacher-timer-countdown" class="font-mono font-bold text-seagreen-800">14:59 Remaining</span>
         </div>
       </div>
 
@@ -375,9 +370,9 @@
     </div>
   </div>
 
-  <!-- Subject Attendance History & Verifiable Proof Modal -->
+  <!-- Subject Attendance Calendar & Verifiable Proof Modal -->
   <div id="history-modal" class="fixed inset-0 bg-charcoal-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-[#FAF7F0] rounded-3xl p-6 max-w-lg w-full border border-cream-200 device-shadow max-h-[85vh] flex flex-col animate-scale-up">
+    <div class="bg-[#FAF7F0] rounded-3xl p-6 max-w-lg w-full border border-cream-200 device-shadow max-h-[90vh] flex flex-col animate-scale-up overflow-hidden">
       
       <!-- Modal Header -->
       <div class="flex items-start justify-between border-b border-cream-200 pb-3">
@@ -396,7 +391,7 @@
       </div>
 
       <!-- Stats Summary Strip -->
-      <div class="my-4 p-3.5 bg-white rounded-2xl border border-cream-200 flex items-center justify-between">
+      <div class="my-3 p-3 bg-white rounded-2xl border border-cream-200 flex items-center justify-between">
         <div>
           <span class="text-[11px] font-bold text-charcoal-700 uppercase tracking-wider block">Attendance Score</span>
           <div class="flex items-baseline space-x-2 mt-0.5">
@@ -408,28 +403,87 @@
           <span id="history-status-badge" class="inline-block px-2.5 py-1 text-xs font-bold rounded-lg bg-seagreen-50 text-seagreen-800 border border-seagreen-600/20">
             Safe (≥ 75%)
           </span>
-          <span class="text-[10px] text-charcoal-700 block mt-1">Proof Audit Verified ✅</span>
         </div>
       </div>
 
-      <!-- Section Title -->
-      <div class="flex items-center justify-between mb-2 px-1">
-        <h4 class="text-xs font-bold uppercase tracking-wider text-charcoal-700">📅 Class Attendance Dates & Audit Proof Log</h4>
-        <span class="text-[11px] text-charcoal-700 font-mono">Tamper-Evident</span>
+      <!-- Calendar Color Legend -->
+      <div class="flex items-center justify-around bg-white p-2.5 rounded-xl border border-cream-200 text-[11px] font-bold mb-3">
+        <div class="flex items-center space-x-1.5">
+          <span class="w-3 h-3 rounded-full bg-seagreen-600 shadow-sm"></span>
+          <span class="text-seagreen-800">Attended</span>
+        </div>
+        <div class="flex items-center space-x-1.5">
+          <span class="w-3 h-3 rounded-full bg-red-600 shadow-sm"></span>
+          <span class="text-red-800">Absent</span>
+        </div>
+        <div class="flex items-center space-x-1.5">
+          <span class="w-3 h-3 rounded-full bg-gray-300"></span>
+          <span class="text-gray-600">Holiday / Weekend</span>
+        </div>
       </div>
 
-      <!-- Verifiable Logs List (Scrollable) -->
-      <div id="history-records-list" class="space-y-2.5 overflow-y-auto flex-1 pr-1 max-h-[320px]">
-        <!-- Populated via JS -->
+      <!-- Month Header -->
+      <div class="flex items-center justify-between mb-2 px-1">
+        <h4 class="text-xs font-bold text-charcoal-900 font-mono flex items-center space-x-1">
+          <span>📅 August 2026</span>
+          <span class="text-[10px] text-charcoal-700 font-normal font-sans">(Tap any date for proof)</span>
+        </h4>
+        <span class="text-[10px] font-bold text-seagreen-700 bg-seagreen-50 px-2 py-0.5 rounded border border-seagreen-600/20">
+          Total Conducted: 20
+        </span>
+      </div>
+
+      <!-- Calendar Month Grid Container -->
+      <div class="bg-white rounded-2xl p-3 border border-cream-200 mb-3">
+        <!-- Weekday Labels -->
+        <div class="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-charcoal-700 mb-1.5">
+          <div class="text-red-500">Sun</div>
+          <div>Mon</div>
+          <div>Tue</div>
+          <div>Wed</div>
+          <div>Thu</div>
+          <div>Fri</div>
+          <div class="text-gray-400">Sat</div>
+        </div>
+
+        <!-- 31-Day Grid Container -->
+        <div id="calendar-days-grid" class="grid grid-cols-7 gap-1 text-center">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
+      <!-- Selected Date Detailed Proof Card (Tamper-Evident Proof Log) -->
+      <div id="calendar-proof-card" class="p-3 bg-seagreen-50/70 border border-seagreen-600/30 rounded-xl mb-3 text-xs">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="flex items-center space-x-1.5">
+              <span id="proof-date-title" class="font-bold text-charcoal-900">Mon, Aug 31, 2026</span>
+              <span id="proof-time-stamp" class="font-mono text-[11px] text-charcoal-700">• 10:24 AM</span>
+            </div>
+            <p id="proof-note" class="text-[11px] text-seagreen-900 font-medium mt-0.5">
+              📍 50m Geofence Verified: 18.4m from MCA Department (< 50.0m limit)
+            </p>
+            <div class="flex items-center space-x-2 mt-1 font-mono text-[9px] text-charcoal-700">
+              <span id="proof-token" class="px-1.5 py-0.5 bg-white rounded border border-cream-200">Token: SHA256: 4F8A-2026</span>
+              <span class="text-seagreen-800 font-bold flex items-center">
+                <svg class="w-3 h-3 mr-0.5 text-seagreen-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                Google Sheet Synced
+              </span>
+            </div>
+          </div>
+          <span id="proof-status-tag" class="px-2 py-0.5 rounded text-[10px] font-bold bg-seagreen-600 text-white shadow-sm flex-shrink-0">
+            Full (1.0)
+          </span>
+        </div>
       </div>
 
       <!-- Modal Footer -->
-      <div class="mt-4 pt-3 border-t border-cream-200 flex items-center justify-between gap-3">
-        <button onclick="downloadProofReceipt()" class="flex-1 py-2.5 bg-charcoal-900 hover:bg-charcoal-800 text-white text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1.5 shadow">
+      <div class="pt-2 border-t border-cream-200 flex items-center justify-between gap-3">
+        <button onclick="downloadProofReceipt()" class="flex-1 py-2 bg-charcoal-900 hover:bg-charcoal-800 text-white text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1.5 shadow">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-          <span>Export Verifiable Slip (PDF)</span>
+          <span>Export Proof Slip (PDF)</span>
         </button>
-        <button onclick="closeSubjectHistoryModal()" class="px-4 py-2.5 bg-cream-200 hover:bg-cream-300 text-charcoal-800 text-xs font-bold rounded-xl transition">
+        <button onclick="closeSubjectHistoryModal()" class="px-4 py-2 bg-cream-200 hover:bg-cream-300 text-charcoal-800 text-xs font-bold rounded-xl transition">
           Close
         </button>
       </div>
@@ -916,7 +970,9 @@
       }
     }
 
-    // --- SUBJECT ATTENDANCE HISTORY & PROOF LOG MODAL ---
+    // --- SUBJECT ATTENDANCE CALENDAR & PROOF LOG MODAL ---
+    let currentCalendarData = {};
+
     function openSubjectHistoryModal(code, name, type, credits, hours, pct, attended, total) {
       document.getElementById('history-code-badge').textContent = code;
       document.getElementById('history-type-badge').textContent = type;
@@ -943,42 +999,8 @@
         statusBadge.textContent = 'Warning (< 75%)';
       }
 
-      // Generate Verifiable Date Logs
-      const recordsContainer = document.getElementById('history-records-list');
-      const dates = generateLectureDates(attended);
-
-      recordsContainer.innerHTML = dates.map((d, index) => {
-        const isHalf = index === 2 && attended > 3; // 1 sample late override
-        const statusText = isHalf ? 'Half (0.5)' : 'Full (1.0)';
-        const statusBadgeClass = isHalf ? 'bg-amber-50 text-amber-900 border border-amber-300' : 'bg-seagreen-50 text-seagreen-800 border border-seagreen-600/20';
-        const verifyNote = isHalf 
-          ? `Faculty Override granted by ${currentTeacherSem <= 2 ? 'Prof. R. K. Sharma' : 'Dr. Ananya Sen'} (Late check-in)`
-          : `GPS Verified within ${d.dist}m of MCA Department (< 50.0m limit)`;
-
-        return `
-          <div class="p-3 bg-white rounded-xl border border-cream-200 hover:border-cream-300 transition">
-            <div class="flex items-start justify-between">
-              <div>
-                <div class="flex items-center space-x-2">
-                  <span class="font-bold text-xs text-charcoal-900 font-mono">${d.date}</span>
-                  <span class="text-[11px] text-charcoal-700 font-mono">• ${d.time}</span>
-                </div>
-                <p class="text-[11px] text-charcoal-700 mt-1 font-medium">${verifyNote}</p>
-                <div class="flex items-center space-x-2 mt-1.5 flex-wrap gap-y-1">
-                  <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cream-100 text-charcoal-700">Token: ${d.token}</span>
-                  <span class="text-[9px] font-bold text-seagreen-700 flex items-center">
-                    <svg class="w-3 h-3 mr-0.5 text-seagreen-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                    Synced to Google Sheet
-                  </span>
-                </div>
-              </div>
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${statusBadgeClass} flex-shrink-0">
-                ${statusText}
-              </span>
-            </div>
-          </div>
-        `;
-      }).join('');
+      // Render August 2026 Calendar Grid
+      renderAttendanceCalendar(code, name, attended, total);
 
       document.getElementById('history-modal').classList.remove('hidden');
     }
@@ -987,21 +1009,131 @@
       document.getElementById('history-modal').classList.add('hidden');
     }
 
-    function generateLectureDates(count) {
-      const dates = [];
-      const baseDate = new Date('2026-08-31T10:24:00');
-      
-      for (let i = 0; i < count; i++) {
-        const d = new Date(baseDate);
-        d.setDate(d.getDate() - (i * 2 + (i % 2))); // alternate class days
-        const dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-        const timeStr = (10 + (i % 3)) + ':' + ((15 + (i * 7)) % 60).toString().padStart(2, '0') + ' AM';
-        const dist = (12.4 + (i * 3.7) % 32.0).toFixed(1);
-        const token = `SHA256: ${Math.random().toString(36).substring(2, 8).toUpperCase()}-${d.getFullYear()}`;
+    function renderAttendanceCalendar(code, name, attended, total) {
+      const grid = document.getElementById('calendar-days-grid');
+      grid.innerHTML = '';
+      currentCalendarData = {};
 
-        dates.push({ date: dateStr, time: timeStr, dist, token });
+      // In August 2026, Aug 1 is Saturday (day index 6)
+      const firstDayOffset = 6; 
+      const totalDaysInMonth = 31;
+      const absentCount = Math.max(0, total - attended);
+
+      // Pre-assign lecture working days vs absent vs holidays
+      // Weekends: Sat (1, 8, 15, 22, 29) & Sun (2, 9, 16, 23, 30)
+      // Holiday: Aug 15 (Independence Day)
+      const holidays = [1, 2, 8, 9, 15, 16, 22, 23, 29, 30];
+      const workingDays = [];
+      for (let day = 1; day <= totalDaysInMonth; day++) {
+        if (!holidays.includes(day)) workingDays.push(day);
       }
-      return dates;
+
+      // Select absent days from working days (e.g. Aug 11, Aug 20 if absent)
+      const absentDays = [];
+      for (let i = 0; i < absentCount; i++) {
+        absentDays.push(workingDays[(i * 6 + 3) % workingDays.length]);
+      }
+
+      // Fill Empty Padding Days before Aug 1
+      for (let p = 0; p < firstDayOffset; p++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'h-9';
+        grid.appendChild(emptyCell);
+      }
+
+      // Render 1 to 31
+      for (let day = 1; day <= totalDaysInMonth; day++) {
+        const isHoliday = holidays.includes(day);
+        const isAbsent = absentDays.includes(day);
+        const isAttended = !isHoliday && !isAbsent;
+
+        let bgClass = '';
+        let statusTag = '';
+        let note = '';
+        let time = '';
+        let token = '';
+
+        if (isHoliday) {
+          bgClass = 'bg-gray-200 text-gray-500 hover:bg-gray-300';
+          statusTag = day === 15 ? 'National Holiday (Independence Day)' : 'Weekend / Non-working Day';
+          note = 'No class scheduled on this date.';
+          time = 'College Closed';
+          token = 'HOLIDAY';
+        } else if (isAbsent) {
+          bgClass = 'bg-red-600 text-white font-bold shadow hover:bg-red-700';
+          statusTag = 'Absent (0.0)';
+          note = `Student was absent for scheduled lecture by ${currentTeacherSem <= 2 ? 'Prof. R. K. Sharma' : 'Dr. Ananya Sen'}.`;
+          time = '10:15 AM Lecture';
+          token = 'ABSENT-UNMARKED';
+        } else {
+          bgClass = 'bg-seagreen-600 text-white font-bold shadow hover:bg-seagreen-700';
+          statusTag = 'Full Attendance (1.0)';
+          note = `📍 GPS Verified within 18.4m of MCA Department (< 50.0m limit)`;
+          time = `${10 + (day % 3)}:${((day * 7) % 50 + 10).toString().padStart(2, '0')} AM`;
+          token = `SHA256: ${code.replace(/[^a-zA-Z0-9]/g, '')}-${day.toString().padStart(2, '0')}AUG`;
+        }
+
+        currentCalendarData[day] = {
+          date: `Aug ${day}, 2026`,
+          dayName: new Date(2026, 7, day).toLocaleDateString('en-US', { weekday: 'short' }),
+          status: statusTag,
+          isAttended,
+          isAbsent,
+          isHoliday,
+          note,
+          time,
+          token,
+        };
+
+        const dayBtn = document.createElement('button');
+        dayBtn.id = `cal-day-${day}`;
+        dayBtn.className = `h-9 w-9 mx-auto rounded-xl flex items-center justify-center text-xs transition transform hover:scale-105 ${bgClass}`;
+        dayBtn.textContent = day;
+        dayBtn.onclick = () => selectCalendarDate(day, code);
+
+        grid.appendChild(dayBtn);
+      }
+
+      // Default select latest class (Aug 31)
+      selectCalendarDate(31, code);
+    }
+
+    function selectCalendarDate(day, code) {
+      const data = currentCalendarData[day];
+      if (!data) return;
+
+      // Highlight active date in calendar
+      document.querySelectorAll('#calendar-days-grid button').forEach(b => {
+        b.classList.remove('ring-2', 'ring-charcoal-900', 'ring-offset-2');
+      });
+      const activeBtn = document.getElementById(`cal-day-${day}`);
+      if (activeBtn) activeBtn.classList.add('ring-2', 'ring-charcoal-900', 'ring-offset-2');
+
+      const card = document.getElementById('calendar-proof-card');
+      const title = document.getElementById('proof-date-title');
+      const time = document.getElementById('proof-time-stamp');
+      const note = document.getElementById('proof-note');
+      const token = document.getElementById('proof-token');
+      const tag = document.getElementById('proof-status-tag');
+
+      title.textContent = `${data.dayName}, ${data.date}`;
+      time.textContent = `• ${data.time}`;
+      note.textContent = data.note;
+      token.textContent = `Token: ${data.token}`;
+
+      if (data.isAttended) {
+        card.className = 'p-3 bg-seagreen-50/80 border border-seagreen-600/30 rounded-xl mb-3 text-xs';
+        tag.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-seagreen-600 text-white shadow-sm flex-shrink-0';
+        tag.textContent = 'Full (1.0)';
+      } else if (data.isAbsent) {
+        card.className = 'p-3 bg-red-50 border border-red-300 rounded-xl mb-3 text-xs';
+        tag.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-red-600 text-white shadow-sm flex-shrink-0';
+        tag.textContent = 'Absent (0.0)';
+      } else {
+        card.className = 'p-3 bg-gray-100 border border-gray-300 rounded-xl mb-3 text-xs';
+        tag.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-gray-400 text-white flex-shrink-0';
+        tag.textContent = 'Holiday';
+      }
     }
 
     function downloadProofReceipt() {
