@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/attendance_provider.dart';
 import '../../providers/location_provider.dart';
@@ -274,6 +275,41 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
                         child: const Text(
                           '⚠️ Fake/Mock GPS Detected. Attendance blocked.',
                           style: TextStyle(color: AppTheme.statusDanger, fontWeight: FontWeight.w600, fontSize: 13),
+                        ),
+                      )
+                    else if (loc.errorMessage != null)
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFEF3C7),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFF59E0B)),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              loc.errorMessage!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Color(0xFF92400E), fontSize: 12, fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 10),
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                await Geolocator.requestPermission();
+                                final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+                                if (!serviceEnabled) {
+                                  await Geolocator.openLocationSettings();
+                                }
+                                loc.refreshLocation();
+                              },
+                              icon: const Icon(Icons.location_on_outlined, size: 16),
+                              label: const Text('Grant Permission / Enable GPS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFD97706),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              ),
+                            ),
+                          ],
                         ),
                       )
                     else

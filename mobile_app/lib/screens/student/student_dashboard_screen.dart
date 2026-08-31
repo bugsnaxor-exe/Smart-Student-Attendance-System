@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/services/location_service.dart';
 import '../../models/attendance_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/attendance_provider.dart';
@@ -18,6 +20,7 @@ class StudentDashboardScreen extends StatefulWidget {
 
 class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   int _selectedSemester = 3;
+  bool _hasLocationPermission = true;
 
   // Complete MCA Curriculum Directory across all 4 Semesters (31 Courses)
   static const Map<int, List<Map<String, dynamic>>> mcaCurriculum = {
@@ -65,6 +68,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   @override
   void initState() {
     super.initState();
+    _checkLocationPermission();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = Provider.of<AuthProvider>(context, listen: false);
       final studentSem = auth.currentUser?.student?.semester ?? 3;
@@ -74,6 +78,22 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       attendance.fetchStudentDashboard();
       attendance.fetchStudentActiveSessions();
     });
+  }
+
+  Future<void> _checkLocationPermission() async {
+    final hasPermission = await LocationService.requestPermissions();
+    if (mounted) {
+      setState(() => _hasLocationPermission = hasPermission);
+    }
+  }
+
+  Future<void> _requestLocationPermission() async {
+    final permission = await Geolocator.requestPermission();
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      await Geolocator.openLocationSettings();
+    }
+    await _checkLocationPermission();
   }
 
   Color _getStatusColor(double percentage) {
@@ -183,6 +203,48 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
+
+                    // Location Permission Prompt Banner (When GPS permission is not granted)
+                    if (!_hasLocationPermission)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 14),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFEF3C7),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFFF59E0B)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.location_disabled_outlined, color: Color(0xFFD97706), size: 24),
+                            const SizedBox(width: 10),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Location Access Required',
+                                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF92400E)),
+                                  ),
+                                  Text(
+                                    'Precise GPS is needed to verify you are inside the 50m department radius.',
+                                    style: TextStyle(fontSize: 11, color: Color(0xFFB45309)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            ElevatedButton(
+                              onPressed: _requestLocationPermission,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFD97706),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              child: const Text('Enable GPS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
+                            ),
+                          ],
+                        ),
+                      ),
 
                     // Active 15-Minute Session Notification (Sea Green / Amber)
                     if (attendance.activeStudentSessions.isNotEmpty) ...[
