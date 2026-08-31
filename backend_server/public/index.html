@@ -53,6 +53,14 @@
       0% { transform: scale(0.95); opacity: 0.8; }
       50% { transform: scale(1.15); opacity: 0.3; }
       100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
     @media print {
       body * { visibility: hidden !important; }
       #export-report-modal, #export-report-modal * { visibility: visible !important; }
@@ -400,10 +408,10 @@
 
   <!-- Subject Attendance Calendar & Verifiable Proof Modal -->
   <div id="history-modal" class="fixed inset-0 bg-charcoal-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-[#FAF7F0] rounded-3xl p-6 max-w-lg w-full border border-cream-200 device-shadow max-h-[90vh] flex flex-col animate-scale-up overflow-hidden">
+    <div class="bg-[#FAF7F0] rounded-3xl p-5 sm:p-6 max-w-lg w-full border border-cream-200 device-shadow max-h-[88vh] flex flex-col animate-scale-up overflow-hidden">
       
-      <!-- Modal Header -->
-      <div class="flex items-start justify-between border-b border-cream-200 pb-3">
+      <!-- Modal Header (Fixed) -->
+      <div class="flex items-start justify-between border-b border-cream-200 pb-3 flex-shrink-0">
         <div>
           <div class="flex items-center space-x-2">
             <span id="history-code-badge" class="font-mono text-xs font-bold px-2 py-0.5 bg-charcoal-900 text-white rounded">MCA-101</span>
@@ -418,107 +426,112 @@
         </button>
       </div>
 
-      <!-- Stats Summary Strip -->
-      <div class="my-3 p-3 bg-white rounded-2xl border border-cream-200 flex items-center justify-between">
-        <div>
-          <span class="text-[11px] font-bold text-charcoal-700 uppercase tracking-wider block">Attendance Score</span>
-          <div class="flex items-baseline space-x-2 mt-0.5">
-            <span id="history-pct" class="text-xl font-bold text-seagreen-600">90.0%</span>
-            <span id="history-ratio" class="text-xs text-charcoal-700 font-medium">(18 of 20 Classes)</span>
-          </div>
-        </div>
-        <div class="text-right">
-          <span id="history-status-badge" class="inline-block px-2.5 py-1 text-xs font-bold rounded-lg bg-seagreen-50 text-seagreen-800 border border-seagreen-600/20">
-            Safe (≥ 75%)
-          </span>
-        </div>
-      </div>
-
-      <!-- Calendar Color Legend -->
-      <div class="flex items-center justify-around bg-white p-2.5 rounded-xl border border-cream-200 text-[11px] font-bold mb-3">
-        <div class="flex items-center space-x-1.5">
-          <span class="w-3 h-3 rounded-full bg-seagreen-600 shadow-sm"></span>
-          <span class="text-seagreen-800">Attended</span>
-        </div>
-        <div class="flex items-center space-x-1.5">
-          <span class="w-3 h-3 rounded-full bg-red-600 shadow-sm"></span>
-          <span class="text-red-800">Absent</span>
-        </div>
-        <div class="flex items-center space-x-1.5">
-          <span class="w-3 h-3 rounded-full bg-gray-300"></span>
-          <span class="text-gray-600">Holiday / Weekend</span>
-        </div>
-      </div>
-
-      <!-- Month Navigation Header -->
-      <div class="flex items-center justify-between mb-2 px-1">
-        <div class="flex items-center space-x-2">
-          <button onclick="changeCalendarMonth(-1)" class="w-7 h-7 rounded-lg bg-cream-200 hover:bg-cream-300 flex items-center justify-center text-charcoal-900 font-bold text-xs transition shadow-sm">
-            ◀
-          </button>
-          <h4 id="calendar-month-heading" class="text-xs font-bold text-charcoal-900 font-mono tracking-tight">
-            August 2026
-          </h4>
-          <button onclick="changeCalendarMonth(1)" class="w-7 h-7 rounded-lg bg-cream-200 hover:bg-cream-300 flex items-center justify-center text-charcoal-900 font-bold text-xs transition shadow-sm">
-            ▶
-          </button>
-        </div>
-        <span id="calendar-conducted-tag" class="text-[10px] font-bold text-seagreen-700 bg-seagreen-50 px-2 py-0.5 rounded border border-seagreen-600/20">
-          Classes Conducted: 20
-        </span>
-      </div>
-
-      <!-- Calendar Month Grid Container -->
-      <div class="bg-white rounded-2xl p-3 border border-cream-200 mb-3">
-        <!-- Weekday Labels -->
-        <div class="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-charcoal-700 mb-1.5">
-          <div class="text-red-500">Sun</div>
-          <div>Mon</div>
-          <div>Tue</div>
-          <div>Wed</div>
-          <div>Thu</div>
-          <div>Fri</div>
-          <div class="text-gray-400">Sat</div>
-        </div>
-
-        <!-- Dynamic Days Grid Container -->
-        <div id="calendar-days-grid" class="grid grid-cols-7 gap-1 text-center">
-          <!-- Populated dynamically via JS -->
-        </div>
-      </div>
-
-      <!-- Selected Date Detailed Proof Card (Tamper-Evident Proof Log) -->
-      <div id="calendar-proof-card" class="p-3 bg-seagreen-50/70 border border-seagreen-600/30 rounded-xl mb-3 text-xs">
-        <div class="flex items-start justify-between">
+      <!-- Scrollable Modal Body (Interactive Smooth Scroll Without Visible Scrollbar) -->
+      <div class="flex-1 overflow-y-auto no-scrollbar scroll-smooth space-y-3 pr-0.5 my-2">
+        
+        <!-- Stats Summary Strip -->
+        <div class="p-3 bg-white rounded-2xl border border-cream-200 flex items-center justify-between">
           <div>
-            <div class="flex items-center space-x-1.5">
-              <span id="proof-date-title" class="font-bold text-charcoal-900">Mon, Aug 31, 2026</span>
-              <span id="proof-time-stamp" class="font-mono text-[11px] text-charcoal-700">• 10:24 AM</span>
-            </div>
-            <p id="proof-note" class="text-[11px] text-seagreen-900 font-medium mt-0.5">
-              📍 50m Geofence Verified: 18.4m from MCA Department (< 50.0m limit)
-            </p>
-            <div class="flex items-center space-x-2 mt-1 font-mono text-[9px] text-charcoal-700">
-              <span id="proof-token" class="px-1.5 py-0.5 bg-white rounded border border-cream-200">Token: SHA256: 4F8A-2026</span>
-              <span class="text-seagreen-800 font-bold flex items-center">
-                <svg class="w-3 h-3 mr-0.5 text-seagreen-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                Google Sheet Synced
-              </span>
+            <span class="text-[11px] font-bold text-charcoal-700 uppercase tracking-wider block">Attendance Score</span>
+            <div class="flex items-baseline space-x-2 mt-0.5">
+              <span id="history-pct" class="text-xl font-bold text-seagreen-600">90.0%</span>
+              <span id="history-ratio" class="text-xs text-charcoal-700 font-medium">(18 of 20 Classes)</span>
             </div>
           </div>
-          <span id="proof-status-tag" class="px-2 py-0.5 rounded text-[10px] font-bold bg-seagreen-600 text-white shadow-sm flex-shrink-0">
-            Full (1.0)
+          <div class="text-right">
+            <span id="history-status-badge" class="inline-block px-2.5 py-1 text-xs font-bold rounded-lg bg-seagreen-50 text-seagreen-800 border border-seagreen-600/20">
+              Safe (≥ 75%)
+            </span>
+          </div>
+        </div>
+
+        <!-- Calendar Color Legend -->
+        <div class="flex items-center justify-around bg-white p-2.5 rounded-xl border border-cream-200 text-[11px] font-bold">
+          <div class="flex items-center space-x-1.5">
+            <span class="w-3 h-3 rounded-full bg-seagreen-600 shadow-sm"></span>
+            <span class="text-seagreen-800">Attended</span>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <span class="w-3 h-3 rounded-full bg-red-600 shadow-sm"></span>
+            <span class="text-red-800">Absent</span>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <span class="w-3 h-3 rounded-full bg-gray-300"></span>
+            <span class="text-gray-600">Holiday / Weekend</span>
+          </div>
+        </div>
+
+        <!-- Month Navigation Header -->
+        <div class="flex items-center justify-between px-1">
+          <div class="flex items-center space-x-2">
+            <button onclick="changeCalendarMonth(-1)" class="w-7 h-7 rounded-lg bg-cream-200 hover:bg-cream-300 flex items-center justify-center text-charcoal-900 font-bold text-xs transition shadow-sm">
+              ◀
+            </button>
+            <h4 id="calendar-month-heading" class="text-xs font-bold text-charcoal-900 font-mono tracking-tight">
+              August 2026
+            </h4>
+            <button onclick="changeCalendarMonth(1)" class="w-7 h-7 rounded-lg bg-cream-200 hover:bg-cream-300 flex items-center justify-center text-charcoal-900 font-bold text-xs transition shadow-sm">
+              ▶
+            </button>
+          </div>
+          <span id="calendar-conducted-tag" class="text-[10px] font-bold text-seagreen-700 bg-seagreen-50 px-2 py-0.5 rounded border border-seagreen-600/20">
+            Classes Conducted: 20
           </span>
         </div>
+
+        <!-- Calendar Month Grid Container -->
+        <div class="bg-white rounded-2xl p-3 border border-cream-200">
+          <!-- Weekday Labels -->
+          <div class="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-charcoal-700 mb-1.5">
+            <div class="text-red-500">Sun</div>
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div class="text-gray-400">Sat</div>
+          </div>
+
+          <!-- Dynamic Days Grid Container -->
+          <div id="calendar-days-grid" class="grid grid-cols-7 gap-1 text-center">
+            <!-- Populated dynamically via JS -->
+          </div>
+        </div>
+
+        <!-- Selected Date Detailed Proof Card (Tamper-Evident Proof Log) -->
+        <div id="calendar-proof-card" class="p-3 bg-seagreen-50/70 border border-seagreen-600/30 rounded-xl text-xs">
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="flex items-center space-x-1.5">
+                <span id="proof-date-title" class="font-bold text-charcoal-900">Mon, Aug 31, 2026</span>
+                <span id="proof-time-stamp" class="font-mono text-[11px] text-charcoal-700">• 10:24 AM</span>
+              </div>
+              <p id="proof-note" class="text-[11px] text-seagreen-900 font-medium mt-0.5">
+                📍 50m Geofence Verified: 18.4m from MCA Department (< 50.0m limit)
+              </p>
+              <div class="flex items-center space-x-2 mt-1 font-mono text-[9px] text-charcoal-700">
+                <span id="proof-token" class="px-1.5 py-0.5 bg-white rounded border border-cream-200">Token: SHA256: 4F8A-2026</span>
+                <span class="text-seagreen-800 font-bold flex items-center">
+                  <svg class="w-3 h-3 mr-0.5 text-seagreen-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  Google Sheet Synced
+                </span>
+              </div>
+            </div>
+            <span id="proof-status-tag" class="px-2 py-0.5 rounded text-[10px] font-bold bg-seagreen-600 text-white shadow-sm flex-shrink-0">
+              Full (1.0)
+            </span>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Modal Footer -->
-      <div class="pt-2 border-t border-cream-200 flex items-center justify-between gap-3">
-        <button onclick="openExportReportModal()" class="flex-1 py-2 bg-charcoal-900 hover:bg-charcoal-800 text-white text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1.5 shadow">
+      <!-- Modal Footer (Fixed) -->
+      <div class="pt-3 border-t border-cream-200 flex items-center justify-between gap-3 flex-shrink-0">
+        <button onclick="openExportReportModal()" class="flex-1 py-2.5 bg-charcoal-900 hover:bg-charcoal-800 text-white text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1.5 shadow">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
           <span>Export Detailed Report (PDF)</span>
         </button>
-        <button onclick="closeSubjectHistoryModal()" class="px-4 py-2 bg-cream-200 hover:bg-cream-300 text-charcoal-800 text-xs font-bold rounded-xl transition">
+        <button onclick="closeSubjectHistoryModal()" class="px-5 py-2.5 bg-cream-200 hover:bg-cream-300 text-charcoal-800 text-xs font-bold rounded-xl transition">
           Close
         </button>
       </div>
@@ -674,8 +687,8 @@
         { code: 'MCA-321', name: 'Project–I (Minor Project)', type: 'Project', credits: 3, hours: '0+0+3', marks: '100', pct: 100.0, attended: 10, total: 10 },
       ],
       4: [
-        { code: 'MCA-421', name: 'Project–II (Major Capstone Project)', type: 'Project', credits: 16, hours: '0+0+24', marks: '400', pct: 95.0, attended: 19, total: 20 },
-        { code: 'MCA-431', name: 'Grand Viva', type: 'Viva', credits: 8, hours: '-', marks: '200', pct: 100.0, attended: 5, total: 5 },
+        { code: 'MCA-421', name: 'Project–II (Major Capstone Project)', type: 'Project', credits: 16, hours: '0+0+24', marks: '400', pct: 0.0, attended: 0, total: 0 },
+        { code: 'MCA-431', name: 'Grand Viva', type: 'Viva', credits: 8, hours: '-', marks: '200', pct: 0.0, attended: 0, total: 0 },
       ]
     };
 
@@ -805,20 +818,29 @@
       }).join('');
 
       // Calculate Aggregate
-      const aggPct = totalConducted > 0 ? ((totalAttended / totalConducted) * 100).toFixed(1) : '100.0';
-      document.getElementById('gauge-text').textContent = `${aggPct}%`;
-      document.getElementById('classes-count').textContent = `${totalAttended} / ${totalConducted} Classes Attended`;
-
-      const offset = 251.2 - (251.2 * (parseFloat(aggPct) / 100));
-      document.getElementById('gauge-circle').style.strokeDashoffset = Math.max(0, offset);
-
-      const badge = document.getElementById('status-badge');
-      if (parseFloat(aggPct) >= 75.0) {
-        badge.className = 'inline-block mt-2 px-2 py-0.5 text-[11px] font-bold rounded bg-seagreen-50 text-seagreen-800 border border-seagreen-600/20';
-        badge.textContent = 'Safe Zone (≥ 75%)';
-      } else {
+      if (totalConducted === 0) {
+        document.getElementById('gauge-text').textContent = 'N/A';
+        document.getElementById('classes-count').textContent = '0 / 0 Classes Conducted (Upcoming Term)';
+        document.getElementById('gauge-circle').style.strokeDashoffset = 251.2;
+        const badge = document.getElementById('status-badge');
         badge.className = 'inline-block mt-2 px-2 py-0.5 text-[11px] font-bold rounded bg-amber-50 text-amber-900 border border-amber-300';
-        badge.textContent = 'Warning (< 75%)';
+        badge.textContent = 'Enrolling Jan 2027';
+      } else {
+        const aggPct = ((totalAttended / totalConducted) * 100).toFixed(1);
+        document.getElementById('gauge-text').textContent = `${aggPct}%`;
+        document.getElementById('classes-count').textContent = `${totalAttended} / ${totalConducted} Classes Attended`;
+
+        const offset = 251.2 - (251.2 * (parseFloat(aggPct) / 100));
+        document.getElementById('gauge-circle').style.strokeDashoffset = Math.max(0, offset);
+
+        const badge = document.getElementById('status-badge');
+        if (parseFloat(aggPct) >= 75.0) {
+          badge.className = 'inline-block mt-2 px-2 py-0.5 text-[11px] font-bold rounded bg-seagreen-50 text-seagreen-800 border border-seagreen-600/20';
+          badge.textContent = 'Safe Zone (≥ 75%)';
+        } else {
+          badge.className = 'inline-block mt-2 px-2 py-0.5 text-[11px] font-bold rounded bg-amber-50 text-amber-900 border border-amber-300';
+          badge.textContent = 'Warning (< 75%)';
+        }
       }
     }
 
@@ -1171,11 +1193,14 @@
       document.getElementById('history-faculty-name').textContent = `Instructor: ${currentTeacherSem <= 2 ? 'Prof. R. K. Sharma' : 'Dr. Ananya Sen'}`;
 
       document.getElementById('history-pct').textContent = `${pct}%`;
-      document.getElementById('history-pct').className = `text-xl font-bold ${pct >= 75 ? 'text-seagreen-600' : 'text-amber-600'}`;
+      document.getElementById('history-pct').className = `text-xl font-bold ${pct >= 75 ? 'text-seagreen-600' : total === 0 ? 'text-charcoal-700' : 'text-amber-600'}`;
       document.getElementById('history-ratio').textContent = `(${attended} of ${total} Classes Attended)`;
 
       const statusBadge = document.getElementById('history-status-badge');
-      if (pct >= 75) {
+      if (total === 0) {
+        statusBadge.className = 'inline-block px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-50 text-amber-900 border border-amber-300';
+        statusBadge.textContent = 'Upcoming (Spring 2027)';
+      } else if (pct >= 75) {
         statusBadge.className = 'inline-block px-2.5 py-1 text-xs font-bold rounded-lg bg-seagreen-50 text-seagreen-800 border border-seagreen-600/20';
         statusBadge.textContent = 'Safe (≥ 75%)';
       } else {
@@ -1242,10 +1267,15 @@
         }
       }
 
-      // Distribute attended vs absent classes proportionally
+      // Distribute attended vs absent classes proportionally (0 for upcoming terms)
       const isAugust2026 = currentCalYear === 2026 && currentCalMonth === 7;
-      monthConducted = isAugust2026 ? total : Math.min(workingDays.length, Math.round(total * 0.9));
-      monthAttended = isAugust2026 ? attended : Math.round(monthConducted * (currentSubjectContext.pct / 100));
+      if (total === 0) {
+        monthConducted = 0;
+        monthAttended = 0;
+      } else {
+        monthConducted = isAugust2026 ? total : Math.min(workingDays.length, Math.round(total * 0.9));
+        monthAttended = isAugust2026 ? attended : Math.round(monthConducted * (currentSubjectContext.pct / 100));
+      }
 
       const absentCount = Math.max(0, monthConducted - monthAttended);
       const absentDays = [];
@@ -1266,9 +1296,10 @@
       for (let day = 1; day <= totalDaysInMonth; day++) {
         const isWeekend = weekendDays.includes(day);
         const isHoliday = holidayDays.includes(day);
-        const isAbsent = absentDays.includes(day);
+        const isAbsent = total > 0 && absentDays.includes(day);
         const isWorking = workingDays.includes(day);
-        const isAttended = isWorking && !isAbsent;
+        const isAttended = total > 0 && isWorking && !isAbsent;
+        const isUpcoming = total === 0 && isWorking;
 
         let bgClass = '';
         let statusTag = '';
@@ -1288,6 +1319,12 @@
           note = 'No classes scheduled on Saturdays or Sundays.';
           time = 'Weekend Break';
           token = 'WEEKEND';
+        } else if (isUpcoming) {
+          bgClass = 'bg-white border border-cream-200 text-charcoal-700 hover:bg-cream-100';
+          statusTag = 'Upcoming Scheduled Lecture';
+          note = 'Term begins January 2027. Real-time GPS attendance will record once faculty launches class session.';
+          time = 'Term Commences Jan 2027';
+          token = 'SCHEDULED';
         } else if (isAbsent) {
           bgClass = 'bg-red-600 text-white font-bold shadow hover:bg-red-700';
           statusTag = 'Absent (0.0)';
@@ -1308,6 +1345,7 @@
           status: statusTag,
           isAttended,
           isAbsent,
+          isUpcoming,
           isHoliday: isHoliday || isWeekend,
           note,
           time,
@@ -1351,16 +1389,20 @@
       note.textContent = data.note;
       token.textContent = `Token: ${data.token}`;
 
-      if (data.isAttended) {
-        card.className = 'p-3 bg-seagreen-50/80 border border-seagreen-600/30 rounded-xl mb-3 text-xs';
+      if (data.isUpcoming) {
+        card.className = 'p-3 bg-amber-50/70 border border-amber-300 rounded-xl text-xs';
+        tag.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-amber-600 text-white shadow-sm flex-shrink-0';
+        tag.textContent = 'Scheduled';
+      } else if (data.isAttended) {
+        card.className = 'p-3 bg-seagreen-50/80 border border-seagreen-600/30 rounded-xl text-xs';
         tag.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-seagreen-600 text-white shadow-sm flex-shrink-0';
         tag.textContent = 'Full (1.0)';
       } else if (data.isAbsent) {
-        card.className = 'p-3 bg-red-50 border border-red-300 rounded-xl mb-3 text-xs';
+        card.className = 'p-3 bg-red-50 border border-red-300 rounded-xl text-xs';
         tag.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-red-600 text-white shadow-sm flex-shrink-0';
         tag.textContent = 'Absent (0.0)';
       } else {
-        card.className = 'p-3 bg-gray-100 border border-gray-300 rounded-xl mb-3 text-xs';
+        card.className = 'p-3 bg-gray-100 border border-gray-300 rounded-xl text-xs';
         tag.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-gray-400 text-white flex-shrink-0';
         tag.textContent = 'Holiday';
       }
@@ -1381,7 +1423,9 @@
       document.getElementById('report-sign-faculty').textContent = faculty;
 
       document.getElementById('report-pct-text').textContent = `${pct}%`;
-      const termStatus = currentStudentSem < loggedInStudent.currentEnrolledSem
+      const termStatus = total === 0
+        ? 'Upcoming Academic Term • Classes Commence Jan 2027'
+        : currentStudentSem < loggedInStudent.currentEnrolledSem
         ? 'Archived Past Record • Examination Cleared & Passed ✅'
         : 'Ongoing Academic Session • Eligible for University Exams (≥ 75%)';
       document.getElementById('report-stats-text').textContent = `Classes Attended: ${attended} / ${total} • ${termStatus}`;
@@ -1390,40 +1434,50 @@
       const tbody = document.getElementById('report-table-body');
       tbody.innerHTML = '';
 
-      // Generate class records matching the total count
-      for (let i = total; i >= 1; i--) {
-        const d = new Date(2026, 7, 31);
-        d.setDate(d.getDate() - ((total - i) * 2 + ((total - i) % 2)));
-        const dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-        const timeSlot = `${10 + (i % 2)}:15 AM - ${11 + (i % 2)}:15 AM`;
-        const isAbsent = i === 5 || (pct < 85 && i === 12);
-        const isHalf = i === 3 && !isAbsent;
-
+      if (total === 0) {
         const tr = document.createElement('tr');
-        tr.className = isAbsent ? 'bg-red-50/40 hover:bg-red-50' : 'hover:bg-cream-50';
         tr.innerHTML = `
-          <td class="py-2 px-3 font-mono font-bold text-charcoal-900">${dateStr}</td>
-          <td class="py-2 px-3 font-mono text-charcoal-700">${timeSlot}</td>
-          <td class="py-2 px-3">
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
-              isAbsent ? 'bg-red-100 text-red-700' :
-              isHalf ? 'bg-amber-100 text-amber-800' :
-              'bg-seagreen-50 text-seagreen-800 border border-seagreen-600/20'
-            }">
-              ${isAbsent ? 'Absent (0.0)' : isHalf ? 'Half (0.5)' : 'Full (1.0)'}
-            </span>
-          </td>
-          <td class="py-2 px-3 text-[11px] text-charcoal-700">
-            ${isAbsent ? 'No GPS Check-in' : isHalf ? 'Faculty Override Stamp' : 'GPS: 18.4m within 50m Radius'}
-          </td>
-          <td class="py-2 px-3 font-mono text-[10px] text-charcoal-700">
-            ${isAbsent ? 'UNMARKED' : `SHA256: ${code.replace(/[^a-zA-Z0-9]/g, '')}-${i.toString().padStart(2, '0')}AUG`}
-          </td>
-          <td class="py-2 px-3 font-bold text-[10px] ${isAbsent ? 'text-charcoal-700' : 'text-seagreen-700'}">
-            ${isAbsent ? '—' : 'Sheet Row Synced ✅'}
+          <td colspan="6" class="py-6 text-center text-charcoal-700 italic">
+            🌱 No classes conducted yet. Attendance tracking will automatically open upon faculty session launch in Spring 2027.
           </td>
         `;
         tbody.appendChild(tr);
+      } else {
+        // Generate class records matching the total count
+        for (let i = total; i >= 1; i--) {
+          const d = new Date(2026, 7, 31);
+          d.setDate(d.getDate() - ((total - i) * 2 + ((total - i) % 2)));
+          const dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+          const timeSlot = `${10 + (i % 2)}:15 AM - ${11 + (i % 2)}:15 AM`;
+          const isAbsent = i === 5 || (pct < 85 && i === 12);
+          const isHalf = i === 3 && !isAbsent;
+
+          const tr = document.createElement('tr');
+          tr.className = isAbsent ? 'bg-red-50/40 hover:bg-red-50' : 'hover:bg-cream-50';
+          tr.innerHTML = `
+            <td class="py-2 px-3 font-mono font-bold text-charcoal-900">${dateStr}</td>
+            <td class="py-2 px-3 font-mono text-charcoal-700">${timeSlot}</td>
+            <td class="py-2 px-3">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
+                isAbsent ? 'bg-red-100 text-red-700' :
+                isHalf ? 'bg-amber-100 text-amber-800' :
+                'bg-seagreen-50 text-seagreen-800 border border-seagreen-600/20'
+              }">
+                ${isAbsent ? 'Absent (0.0)' : isHalf ? 'Half (0.5)' : 'Full (1.0)'}
+              </span>
+            </td>
+            <td class="py-2 px-3 text-[11px] text-charcoal-700">
+              ${isAbsent ? 'No GPS Check-in' : isHalf ? 'Faculty Override Stamp' : 'GPS: 18.4m within 50m Radius'}
+            </td>
+            <td class="py-2 px-3 font-mono text-[10px] text-charcoal-700">
+              ${isAbsent ? 'UNMARKED' : `SHA256: ${code.replace(/[^a-zA-Z0-9]/g, '')}-${i.toString().padStart(2, '0')}AUG`}
+            </td>
+            <td class="py-2 px-3 font-bold text-[10px] ${isAbsent ? 'text-charcoal-700' : 'text-seagreen-700'}">
+              ${isAbsent ? '—' : 'Sheet Row Synced ✅'}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        }
       }
 
       document.getElementById('export-report-modal').classList.remove('hidden');
