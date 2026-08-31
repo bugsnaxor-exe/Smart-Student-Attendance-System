@@ -579,20 +579,6 @@
         </div>
       </div>
 
-      <!-- Signatures & Stamp -->
-      <div class="grid grid-cols-2 gap-6 pt-4 border-t border-cream-200 text-xs mb-4 text-center">
-        <div class="border border-dashed border-cream-300 p-3 rounded-xl">
-          <p class="font-bold text-charcoal-900" id="report-sign-faculty">Prof. R. K. Sharma</p>
-          <p class="text-[10px] text-charcoal-700">Signature of Course Instructor</p>
-          <span class="text-[9px] text-seagreen-700 font-mono block mt-1">Digitally Authenticated (Google Sheets API v4)</span>
-        </div>
-        <div class="border border-dashed border-cream-300 p-3 rounded-xl">
-          <p class="font-bold text-charcoal-900">Head of Department (HOD)</p>
-          <p class="text-[10px] text-charcoal-700">MCA Department Seal & Stamp</p>
-          <span class="text-[9px] text-seagreen-700 font-mono block mt-1">Verified Server-Side GPS Perimeter (50m)</span>
-        </div>
-      </div>
-
       <!-- Footer Buttons -->
       <div class="flex items-center justify-end space-x-3 pt-3 border-t border-cream-200">
         <button onclick="window.print()" class="px-5 py-2.5 bg-seagreen-600 hover:bg-seagreen-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center space-x-1.5">
@@ -1390,8 +1376,7 @@
       const selectedOption = courseSelect?.options[courseSelect?.selectedIndex];
       const courseName = selectedOption?.getAttribute('data-name') || 'Artificial Intelligence';
 
-      document.getElementById('report-faculty-name').textContent = loggedInFaculty?.name || 'Prof. R. K. Sharma';
-      document.getElementById('report-sign-faculty').textContent = loggedInFaculty?.name || 'Prof. R. K. Sharma';
+      document.getElementById('report-faculty-name').textContent = loggedInFaculty?.name || 'Faculty Member';
       document.getElementById('report-course-title').textContent = `${courseCode}: ${courseName} (Sem ${currentTeacherSem})`;
 
       const tbody = document.getElementById('report-table-body');
