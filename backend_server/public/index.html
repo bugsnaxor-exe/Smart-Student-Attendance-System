@@ -1241,23 +1241,51 @@
         }
       }
 
-      // Initial semester / subject selection
-      let initialSem = localStorage.getItem('faculty_assigned_sem') || localStorage.getItem('faculty_active_sem') || loggedInFaculty?.teacher?.subjects?.[0]?.semester?.toString() || '3';
-      let initialSubj = localStorage.getItem('faculty_assigned_subject') || localStorage.getItem('faculty_active_subject') || loggedInFaculty?.teacher?.subjects?.[0]?.code || 'MCA-301';
+      // Role-based Semester & Subject Access Control
+      let initialSem = '3';
+      let initialSubj = 'MCA-301';
 
-      if (semSelect) {
-        semSelect.disabled = false;
-        semSelect.classList.remove('opacity-75', 'cursor-not-allowed');
-      }
+      if (!isAdmin) {
+        // Regular faculty: strictly locked to their registered / assigned course and semester
+        const assignedSubj = loggedInFaculty?.teacher?.subjects?.[0]?.code || localStorage.getItem('faculty_assigned_subject') || localStorage.getItem('faculty_active_subject') || 'MCA-301';
+        const assignedSem = loggedInFaculty?.teacher?.subjects?.[0]?.semester?.toString() || localStorage.getItem('faculty_assigned_sem') || localStorage.getItem('faculty_active_sem') || '3';
 
-      currentTeacherSem = parseInt(initialSem, 10);
-      if (semSelect) semSelect.value = initialSem;
-      populateTeacherCourses(currentTeacherSem);
+        initialSem = assignedSem;
+        initialSubj = assignedSubj;
 
-      if (courseSelect) {
-        courseSelect.disabled = false;
-        courseSelect.classList.remove('opacity-75', 'cursor-not-allowed');
-        if (initialSubj) courseSelect.value = initialSubj;
+        currentTeacherSem = parseInt(initialSem, 10);
+        if (semSelect) {
+          semSelect.value = initialSem;
+          semSelect.disabled = true;
+          semSelect.classList.add('opacity-75', 'cursor-not-allowed');
+        }
+
+        populateTeacherCourses(currentTeacherSem);
+
+        if (courseSelect) {
+          courseSelect.value = initialSubj;
+          courseSelect.disabled = true;
+          courseSelect.classList.add('opacity-75', 'cursor-not-allowed');
+        }
+      } else {
+        // Super Admin (Sayantan Dasgupta): full freedom to switch across any semester and course
+        initialSem = localStorage.getItem('faculty_assigned_sem') || localStorage.getItem('faculty_active_sem') || '3';
+        initialSubj = localStorage.getItem('faculty_assigned_subject') || localStorage.getItem('faculty_active_subject') || 'MCA-301';
+
+        currentTeacherSem = parseInt(initialSem, 10);
+        if (semSelect) {
+          semSelect.value = initialSem;
+          semSelect.disabled = false;
+          semSelect.classList.remove('opacity-75', 'cursor-not-allowed');
+        }
+
+        populateTeacherCourses(currentTeacherSem);
+
+        if (courseSelect) {
+          courseSelect.disabled = false;
+          courseSelect.classList.remove('opacity-75', 'cursor-not-allowed');
+          if (initialSubj) courseSelect.value = initialSubj;
+        }
       }
 
       if (badgeCourse) badgeCourse.textContent = courseSelect?.value || initialSubj;
