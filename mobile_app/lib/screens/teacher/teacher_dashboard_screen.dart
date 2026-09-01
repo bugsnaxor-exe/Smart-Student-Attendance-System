@@ -95,12 +95,14 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
       attendance.connectRealTimeStream();
       _fetchActiveSheetFromBackend();
       _loadStudentsForSemester(_selectedSemester);
+      _fetchTodaySessionCounts();
       _fetchTodayCheckIns();
       _checkOngoingSession();
     });
 
     _syncTimer = Timer.periodic(const Duration(seconds: 4), (_) {
       if (mounted) {
+        _fetchTodaySessionCounts();
         _fetchTodayCheckIns();
         _checkOngoingSession();
       }
@@ -167,14 +169,52 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     }
   }
 
+  Future<void> _fetchTodaySessionCounts() async {
+    try {
+      final res = await ApiService.getTodaySessionCounts();
+      if (res['counts'] != null && mounted) {
+        final Map<String, dynamic> rawCounts = res['counts'];
+        setState(() {
+          rawCounts.forEach((key, value) {
+            _sessionCountsByCourse[key] = (value as num).toInt();
+          });
+        });
+      }
+    } catch (e) {
+      // Ignore network errors on background fetch
+    }
+  }
+
   Future<void> _checkOngoingSession() async {
     if (_selectedCourseCode == null) return;
     final attendance = Provider.of<AttendanceProvider>(context, listen: false);
     final res = await attendance.checkActiveTeacherSession(_selectedCourseCode!);
+    if (res != null && res['sessionsConductedToday'] != null && mounted) {
+      setState(() {
+        _sessionCountsByCourse[_selectedCourseCode!] = (res['sessionsConductedToday'] as num).toInt();
+      });
+    }
     if (res != null && res['isActive'] == true && res['session'] != null && mounted) {
       final sess = res['session'];
       final remaining = (res['remainingSeconds'] as num?)?.toInt() ?? 900;
-      _activeSessionId = sess['id'];
+      final newSessionId = sess['id'];
+
+      // If active session ID changed, reset the check-in status map for this new session
+      if (_activeSessionId != newSessionId) {
+        _attendanceStatusByUniRoll.clear();
+        _activeSessionId = newSessionId;
+        if (sess['attendances'] != null) {
+          for (final a in (sess['attendances'] as List)) {
+            final st = a['student'];
+            final uRoll = st?['universityRoll'] ?? '';
+            final cRoll = st?['classRoll'] ?? '';
+            final statusStr = a['status'] == 'Half' ? 'H' : 'P';
+            if (uRoll.isNotEmpty) _attendanceStatusByUniRoll[uRoll] = statusStr;
+            if (cRoll.isNotEmpty) _attendanceStatusByUniRoll[cRoll] = statusStr;
+          }
+        }
+      }
+
       if (!_isSessionActive || _countdownSeconds == 0) {
         setState(() {
           _isSessionActive = true;
@@ -210,6 +250,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
       }
     });
     _loadStudentsForSemester(newSem);
+    _fetchTodaySessionCounts();
     _fetchTodayCheckIns();
     _checkOngoingSession();
   }
@@ -239,7 +280,12 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         _isSessionActive = true;
         _countdownSeconds = 900;
         _sessionCountsByCourse[_selectedCourseCode!] = count + 1;
+        // Clean slate for the new active session
+        _attendanceStatusByUniRoll.clear();
       });
+
+      // Refresh absent students for this fresh session
+      await attendance.fetchAbsentStudents(_selectedCourseCode!, sessionId: sessionId);
 
       _sessionTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
         if (_countdownSeconds > 0) {
@@ -288,7 +334,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
 
     final attendance = Provider.of<AttendanceProvider>(context, listen: false);
     if (_selectedCourseCode != null) {
-      await attendance.grantHalfAttendance(_selectedCourseCode!, studentId);
+      await attendance.grantHalfAttendance(_selectedCourseCode!, studentId, sessionId: _activeSessionId);
       await _fetchTodayCheckIns();
     }
 

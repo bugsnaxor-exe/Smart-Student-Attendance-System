@@ -85,6 +85,7 @@ app.get('/api/auth/me', requireAuth, AuthController.getMe);
 
 // --- SESSION ROUTES (15-Minute Dynamic Window) ---
 app.post('/api/sessions/start', optionalAuth, SessionController.startSession);
+app.get('/api/sessions/counts-today', SessionController.getTodayCounts);
 app.get('/api/sessions/active/:subjectId', SessionController.getActiveSession);
 app.get('/api/sessions/student-active', optionalAuth, SessionController.getStudentActiveSessions);
 app.post('/api/sessions/close/:sessionId', optionalAuth, SessionController.closeSession);
@@ -97,8 +98,8 @@ app.get('/api/attendance/student/subject-history/:subjectId', requireAuth, Atten
 app.get('/api/attendance/teacher/:subjectId', requireAuth, requireRole(['TEACHER', 'ADMIN']), AttendanceController.getTeacherSubjectAttendance);
 
 // --- TEACHER OVERRIDE ROUTES (Full / Half Attendance) ---
-app.get('/api/override/absent/:subjectId', requireAuth, requireRole(['TEACHER', 'ADMIN']), OverrideController.getAbsentStudentsForSubject);
-app.post('/api/override/grant-half', requireAuth, requireRole(['TEACHER', 'ADMIN']), OverrideController.grantHalfAttendance);
+app.get('/api/override/absent/:subjectId', optionalAuth, OverrideController.getAbsentStudentsForSubject);
+app.post('/api/override/grant-half', optionalAuth, OverrideController.grantHalfAttendance);
 app.post('/api/override/grant-half-matrix', OverrideController.grantHalfAttendanceMatrix);
 app.get('/api/students/semester/:semester', OverrideController.getStudentsBySemester);
 app.get('/api/override/students/semester/:semester', OverrideController.getStudentsBySemester);

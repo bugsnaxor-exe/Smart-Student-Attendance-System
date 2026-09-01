@@ -239,9 +239,10 @@ class AttendanceProvider extends ChangeNotifier {
   }
 
   /// Teacher: Fetches absent students for manual "Grant Half" override
-  Future<void> fetchAbsentStudents(String subjectId, {String? date}) async {
+  Future<void> fetchAbsentStudents(String subjectId, {String? date, String? sessionId}) async {
     try {
-      final res = await ApiService.getAbsentStudents(subjectId, date: date);
+      final targetSessionId = sessionId ?? _teacherActiveSession?.id;
+      final res = await ApiService.getAbsentStudents(subjectId, date: date, sessionId: targetSessionId);
       if (res['absentStudents'] != null) {
         _absentStudents = res['absentStudents'];
         notifyListeners();
@@ -252,9 +253,10 @@ class AttendanceProvider extends ChangeNotifier {
   }
 
   /// Teacher: Manually grants Half attendance to a late student
-  Future<bool> grantHalfAttendance(String subjectId, String studentId, {String? date}) async {
+  Future<bool> grantHalfAttendance(String subjectId, String studentId, {String? date, String? sessionId}) async {
     try {
-      final res = await ApiService.grantHalfAttendance(subjectId, studentId, date: date);
+      final targetSessionId = sessionId ?? _teacherActiveSession?.id;
+      final res = await ApiService.grantHalfAttendance(subjectId, studentId, date: date, sessionId: targetSessionId);
       if (res['status'] == 'Half') {
         // Remove from absent list
         _absentStudents.removeWhere((s) => s['id'] == studentId);

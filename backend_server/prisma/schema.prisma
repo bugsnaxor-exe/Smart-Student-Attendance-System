@@ -114,5 +114,6 @@ model AttendanceRecord {
   syncedToSheet  Boolean        @default(false)
   createdAt      DateTime       @default(now())
 
-  @@unique([studentId, subjectId, date])
+  @@index([studentId, subjectId, date])
+  @@index([sessionId])
 }

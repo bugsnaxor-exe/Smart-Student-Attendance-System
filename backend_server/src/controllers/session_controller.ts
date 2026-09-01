@@ -173,12 +173,16 @@ export class SessionController {
       const cleanCode = subjectId ? subjectId.trim() : '';
 
       const session = await SessionService.getActiveSession(cleanCode);
+      const sessionsConductedToday = await SessionService.getTodaySessionsCount(cleanCode);
 
       if (!session) {
         return res.json({
           isActive: false,
           session: null,
           remainingSeconds: 0,
+          sessionsConductedToday,
+          remainingDailySessions: Math.max(0, 3 - sessionsConductedToday),
+          maxDailySessions: 3,
           message: 'No active session found or session has expired.',
         });
       }
@@ -189,6 +193,9 @@ export class SessionController {
       return res.json({
         isActive: true,
         remainingSeconds,
+        sessionsConductedToday,
+        remainingDailySessions: Math.max(0, 3 - sessionsConductedToday),
+        maxDailySessions: 3,
         session: {
           id: session.id,
           subjectId: session.subjectId,
@@ -199,6 +206,21 @@ export class SessionController {
           expiresAt: session.expiresAt,
           attendances: session.attendances,
         },
+      });
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
+   * Returns today's conducted session counts across all subjects.
+   */
+  public static async getTodayCounts(req: AuthRequest, res: Response) {
+    try {
+      const counts = await SessionService.getAllTodaySessionCounts();
+      return res.json({
+        counts,
+        maxDailyLimit: 3,
       });
     } catch (error: any) {
       return res.status(500).json({ error: error.message });

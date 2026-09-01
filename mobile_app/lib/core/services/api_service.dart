@@ -157,9 +157,12 @@ class ApiService {
     return jsonDecode(res.body);
   }
 
-  static Future<Map<String, dynamic>> getAbsentStudents(String subjectId, {String? date}) async {
+  static Future<Map<String, dynamic>> getAbsentStudents(String subjectId, {String? date, String? sessionId}) async {
     String url = '$baseUrl/override/absent/$subjectId';
-    if (date != null) url += '?date=$date';
+    final queryParams = <String>[];
+    if (date != null) queryParams.add('date=$date');
+    if (sessionId != null) queryParams.add('sessionId=$sessionId');
+    if (queryParams.isNotEmpty) url += '?${queryParams.join('&')}';
 
     final res = await http.get(
       Uri.parse(url),
@@ -168,7 +171,7 @@ class ApiService {
     return jsonDecode(res.body);
   }
 
-  static Future<Map<String, dynamic>> grantHalfAttendance(String subjectId, String studentId, {String? date}) async {
+  static Future<Map<String, dynamic>> grantHalfAttendance(String subjectId, String studentId, {String? date, String? sessionId}) async {
     final res = await http.post(
       Uri.parse('$baseUrl/override/grant-half'),
       headers: await _getHeaders(),
@@ -176,7 +179,16 @@ class ApiService {
         'subjectId': subjectId,
         'studentId': studentId,
         'date': date,
+        if (sessionId != null) 'sessionId': sessionId,
       }),
+    );
+    return jsonDecode(res.body);
+  }
+
+  static Future<Map<String, dynamic>> getTodaySessionCounts() async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/sessions/counts-today'),
+      headers: await _getHeaders(),
     );
     return jsonDecode(res.body);
   }

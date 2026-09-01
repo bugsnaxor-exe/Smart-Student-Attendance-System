@@ -3,6 +3,7 @@ import { AuthRequest } from '../middleware/auth_middleware';
 import { prisma } from '../config/database';
 import { GoogleSheetsService } from '../services/sheets_service';
 import { GeofenceService, getKolkataTime } from '../services/geofence_service';
+import { SessionService } from '../services/session_service';
 
 type OverrideBroadcastCallback = (data: any) => void;
 let overrideBroadcastCallback: OverrideBroadcastCallback | null = null;
@@ -19,7 +20,7 @@ export class OverrideController {
   public static async getAbsentStudentsForSubject(req: AuthRequest, res: Response) {
     try {
       const { subjectId } = req.params;
-      const { date } = req.query;
+      const { date, sessionId } = req.query;
 
       const kolkata = getKolkataTime();
       const targetDate = (date as string) || kolkata.dateString;
@@ -37,7 +38,7 @@ export class OverrideController {
         return res.status(404).json({ error: 'Subject not found.' });
       }
 
-      // 1. Get all students enrolled in this department & semester
+      // 1. Get all students enrolled in this semester
       const allStudents = await prisma.studentProfile.findMany({
         where: {
           semester: subject.semester,
@@ -50,17 +51,52 @@ export class OverrideController {
         },
       });
 
-      // 2. Get students who already marked attendance today
-      const markedAttendances = await prisma.attendanceRecord.findMany({
-        where: {
-          subjectId: subject.id,
-          date: targetDate,
-        },
-      });
+      // 2. Identify the active session or specific session to filter absentees
+      let targetSession = null;
+      if (sessionId) {
+        targetSession = await prisma.activeSession.findUnique({
+          where: { id: sessionId as string },
+        });
+      }
 
-      const markedStudentIds = new Set(markedAttendances.map((a) => a.studentId));
+      if (!targetSession) {
+        targetSession = await SessionService.getActiveSession(subject.id);
+      }
 
-      // 3. Filter for absent students
+      let markedStudentIds = new Set<string>();
+
+      if (targetSession) {
+        // Find attendees specifically checked in for THIS session
+        const sessionAttendances = await prisma.attendanceRecord.findMany({
+          where: {
+            sessionId: targetSession.id,
+          },
+        });
+        markedStudentIds = new Set(sessionAttendances.map((a) => a.studentId));
+      } else {
+        // If no active session, find attendees from latest session today
+        const startOfDay = new Date(`${targetDate}T00:00:00+05:30`);
+        const endOfDay = new Date(`${targetDate}T23:59:59+05:30`);
+
+        const latestSession = await prisma.activeSession.findFirst({
+          where: {
+            subjectId: subject.id,
+            createdAt: { gte: startOfDay, lte: endOfDay },
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        if (latestSession) {
+          const sessionAttendances = await prisma.attendanceRecord.findMany({
+            where: {
+              sessionId: latestSession.id,
+            },
+          });
+          markedStudentIds = new Set(sessionAttendances.map((a) => a.studentId));
+        }
+      }
+
+      // 3. Filter for absent students for this specific session
       const absentStudents = allStudents
         .filter((student) => !markedStudentIds.has(student.id))
         .map((student) => ({
@@ -77,8 +113,9 @@ export class OverrideController {
         subjectName: subject.name,
         subjectCode: subject.code,
         date: targetDate,
+        sessionId: targetSession?.id || null,
         totalEnrolled: allStudents.length,
-        totalPresent: markedAttendances.length,
+        totalPresent: markedStudentIds.size,
         totalAbsent: absentStudents.length,
         absentStudents,
       });
@@ -93,7 +130,7 @@ export class OverrideController {
    */
   public static async grantHalfAttendance(req: AuthRequest, res: Response) {
     try {
-      const { subjectId, studentId, date } = req.body;
+      const { subjectId, studentId, date, sessionId } = req.body;
 
       if (!subjectId || !studentId) {
         return res.status(400).json({ error: 'subjectId and studentId are required.' });
@@ -132,28 +169,80 @@ export class OverrideController {
       const kolkata = getKolkataTime();
       const targetDate = date || kolkata.dateString;
 
-      // Create or update attendance record as "Half"
-      const record = await prisma.attendanceRecord.upsert({
+      // Determine active session
+      let targetSession = null;
+      if (sessionId) {
+        targetSession = await prisma.activeSession.findUnique({
+          where: { id: sessionId },
+        });
+      }
+      if (!targetSession) {
+        targetSession = await SessionService.getActiveSession(subject.id);
+      }
+
+      // Calculate session number today
+      let sessionNumber = 1;
+      const todaySessions = await prisma.activeSession.findMany({
         where: {
-          studentId_subjectId_date: {
+          subjectId: subject.id,
+          createdAt: {
+            gte: new Date(`${targetDate}T00:00:00+05:30`),
+            lte: new Date(`${targetDate}T23:59:59+05:30`),
+          },
+        },
+        orderBy: { createdAt: 'asc' },
+      });
+
+      if (targetSession) {
+        const idx = todaySessions.findIndex(s => s.id === targetSession.id);
+        if (idx !== -1) sessionNumber = idx + 1;
+      } else if (todaySessions.length > 0) {
+        sessionNumber = todaySessions.length;
+      }
+
+      // Create or update attendance record as "Half"
+      let record;
+      if (targetSession) {
+        const existing = await prisma.attendanceRecord.findFirst({
+          where: {
+            studentId: student.id,
+            sessionId: targetSession.id,
+          },
+        });
+
+        if (existing) {
+          record = await prisma.attendanceRecord.update({
+            where: { id: existing.id },
+            data: {
+              status: 'Half',
+              time: kolkata.formattedTime,
+            },
+          });
+        } else {
+          record = await prisma.attendanceRecord.create({
+            data: {
+              sessionId: targetSession.id,
+              studentId: student.id,
+              subjectId: subject.id,
+              date: targetDate,
+              time: kolkata.formattedTime,
+              status: 'Half',
+              syncedToSheet: false,
+            },
+          });
+        }
+      } else {
+        record = await prisma.attendanceRecord.create({
+          data: {
             studentId: student.id,
             subjectId: subject.id,
             date: targetDate,
+            time: kolkata.formattedTime,
+            status: 'Half',
+            syncedToSheet: false,
           },
-        },
-        create: {
-          studentId: student.id,
-          subjectId: subject.id,
-          date: targetDate,
-          time: kolkata.formattedTime,
-          status: 'Half',
-          syncedToSheet: false,
-        },
-        update: {
-          status: 'Half',
-          time: kolkata.formattedTime,
-        },
-      });
+        });
+      }
 
       // Append row to Teacher's Google Sheet
       let sheetSyncSuccess = false;
@@ -179,6 +268,7 @@ export class OverrideController {
             subjectCode: subject.code,
             subjectName: subject.name,
             semester: subject.semester,
+            sessionNumber,
           },
           subject.sheetTabName || 'Attendance'
         );
@@ -240,6 +330,7 @@ export class OverrideController {
         date,
         subjectCode = 'MCA-301',
         semester,
+        sessionId,
       } = req.body;
 
       const kolkata = getKolkataTime();
@@ -266,29 +357,82 @@ export class OverrideController {
         },
       });
 
+      // Determine active session
+      let targetSession = null;
+      if (sessionId) {
+        targetSession = await prisma.activeSession.findUnique({
+          where: { id: sessionId },
+        });
+      }
+      if (!targetSession && subject) {
+        targetSession = await SessionService.getActiveSession(subject.id);
+      }
+
+      // Calculate session number today
+      let sessionNumber = 1;
+      if (subject) {
+        const todaySessions = await prisma.activeSession.findMany({
+          where: {
+            subjectId: subject.id,
+            createdAt: {
+              gte: new Date(`${targetDate}T00:00:00+05:30`),
+              lte: new Date(`${targetDate}T23:59:59+05:30`),
+            },
+          },
+          orderBy: { createdAt: 'asc' },
+        });
+
+        if (targetSession) {
+          const idx = todaySessions.findIndex(s => s.id === targetSession.id);
+          if (idx !== -1) sessionNumber = idx + 1;
+        } else if (todaySessions.length > 0) {
+          sessionNumber = todaySessions.length;
+        }
+      }
+
       let dbRecord = null;
       if (student && subject) {
-        dbRecord = await prisma.attendanceRecord.upsert({
-          where: {
-            studentId_subjectId_date: {
+        if (targetSession) {
+          const existing = await prisma.attendanceRecord.findFirst({
+            where: {
+              studentId: student.id,
+              sessionId: targetSession.id,
+            },
+          });
+
+          if (existing) {
+            dbRecord = await prisma.attendanceRecord.update({
+              where: { id: existing.id },
+              data: {
+                status: status === 'Full' ? 'Full' : 'Half',
+                time: kolkata.formattedTime,
+              },
+            });
+          } else {
+            dbRecord = await prisma.attendanceRecord.create({
+              data: {
+                sessionId: targetSession.id,
+                studentId: student.id,
+                subjectId: subject.id,
+                date: targetDate,
+                time: kolkata.formattedTime,
+                status: status === 'Full' ? 'Full' : 'Half',
+                syncedToSheet: false,
+              },
+            });
+          }
+        } else {
+          dbRecord = await prisma.attendanceRecord.create({
+            data: {
               studentId: student.id,
               subjectId: subject.id,
               date: targetDate,
+              time: kolkata.formattedTime,
+              status: status === 'Full' ? 'Full' : 'Half',
+              syncedToSheet: false,
             },
-          },
-          create: {
-            studentId: student.id,
-            subjectId: subject.id,
-            date: targetDate,
-            time: kolkata.formattedTime,
-            status: status === 'Full' ? 'Full' : 'Half',
-            syncedToSheet: false,
-          },
-          update: {
-            status: status === 'Full' ? 'Full' : 'Half',
-            time: kolkata.formattedTime,
-          },
-        });
+          });
+        }
       }
 
       let sheetSyncSuccess = false;
@@ -307,6 +451,7 @@ export class OverrideController {
             subjectCode: subject?.code || subjectCode,
             subjectName: subject?.name,
             semester: subject?.semester || student?.semester || semester || 3,
+            sessionNumber,
           }
         );
         sheetSyncSuccess = sheetRes.success;

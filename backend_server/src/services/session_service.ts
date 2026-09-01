@@ -19,6 +19,28 @@ export class SessionService {
     const startOfDay = new Date(`${kolkata.dateString}T00:00:00+05:30`);
     const endOfDay = new Date(`${kolkata.dateString}T23:59:59+05:30`);
 
+    // Clean up empty inactive sessions from today (0 attendances) so accidental clicks don't waste daily slots
+    const emptySessions = await prisma.activeSession.findMany({
+      where: {
+        subjectId,
+        isActive: false,
+        attendances: { none: {} },
+        createdAt: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+    });
+
+    if (emptySessions.length > 0) {
+      await prisma.activeSession.deleteMany({
+        where: {
+          id: { in: emptySessions.map((s) => s.id) },
+        },
+      });
+    }
+
+    // Count non-empty or currently active sessions conducted today
     const todaySessionsCount = await prisma.activeSession.count({
       where: {
         subjectId,
@@ -31,7 +53,7 @@ export class SessionService {
 
     if (todaySessionsCount >= 3) {
       throw new Error(
-        'Maximum daily limit reached (3 / 3 sessions conducted today for this class). No more sessions can be started.'
+        'Maximum daily limit reached (3 / 3 sessions conducted today for this class). No more sessions can be started today.'
       );
     }
 
@@ -62,10 +84,100 @@ export class SessionService {
     });
 
     console.log(
-      `⏱️ [Session Started] Subject: ${session.subject.name} (${session.subject.code}) | Expires in ${durationMinutes} mins at ${expiresAt.toLocaleTimeString()}`
+      `⏱️ [Session Started] Subject: ${session.subject.name} (${session.subject.code}) | Session #${todaySessionsCount + 1} | Expires in ${durationMinutes} mins at ${expiresAt.toLocaleTimeString()}`
     );
 
     return session;
+  }
+
+  /**
+   * Returns how many sessions have been conducted today for a specific subject.
+   */
+  public static async getTodaySessionsCount(subjectIdentifier: string): Promise<number> {
+    const now = new Date();
+    const kolkata = getKolkataTime(now);
+    const startOfDay = new Date(`${kolkata.dateString}T00:00:00+05:30`);
+    const endOfDay = new Date(`${kolkata.dateString}T23:59:59+05:30`);
+
+    const subject = await prisma.subject.findFirst({
+      where: {
+        OR: [
+          { id: subjectIdentifier },
+          { code: { equals: subjectIdentifier, mode: 'insensitive' } },
+        ],
+      },
+    });
+
+    if (!subject) return 0;
+
+    // Clean up empty inactive sessions from today with 0 attendances
+    await prisma.activeSession.deleteMany({
+      where: {
+        subjectId: subject.id,
+        isActive: false,
+        attendances: { none: {} },
+        createdAt: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+    });
+
+    const count = await prisma.activeSession.count({
+      where: {
+        subjectId: subject.id,
+        createdAt: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+    });
+
+    return count;
+  }
+
+  /**
+   * Returns a map of all session counts conducted today by subject code.
+   */
+  public static async getAllTodaySessionCounts(): Promise<Record<string, number>> {
+    const now = new Date();
+    const kolkata = getKolkataTime(now);
+    const startOfDay = new Date(`${kolkata.dateString}T00:00:00+05:30`);
+    const endOfDay = new Date(`${kolkata.dateString}T23:59:59+05:30`);
+
+    // Clean up empty inactive sessions with 0 attendances
+    await prisma.activeSession.deleteMany({
+      where: {
+        isActive: false,
+        attendances: { none: {} },
+        createdAt: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+    });
+
+    const todaySessions = await prisma.activeSession.findMany({
+      where: {
+        createdAt: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+      include: {
+        subject: true,
+      },
+    });
+
+    const counts: Record<string, number> = {};
+    for (const sess of todaySessions) {
+      const code = sess.subject?.code;
+      if (code) {
+        counts[code] = (counts[code] || 0) + 1;
+      }
+    }
+
+    return counts;
   }
 
   /**

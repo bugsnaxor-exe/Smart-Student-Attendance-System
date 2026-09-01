@@ -12,6 +12,7 @@ export interface AttendanceSheetRow {
   subjectCode?: string;      // e.g. "MCA-301"
   subjectName?: string;      // e.g. "Artificial Intelligence"
   semester?: number;         // e.g. 3
+  sessionNumber?: number;    // e.g. 1, 2, 3
 }
 
 export class GoogleSheetsService {
@@ -217,21 +218,31 @@ export class GoogleSheetsService {
 
       const headers = values[0];
 
-      // 2. Find or create the Date & Subject Column (e.g. "2026-09-01 [MCA-301 • Sem 3]")
+      // 2. Find or create the Date & Subject Column (e.g. "2026-09-01 [MCA-301 • Sem 3]" or "2026-09-01 [MCA-301 • Sem 3 • S2]")
+      const sessionTag = (rowData.sessionNumber && rowData.sessionNumber > 1)
+        ? ` • S${rowData.sessionNumber}`
+        : '';
       const subjectTag = rowData.subjectCode
-        ? ` [${rowData.subjectCode}${rowData.semester ? ` • Sem ${rowData.semester}` : ''}]`
+        ? ` [${rowData.subjectCode}${rowData.semester ? ` • Sem ${rowData.semester}` : ''}${sessionTag}]`
         : '';
       const targetDateHeader = `${rowData.date}${subjectTag}`;
 
       let dateColIndex = -1;
       for (let i = 0; i < headers.length; i++) {
         const h = headers[i]?.trim();
-        if (
-          h === targetDateHeader ||
-          (rowData.subjectCode && h.startsWith(rowData.date) && h.includes(rowData.subjectCode))
-        ) {
+        if (h === targetDateHeader) {
           dateColIndex = i;
           break;
+        }
+      }
+
+      if (dateColIndex === -1 && !rowData.sessionNumber) {
+        for (let i = 0; i < headers.length; i++) {
+          const h = headers[i]?.trim();
+          if (rowData.subjectCode && h.startsWith(rowData.date) && h.includes(rowData.subjectCode)) {
+            dateColIndex = i;
+            break;
+          }
         }
       }
 

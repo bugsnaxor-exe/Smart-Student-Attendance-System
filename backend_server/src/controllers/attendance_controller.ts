@@ -114,41 +114,61 @@ export class AttendanceController {
         });
       }
 
-      // 7. Save Attendance Record with Status "Full"
+      // 7. Save Attendance Record with Status "Full" for this Active Session
       const kolkata = getKolkataTime();
       const todayDate = kolkata.dateString; // YYYY-MM-DD in Kolkata Mean Time
-      const record = await prisma.attendanceRecord.upsert({
+
+      // Calculate session number today
+      let sessionNumber = 1;
+      const todaySessions = await prisma.activeSession.findMany({
         where: {
-          studentId_subjectId_date: {
+          subjectId: subject.id,
+          createdAt: {
+            gte: new Date(`${todayDate}T00:00:00+05:30`),
+            lte: new Date(`${todayDate}T23:59:59+05:30`),
+          },
+        },
+        orderBy: { createdAt: 'asc' },
+      });
+      const sIdx = todaySessions.findIndex((s) => s.id === activeSession.id);
+      if (sIdx !== -1) sessionNumber = sIdx + 1;
+
+      let record = await prisma.attendanceRecord.findFirst({
+        where: {
+          studentId: student.id,
+          sessionId: activeSession.id,
+        },
+      });
+
+      if (record) {
+        record = await prisma.attendanceRecord.update({
+          where: { id: record.id },
+          data: {
+            time: timeValidation.formattedTime,
+            status: 'Full',
+            latitude: parseFloat(latitude),
+            longitude: parseFloat(longitude),
+            distanceMeters: locationValidation.distanceMeters,
+            isMockLocation: false,
+          },
+        });
+      } else {
+        record = await prisma.attendanceRecord.create({
+          data: {
+            sessionId: activeSession.id,
             studentId: student.id,
             subjectId: subject.id,
             date: todayDate,
+            time: timeValidation.formattedTime,
+            status: 'Full',
+            latitude: parseFloat(latitude),
+            longitude: parseFloat(longitude),
+            distanceMeters: locationValidation.distanceMeters,
+            isMockLocation: false,
+            syncedToSheet: false,
           },
-        },
-        create: {
-          sessionId: activeSession.id,
-          studentId: student.id,
-          subjectId: subject.id,
-          date: todayDate,
-          time: timeValidation.formattedTime,
-          status: 'Full',
-          latitude: parseFloat(latitude),
-          longitude: parseFloat(longitude),
-          distanceMeters: locationValidation.distanceMeters,
-          isMockLocation: false,
-          syncedToSheet: false,
-        },
-        update: {
-          sessionId: activeSession.id,
-          time: timeValidation.formattedTime,
-          status: 'Full',
-          latitude: parseFloat(latitude),
-          longitude: parseFloat(longitude),
-          distanceMeters: locationValidation.distanceMeters,
-          isMockLocation: false,
-          syncedToSheet: false,
-        },
-      });
+        });
+      }
 
       // 8. Append Row to Teacher's Google Sheet
       let sheetSyncSuccess = false;
@@ -156,7 +176,7 @@ export class AttendanceController {
       if (!sheetId) {
         const anyConfig = await prisma.subject.findFirst({
           where: { googleSheetId: { not: null } },
-          select: { googleSheetId: true }
+          select: { googleSheetId: true },
         });
         if (anyConfig?.googleSheetId) sheetId = anyConfig.googleSheetId;
       }
@@ -174,6 +194,7 @@ export class AttendanceController {
             subjectCode: subject.code,
             subjectName: subject.name,
             semester: subject.semester,
+            sessionNumber,
           },
           subject.sheetTabName || 'Attendance'
         );

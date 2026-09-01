@@ -1117,6 +1117,10 @@
         const res = await fetch(`/api/sessions/active/${courseCode}`);
         if (res.ok) {
           const data = await res.json();
+          if (data.sessionsConductedToday !== undefined) {
+            sessionCountsByCourse[courseCode] = data.sessionsConductedToday;
+            updateSessionCountDisplay();
+          }
           if (data.isActive && data.session) {
             applyActiveSessionState(data.session, data.remainingSeconds);
           } else if (activeSession && (activeSession.code === courseCode || activeSession.id === courseCode)) {
@@ -1125,6 +1129,21 @@
         }
       } catch (e) {
         console.warn('Error syncing active session:', e);
+      }
+    }
+
+    async function fetchSessionCountsToday() {
+      try {
+        const res = await fetch('/api/sessions/counts-today');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.counts) {
+            sessionCountsByCourse = Object.assign({}, data.counts);
+            updateSessionCountDisplay();
+          }
+        }
+      } catch (e) {
+        console.warn('Error fetching counts today:', e);
       }
     }
 
@@ -1415,6 +1434,10 @@
         const data = await res.json();
         if (data.session) {
           sessionCountsByCourse[courseCode] = currentCount + 1;
+          // Clear previous check-ins for the fresh new session
+          attendanceStatusByStudent = {};
+          renderAbsentStudents(currentTeacherSem);
+          renderMatrixGoogleSheet(currentTeacherSem);
           updateSessionCountDisplay();
           applyActiveSessionState(data.session, data.session.remainingSeconds || 900);
         } else {
@@ -1483,7 +1506,8 @@
             studentName: name,
             status: 'Half',
             date: todayDateStr,
-            subjectCode: courseCode
+            subjectCode: courseCode,
+            sessionId: activeSessionId
           })
         });
         const data = await res.json();
