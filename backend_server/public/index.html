@@ -794,21 +794,39 @@
       const regForm = document.getElementById('form-register');
       const otpForm = document.getElementById('form-otp');
 
-      if (otpForm) otpForm.classList.add('hidden');
-      if (document.getElementById('tab-btn-login')?.parentElement) {
-        document.getElementById('tab-btn-login').parentElement.classList.remove('hidden');
+      if (otpForm) {
+        otpForm.style.display = 'none';
+        otpForm.classList.add('hidden');
+      }
+      const tabsContainer = document.getElementById('tab-btn-login')?.parentElement;
+      if (tabsContainer) {
+        tabsContainer.style.display = 'flex';
+        tabsContainer.classList.remove('hidden');
       }
 
       if (tab === 'login') {
-        loginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg transition bg-charcoal-900 text-white shadow-sm';
-        regBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg transition text-charcoal-700 hover:text-charcoal-900';
-        loginForm.classList.remove('hidden');
-        regForm.classList.add('hidden');
+        if (loginBtn) loginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg transition bg-charcoal-900 text-white shadow-sm';
+        if (regBtn) regBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg transition text-charcoal-700 hover:text-charcoal-900';
+        if (loginForm) {
+          loginForm.style.display = 'block';
+          loginForm.classList.remove('hidden');
+        }
+        if (regForm) {
+          regForm.style.display = 'none';
+          regForm.classList.add('hidden');
+        }
       } else {
-        regBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg transition bg-charcoal-900 text-white shadow-sm';
-        loginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg transition text-charcoal-700 hover:text-charcoal-900';
-        regForm.classList.remove('hidden');
-        loginForm.classList.add('hidden');
+        if (regBtn) regBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg transition bg-charcoal-900 text-white shadow-sm';
+        if (loginBtn) loginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg transition text-charcoal-700 hover:text-charcoal-900';
+        if (regForm) {
+          regForm.style.display = 'block';
+          regForm.classList.remove('hidden');
+        }
+        if (loginForm) {
+          loginForm.style.display = 'none';
+          loginForm.classList.add('hidden');
+        }
+        onRegSemesterChange();
       }
     }
 
@@ -861,10 +879,19 @@
     }
 
     function showOtpScreen(email) {
-      document.getElementById('form-login').classList.add('hidden');
-      document.getElementById('form-register').classList.add('hidden');
-      document.getElementById('tab-btn-login').parentElement.classList.add('hidden');
-      document.getElementById('form-otp').classList.remove('hidden');
+      const loginForm = document.getElementById('form-login');
+      const regForm = document.getElementById('form-register');
+      const otpForm = document.getElementById('form-otp');
+      const tabsContainer = document.getElementById('tab-btn-login')?.parentElement;
+
+      if (loginForm) { loginForm.style.display = 'none'; loginForm.classList.add('hidden'); }
+      if (regForm) { regForm.style.display = 'none'; regForm.classList.add('hidden'); }
+      if (tabsContainer) { tabsContainer.style.display = 'none'; tabsContainer.classList.add('hidden'); }
+
+      if (otpForm) {
+        otpForm.style.display = 'block';
+        otpForm.classList.remove('hidden');
+      }
       document.getElementById('otp-target-email').textContent = email;
       document.getElementById('otp-code-input').value = '';
       document.getElementById('otp-code-input').focus();
@@ -873,8 +900,16 @@
 
     function backToLogin() {
       clearInterval(otpTimerInterval);
-      document.getElementById('form-otp').classList.add('hidden');
-      document.getElementById('tab-btn-login').parentElement.classList.remove('hidden');
+      const otpForm = document.getElementById('form-otp');
+      if (otpForm) {
+        otpForm.style.display = 'none';
+        otpForm.classList.add('hidden');
+      }
+      const tabsContainer = document.getElementById('tab-btn-login')?.parentElement;
+      if (tabsContainer) {
+        tabsContainer.style.display = 'flex';
+        tabsContainer.classList.remove('hidden');
+      }
       switchAuthTab('login');
     }
 
@@ -972,6 +1007,12 @@
       const password = document.getElementById('reg-password').value;
       const selectedSem = document.getElementById('reg-sem-select')?.value || '3';
       const selectedCourse = document.getElementById('reg-course-select')?.value || 'MCA-301';
+      const btn = document.getElementById('btn-reg-submit');
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span>Registering Account...</span>`;
+      }
 
       try {
         const res = await fetch('/api/auth/register-teacher', {
@@ -1001,6 +1042,11 @@
         }
       } catch (err) {
         alert('Server connection error during registration.');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<span>Register Faculty Account</span>`;
+        }
       }
     }
 
@@ -1020,11 +1066,26 @@
     }
 
     function showAuthView() {
-      document.getElementById('auth-section').classList.remove('hidden');
-      document.getElementById('dashboard-section').classList.add('hidden');
+      const authSection = document.getElementById('auth-section');
+      const dashSection = document.getElementById('dashboard-section');
+      const facultyNavUser = document.getElementById('faculty-nav-user');
+
+      if (authSection) {
+        authSection.style.display = 'block';
+        authSection.classList.remove('hidden');
+      }
+      if (dashSection) {
+        dashSection.style.display = 'none';
+        dashSection.classList.add('hidden');
+      }
+      if (facultyNavUser) {
+        facultyNavUser.style.display = 'none';
+        facultyNavUser.classList.add('hidden');
+      }
       document.getElementById('nav-auth-controls').innerHTML = `
         <span class="text-xs font-bold text-charcoal-700">Not Logged In</span>
       `;
+      switchAuthTab('login');
     }
 
     function getLocationDisplayHtml() {
@@ -1187,10 +1248,23 @@
       }
     }
 
-        function showDashboardView() {
-      document.getElementById('auth-section').classList.add('hidden');
-      document.getElementById('dashboard-section').classList.remove('hidden');
-      document.getElementById('faculty-nav-user').classList.remove('hidden');
+    function showDashboardView() {
+      const authSection = document.getElementById('auth-section');
+      const dashSection = document.getElementById('dashboard-section');
+      const facultyNavUser = document.getElementById('faculty-nav-user');
+
+      if (authSection) {
+        authSection.style.display = 'none';
+        authSection.classList.add('hidden');
+      }
+      if (dashSection) {
+        dashSection.style.display = 'block';
+        dashSection.classList.remove('hidden');
+      }
+      if (facultyNavUser) {
+        facultyNavUser.style.display = 'flex';
+        facultyNavUser.classList.remove('hidden');
+      }
 
       const nameEl = document.getElementById('faculty-welcome-name');
       const emailEl = document.getElementById('faculty-email-display');
