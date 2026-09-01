@@ -183,6 +183,7 @@ class AuthProvider extends ChangeNotifier {
 
       _isLoading = false;
       if (res['user'] != null) {
+        _currentUser = UserModel.fromJson(res['user']);
         notifyListeners();
         return true;
       } else {

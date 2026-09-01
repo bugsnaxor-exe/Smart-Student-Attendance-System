@@ -220,8 +220,11 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (success && mounted) {
-      _showSnackBar('Faculty registered successfully! A 6-digit OTP has been sent for verification.', isError: false);
-      _showFacultyOtpBottomSheet(email);
+      _showSnackBar('Faculty registered successfully! Accessing console...', isError: false);
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const TeacherDashboardScreen()),
+      );
     } else if (mounted) {
       _showSnackBar(auth.errorMessage ?? 'Faculty registration failed.', isError: true);
     }

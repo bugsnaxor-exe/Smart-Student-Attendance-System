@@ -140,10 +140,15 @@ export class AuthService {
 
   public static async registerTeacher(input: RegisterTeacherInput) {
     const cleanEmail = input.email.toLowerCase().trim();
-    const existingEmail = await prisma.user.findUnique({ where: { email: cleanEmail } });
-    if (existingEmail) {
-      throw new Error('Email is already registered.');
-    }
+    const isSuperAdmin = cleanEmail === 'sayantan05072004@gmail.com';
+    const role = isSuperAdmin ? 'ADMIN' : 'TEACHER';
+
+    const existingUser = await prisma.user.findUnique({
+      where: { email: cleanEmail },
+      include: { teacher: true }
+    });
+
+    const passwordHash = await bcrypt.hash(input.password, 10);
 
     let department = await prisma.department.findUnique({
       where: { code: input.departmentCode.toUpperCase() },
@@ -161,33 +166,56 @@ export class AuthService {
       });
     }
 
-    const passwordHash = await bcrypt.hash(input.password, 10);
+    let user;
 
-    // Super Admin check
-    const isSuperAdmin = cleanEmail === 'sayantan05072004@gmail.com';
-    const role = isSuperAdmin ? 'ADMIN' : 'TEACHER';
-
-    const user = await prisma.user.create({
-      data: {
-        name: input.name.trim(),
-        email: cleanEmail,
-        passwordHash,
-        role,
-        teacher: {
-          create: {
-            departmentId: department.id,
+    if (existingUser) {
+      if (isSuperAdmin) {
+        // Update Admin password & ensure ADMIN role and teacher profile
+        user = await prisma.user.update({
+          where: { id: existingUser.id },
+          data: {
+            name: input.name.trim(),
+            passwordHash,
+            role: 'ADMIN',
+            ...(existingUser.teacher
+              ? {}
+              : { teacher: { create: { departmentId: department.id } } }),
           },
-        },
-      },
-      include: {
-        teacher: {
           include: {
-            department: true,
-            subjects: true,
+            teacher: {
+              include: {
+                department: true,
+                subjects: true,
+              },
+            },
+          },
+        });
+      } else {
+        throw new Error('Email is already registered. Please log in with your password.');
+      }
+    } else {
+      user = await prisma.user.create({
+        data: {
+          name: input.name.trim(),
+          email: cleanEmail,
+          passwordHash,
+          role,
+          teacher: {
+            create: {
+              departmentId: department.id,
+            },
           },
         },
-      },
-    });
+        include: {
+          teacher: {
+            include: {
+              department: true,
+              subjects: true,
+            },
+          },
+        },
+      });
+    }
 
     // Link assigned subject to this teacher profile if provided
     if (input.subjectCode && user.teacher) {
