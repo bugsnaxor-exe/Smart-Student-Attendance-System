@@ -94,10 +94,17 @@ export class OverrideController {
    */
   public static async grantHalfAttendance(req: AuthRequest, res: Response) {
     try {
-      const { subjectId, studentId, date, sessionId } = req.body;
+      const { subjectId, studentId, classRoll, universityRoll, registrationNumber, date, sessionId } = req.body;
 
-      if (!subjectId || !studentId) {
-        return res.status(400).json({ error: 'subjectId and studentId are required.' });
+      const lookupIdentifiers = [
+        studentId,
+        classRoll,
+        universityRoll,
+        registrationNumber,
+      ].filter(id => id && id !== 'undefined' && id !== 'null' && typeof id === 'string' && id.trim() !== '');
+
+      if (!subjectId || lookupIdentifiers.length === 0) {
+        return res.status(400).json({ error: 'Valid subjectId and student identifier are required.' });
       }
 
       const subject = await prisma.subject.findFirst({
@@ -113,14 +120,17 @@ export class OverrideController {
         return res.status(404).json({ error: 'Subject not found.' });
       }
 
+      const orConditions: any[] = [];
+      for (const id of lookupIdentifiers) {
+        orConditions.push({ id });
+        orConditions.push({ classRoll: id });
+        orConditions.push({ universityRoll: id });
+        orConditions.push({ regNumber: id });
+      }
+
       const student = await prisma.studentProfile.findFirst({
         where: {
-          OR: [
-            { id: studentId },
-            { classRoll: studentId },
-            { universityRoll: studentId },
-            { regNumber: studentId },
-          ],
+          OR: orConditions,
         },
         include: {
           user: true,
@@ -436,7 +446,9 @@ export class OverrideController {
           email: s.user.email,
           classRoll: s.classRoll,
           universityRoll: s.universityRoll,
+          uniRoll: s.universityRoll,
           regNo: s.regNumber,
+          regNumber: s.regNumber,
           semester: s.semester,
         })),
       });

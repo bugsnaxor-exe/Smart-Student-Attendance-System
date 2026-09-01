@@ -1182,7 +1182,13 @@
         if (studRes.ok) {
           const data = await studRes.json();
           if (data.students && Array.isArray(data.students)) {
-            enrolledStudents[sem] = data.students;
+            enrolledStudents[sem] = data.students.map(s => ({
+              ...s,
+              uniRoll: s.universityRoll || s.uniRoll || '',
+              universityRoll: s.universityRoll || s.uniRoll || '',
+              classRoll: s.classRoll || '',
+              regNo: s.regNo || s.regNumber || ''
+            }));
           }
         }
 
@@ -1193,9 +1199,11 @@
               const status = r.status === 'Half' ? 'H' : 'P';
               if (r.universityRoll) attendanceStatusByStudent[r.universityRoll] = status;
               if (r.classRoll) attendanceStatusByStudent[r.classRoll] = status;
+              if (r.studentId) attendanceStatusByStudent[r.studentId] = status;
               if (r.student) {
                 if (r.student.universityRoll) attendanceStatusByStudent[r.student.universityRoll] = status;
                 if (r.student.classRoll) attendanceStatusByStudent[r.student.classRoll] = status;
+                if (r.student.id) attendanceStatusByStudent[r.student.id] = status;
               }
             });
           }
@@ -1218,7 +1226,7 @@
       if (count >= 3 && !activeSession) {
         btn.disabled = true;
         btn.className = 'w-full py-3 bg-gray-300 text-gray-600 font-bold text-xs rounded-xl shadow-sm cursor-not-allowed';
-        document.getElementById('session-btn-text').textContent = 'Max Daily Limit (3/3 Done)';
+        document.getElementById('session-btn-text').textContent = 'Daily Limit Reached (3/3)';
       } else if (!activeSession) {
         btn.disabled = false;
         btn.className = 'w-full py-3 bg-seagreen-600 hover:bg-seagreen-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center space-x-2';
@@ -1241,7 +1249,12 @@
         return;
       }
 
-      const unmarked = roster.filter(s => !attendanceStatusByStudent[s.uniRoll]);
+      const unmarked = roster.filter(s => !(
+        (s.universityRoll && attendanceStatusByStudent[s.universityRoll]) ||
+        (s.uniRoll && attendanceStatusByStudent[s.uniRoll]) ||
+        (s.classRoll && attendanceStatusByStudent[s.classRoll]) ||
+        (s.id && attendanceStatusByStudent[s.id])
+      ));
 
       if (unmarked.length === 0) {
         container.innerHTML = `
@@ -1261,7 +1274,10 @@
 
       container.innerHTML = `
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          ${unmarked.map(s => `
+          ${unmarked.map(s => {
+            const uni = s.universityRoll || s.uniRoll || '';
+            const reg = s.regNo || s.regNumber || '';
+            return `
             <div class="p-3 bg-cream-50 hover:bg-white border border-cream-200 rounded-xl transition flex items-center justify-between shadow-sm hover:shadow">
               <div class="flex items-center space-x-3 min-w-0">
                 <div class="w-9 h-9 rounded-lg bg-cream-200 flex items-center justify-center font-bold text-xs text-charcoal-800 shrink-0">
@@ -1269,17 +1285,17 @@
                 </div>
                 <div class="min-w-0">
                   <p class="text-xs font-bold text-charcoal-900 truncate">${s.name}</p>
-                  <p class="text-[10px] text-charcoal-500 font-mono">Roll: ${s.classRoll} • Uni: ${s.uniRoll}</p>
+                  <p class="text-[10px] text-charcoal-500 font-mono">Roll: ${s.classRoll || '—'} • Uni: ${uni || '—'}</p>
                 </div>
               </div>
               <button 
-                onclick="grantHalfOverride('${s.classRoll}', '${s.uniRoll}', '${s.regNo}', '${s.name.replace(/'/g, "\\'")}')" 
+                onclick="grantHalfOverride('${s.id || ''}', '${s.classRoll || ''}', '${uni}', '${reg}', '${(s.name || '').replace(/'/g, "\\'")}')" 
                 class="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-[10px] rounded-lg shadow transition flex items-center space-x-1 shrink-0 ml-2">
                 <span>⏱️</span>
                 <span>Grant Half</span>
               </button>
             </div>
-          `).join('')}
+          `;}).join('')}
         </div>
       `;
     }
@@ -1306,7 +1322,13 @@
       let presentCount = 0;
 
       tbody.innerHTML = roster.map(s => {
-        const status = attendanceStatusByStudent[s.uniRoll];
+        const uni = s.universityRoll || s.uniRoll || '';
+        const reg = s.regNo || s.regNumber || '';
+        const status = (s.universityRoll && attendanceStatusByStudent[s.universityRoll]) ||
+                       (s.uniRoll && attendanceStatusByStudent[s.uniRoll]) ||
+                       (s.classRoll && attendanceStatusByStudent[s.classRoll]) ||
+                       (s.id && attendanceStatusByStudent[s.id]);
+
         if (status) presentCount++;
 
         let cellMark = `<span class="text-gray-300 font-mono italic">—</span>`;
@@ -1322,10 +1344,10 @@
 
         return `
           <tr class="hover:bg-cream-50 transition ${status === 'P' ? 'bg-seagreen-50/30' : status === 'H' ? 'bg-amber-50/30' : ''}">
-            <td class="py-3 px-4 font-mono font-bold text-charcoal-900">${s.classRoll}</td>
-            <td class="py-3 px-4 font-mono text-charcoal-700">${s.uniRoll}</td>
-            <td class="py-3 px-4 font-mono text-charcoal-700">${s.regNo}</td>
-            <td class="py-3 px-4 font-bold text-charcoal-900">${s.name}</td>
+            <td class="py-3 px-4 font-mono font-bold text-charcoal-900">${s.classRoll || '—'}</td>
+            <td class="py-3 px-4 font-mono text-charcoal-700">${uni || '—'}</td>
+            <td class="py-3 px-4 font-mono text-charcoal-700">${reg || '—'}</td>
+            <td class="py-3 px-4 font-bold text-charcoal-900">${s.name || '—'}</td>
             <td class="py-3 px-4 text-center border-x border-cream-200">${cellMark}</td>
             <td class="py-3 px-4 text-right">${scoreTag}</td>
           </tr>
@@ -1549,7 +1571,7 @@
     }
 
     // --- LATE COMER HALF ATTENDANCE OVERRIDE (1 COUNT) & REAL GOOGLE SHEET SYNC ---
-    async function grantHalfOverride(classRoll, uniRoll, regNo, name) {
+    async function grantHalfOverride(studentId, classRoll, uniRoll, regNo, name) {
       const courseSelect = document.getElementById('teacher-course-select');
       const courseCode = courseSelect?.value || 'MCA-301';
       const todayDateStr = getTodayDateStr();
@@ -1557,6 +1579,7 @@
       // Optimistically update local UI immediately
       if (uniRoll) attendanceStatusByStudent[uniRoll] = 'H';
       if (classRoll) attendanceStatusByStudent[classRoll] = 'H';
+      if (studentId) attendanceStatusByStudent[studentId] = 'H';
       renderMatrixGoogleSheet(currentTeacherSem);
       renderAbsentStudents(currentTeacherSem);
 
@@ -1570,7 +1593,10 @@
           },
           body: JSON.stringify({
             subjectId: courseCode,
-            studentId: uniRoll || classRoll,
+            studentId: studentId || uniRoll || classRoll,
+            classRoll: classRoll,
+            universityRoll: uniRoll,
+            registrationNumber: regNo,
             date: todayDateStr,
             sessionId: activeSessionId
           })
