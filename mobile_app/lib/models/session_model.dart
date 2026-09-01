@@ -10,6 +10,9 @@ class SessionModel {
   final int remainingSeconds;
   final DateTime createdAt;
   final DateTime expiresAt;
+  final double? latitude;
+  final double? longitude;
+  final double? radiusMeters;
 
   SessionModel({
     required this.id,
@@ -23,6 +26,9 @@ class SessionModel {
     this.remainingSeconds = 0,
     required this.createdAt,
     required this.expiresAt,
+    this.latitude,
+    this.longitude,
+    this.radiusMeters,
   });
 
   factory SessionModel.fromJson(Map<String, dynamic> json) {
@@ -40,6 +46,9 @@ class SessionModel {
       remainingSeconds: json['remainingSeconds'] ?? 0,
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
       expiresAt: json['expiresAt'] != null ? DateTime.parse(json['expiresAt']) : DateTime.now(),
+      latitude: json['latitude'] != null ? (json['latitude'] as num).toDouble() : null,
+      longitude: json['longitude'] != null ? (json['longitude'] as num).toDouble() : null,
+      radiusMeters: json['radiusMeters'] != null ? (json['radiusMeters'] as num).toDouble() : null,
     );
   }
 }

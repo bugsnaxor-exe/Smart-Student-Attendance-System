@@ -19,19 +19,23 @@ class LocationProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   Future<void> refreshLocation({
-    double deptLat = AppConstants.defaultDeptLatitude,
-    double deptLon = AppConstants.defaultDeptLongitude,
-    double radiusMeters = AppConstants.defaultGeofenceRadiusMeters,
+    double? deptLat,
+    double? deptLon,
+    double? radiusMeters,
   }) async {
     _isChecking = true;
     _errorMessage = null;
     _isMockDetected = false;
     notifyListeners();
 
+    final targetLat = deptLat ?? AppConstants.defaultDeptLatitude;
+    final targetLon = deptLon ?? AppConstants.defaultDeptLongitude;
+    final targetRadius = radiusMeters ?? AppConstants.defaultGeofenceRadiusMeters;
+
     final result = await LocationService.getSmoothedLocation(
-      targetDeptLat: deptLat,
-      targetDeptLon: deptLon,
-      allowedRadiusMeters: radiusMeters,
+      targetDeptLat: targetLat,
+      targetDeptLon: targetLon,
+      allowedRadiusMeters: targetRadius,
     );
 
     _isChecking = false;

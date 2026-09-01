@@ -289,6 +289,12 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     }
 
     final attendance = Provider.of<AttendanceProvider>(context, listen: false);
+
+    // Auto-acquire high-accuracy GPS if not yet detected
+    if (_detectedLatitude == null || _detectedLongitude == null) {
+      await _detectLocation();
+    }
+
     final success = await attendance.startSession(
       _selectedCourseCode!,
       durationMinutes: 15,

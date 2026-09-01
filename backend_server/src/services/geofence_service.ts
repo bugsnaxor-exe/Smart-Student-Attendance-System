@@ -117,23 +117,27 @@ export class GeofenceService {
       };
     }
 
-    // 2. Indoor GPS Accuracy Sanity Check
-    if (accuracyMeters !== undefined && accuracyMeters > 40) {
+    // 2. Indoor GPS Accuracy Sanity Check (Allow reasonable smartphone indoor accuracy)
+    if (accuracyMeters !== undefined && accuracyMeters > 100) {
       return {
         isValid: false,
         distanceMeters: 0,
-        reason: `GPS accuracy too low (${accuracyMeters}m). Please move closer to a window or corridor for better satellite lock.`,
+        reason: `GPS accuracy too low (±${Math.round(accuracyMeters)}m). Please move closer to a window or corridor for better satellite lock.`,
       };
     }
 
-    // 3. Haversine Distance Calculation
+    // 3. Haversine Distance Calculation with indoor GPS jitter tolerance
     const distance = this.calculateHaversineDistance(studentLat, studentLon, deptLat, deptLon);
 
-    if (distance > radiusMeters) {
+    // Factor in GPS accuracy buffer (up to 20m) for indoor multi-device testing
+    const accuracyBuffer = accuracyMeters ? Math.min(20, accuracyMeters * 0.3) : 0;
+    const effectiveMaxRadius = radiusMeters + accuracyBuffer;
+
+    if (distance > effectiveMaxRadius) {
       return {
         isValid: false,
         distanceMeters: distance,
-        reason: `You are ${distance}m away from the department. Must be within ${radiusMeters}m.`,
+        reason: `You are ${distance}m away from the faculty / classroom. Must be within ${radiusMeters}m.`,
       };
     }
 

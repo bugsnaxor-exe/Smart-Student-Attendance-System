@@ -86,6 +86,8 @@ export class AttendanceController {
       const targetLng = activeSession.longitude != null ? activeSession.longitude : dept.longitude;
       const targetRadius = activeSession.radiusMeters != null ? activeSession.radiusMeters : (dept.radiusMeters || 50.0);
 
+      console.log(`📍 [Geofence Check] Student: (${latitude}, ${longitude}, acc: ${accuracyMeters || 'N/A'}m) vs Target: (${targetLat}, ${targetLng}, radius: ${targetRadius}m) -> Session ${activeSession.id}`);
+
       const locationValidation = GeofenceService.validateStudentLocation(
         parseFloat(latitude),
         parseFloat(longitude),
@@ -97,11 +99,14 @@ export class AttendanceController {
       );
 
       if (!locationValidation.isValid) {
+        console.warn(`❌ [Geofence Rejected] Distance: ${locationValidation.distanceMeters}m | Reason: ${locationValidation.reason}`);
         return res.status(400).json({
           error: locationValidation.reason,
           distanceMeters: locationValidation.distanceMeters,
         });
       }
+
+      console.log(`✅ [Geofence Passed] Distance: ${locationValidation.distanceMeters}m within ${targetRadius}m`);
 
       // 6. Check Duplicate Attendance for This Active Session
       const existingSessionRecord = await prisma.attendanceRecord.findFirst({

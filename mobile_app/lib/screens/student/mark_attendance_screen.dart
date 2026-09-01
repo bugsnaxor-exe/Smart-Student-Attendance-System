@@ -28,7 +28,11 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final loc = Provider.of<LocationProvider>(context, listen: false);
-      loc.refreshLocation();
+      loc.refreshLocation(
+        deptLat: widget.session.latitude,
+        deptLon: widget.session.longitude,
+        radiusMeters: widget.session.radiusMeters ?? 50.0,
+      );
     });
   }
 
@@ -55,7 +59,11 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
     final attendance = Provider.of<AttendanceProvider>(context, listen: false);
 
     if (loc.currentPosition == null) {
-      await loc.refreshLocation();
+      await loc.refreshLocation(
+        deptLat: widget.session.latitude,
+        deptLon: widget.session.longitude,
+        radiusMeters: widget.session.radiusMeters ?? 50.0,
+      );
     }
 
     if (loc.isMockDetected) {
@@ -337,7 +345,11 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
 
               // Re-scan Button
               OutlinedButton.icon(
-                onPressed: loc.isChecking ? null : () => loc.refreshLocation(),
+                onPressed: loc.isChecking ? null : () => loc.refreshLocation(
+                  deptLat: widget.session.latitude,
+                  deptLon: widget.session.longitude,
+                  radiusMeters: widget.session.radiusMeters ?? 50.0,
+                ),
                 icon: const Icon(Icons.my_location, size: 18),
                 label: const Text('Re-scan Exact Location'),
               ),

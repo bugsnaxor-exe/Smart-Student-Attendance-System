@@ -359,6 +359,9 @@ export class SessionController {
           expiresAt: sess.expiresAt,
           isAlreadyMarked: markedSessionIds.has(sess.id),
           remainingSeconds,
+          latitude: sess.latitude,
+          longitude: sess.longitude,
+          radiusMeters: sess.radiusMeters,
         };
       });
 
