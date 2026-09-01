@@ -89,6 +89,39 @@
       }
       #export-report-modal button { display: none !important; }
     }
+  
+    /* Modern Ease Micro-Animations */
+    * {
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .ease-spring {
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .ease-smooth {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.75; transform: scale(1.03); }
+    }
+    .animate-pulse-glow {
+      animation: pulseGlow 2s infinite ease-in-out;
+    }
+    @keyframes slideInDown {
+      from { transform: translateY(-16px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .animate-slide-down {
+      animation: slideInDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes fadeInScale {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .animate-fade-scale {
+      animation: fadeInScale 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
   </style>
 </head>
 <body class="text-charcoal-900 min-h-screen flex flex-col antialiased">
@@ -969,7 +1002,9 @@
             name,
             email,
             password,
-            departmentCode: 'MCA'
+            departmentCode: 'MCA',
+            semester: parseInt(selectedSem, 10),
+            subjectCode: selectedCourse
           })
         });
         const data = await res.json();
@@ -979,6 +1014,8 @@
           localStorage.setItem('edu_faculty_user', JSON.stringify(data.user));
           localStorage.setItem('faculty_active_sem', selectedSem);
           localStorage.setItem('faculty_active_subject', selectedCourse);
+          localStorage.setItem('faculty_assigned_sem', selectedSem);
+          localStorage.setItem('faculty_assigned_subject', selectedCourse);
           showDashboardView();
         } else {
           alert(data.error || 'Registration failed. Please try again.');
@@ -1171,222 +1208,82 @@
       }
     }
 
-    function showDashboardView() {
+        function showDashboardView() {
       document.getElementById('auth-section').classList.add('hidden');
       document.getElementById('dashboard-section').classList.remove('hidden');
-      
-      document.getElementById('faculty-welcome-name').textContent = loggedInFaculty.name;
-      document.getElementById('faculty-email-display').textContent = `${loggedInFaculty.email}`;
-      
-      const isCustomLoc = !!localStorage.getItem('faculty_detected_lat');
+      document.getElementById('faculty-nav-user').classList.remove('hidden');
 
-      document.getElementById('nav-auth-controls').innerHTML = `
-        <div class="relative inline-block text-left">
-          <button id="teacher-profile-btn" onclick="toggleLocationDropdown(event)" class="cursor-pointer hover:bg-cream-200 transition flex items-center space-x-1.5 text-xs font-bold text-charcoal-900 bg-cream-100 px-3 py-1.5 rounded-xl border border-cream-300 shadow-xs">
-            <span>👨‍🏫</span>
-            <span id="teacher-nav-name">${loggedInFaculty.name}</span>
-            <span id="teacher-loc-indicator" class="w-2 h-2 rounded-full ${isCustomLoc ? 'bg-seagreen-500 animate-pulse' : 'bg-charcoal-400'}" title="${isCustomLoc ? 'Live GPS Detected' : 'Campus Default Location'}"></span>
-            <svg class="w-3 h-3 text-charcoal-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-          </button>
-
-          <!-- Location & Faculty Settings Dropdown Card -->
-          <div id="faculty-location-dropdown" class="hidden absolute right-0 mt-2 w-80 bg-white border border-cream-300 rounded-2xl shadow-xl z-50 p-4 text-left">
-            <div class="flex items-center space-x-3 pb-3 border-b border-cream-200">
-              <div class="w-10 h-10 rounded-xl bg-seagreen-100 border border-seagreen-200 flex items-center justify-center text-lg">
-                👨‍🏫
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="text-xs font-bold text-charcoal-900 truncate">${loggedInFaculty.name}</p>
-                <p class="text-[11px] text-charcoal-500 truncate">${loggedInFaculty.email}</p>
-              </div>
-            </div>
-
-            <!-- Location Status Card -->
-            <div class="mt-3 p-3 bg-[#FAF7F0] border border-cream-200 rounded-xl">
-              <div class="flex items-center justify-between">
-                <span class="text-[11px] font-bold text-charcoal-800 flex items-center space-x-1">
-                  <span>📍</span>
-                  <span>Classroom Location</span>
-                </span>
-                <span id="location-mode-badge" class="px-2 py-0.5 text-[10px] font-bold rounded-full ${isCustomLoc ? 'bg-seagreen-100 text-seagreen-800 border border-seagreen-300' : 'bg-charcoal-100 text-charcoal-700 border border-charcoal-200'}">
-                  ${isCustomLoc ? '🛰️ Custom GPS' : '🏫 Campus Default'}
-                </span>
-              </div>
-              <div id="location-coords-display" class="mt-2 text-[11px] text-charcoal-600 font-mono">
-                ${getLocationDisplayHtml()}
-              </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="mt-3 space-y-2">
-              <button 
-                id="btn-detect-location" 
-                onclick="detectFacultyLocation(event)" 
-                class="w-full py-2.5 px-3 bg-seagreen-600 hover:bg-seagreen-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center space-x-2">
-                <span id="detect-loc-icon">🛰️</span>
-                <span id="detect-loc-text">Detect Current Location</span>
-              </button>
-
-              <button 
-                id="btn-reset-location" 
-                onclick="resetFacultyLocation(event)" 
-                class="w-full py-2 px-3 bg-cream-100 hover:bg-cream-200 text-charcoal-700 font-bold text-[11px] rounded-xl border border-cream-300 transition flex items-center justify-center space-x-1.5">
-                <span>🔄</span>
-                <span>Reset to Campus Default</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <button onclick="logoutFaculty()" class="px-3 py-1.5 bg-charcoal-900 hover:bg-charcoal-800 text-white text-xs font-bold rounded-xl transition shadow-sm">
-          Logout
-        </button>
-      `;
-
-      const savedSem = localStorage.getItem('faculty_active_sem');
-      if (savedSem && document.getElementById('teacher-sem-select')) {
-        document.getElementById('teacher-sem-select').value = savedSem;
-      }
-
-      onTeacherSemesterChange();
-
-      const savedCourse = localStorage.getItem('faculty_active_subject');
-      if (savedCourse && document.getElementById('teacher-course-select')) {
-        document.getElementById('teacher-course-select').value = savedCourse;
-      }
-
-      const courseBadge = document.getElementById('faculty-course-badge');
-      if (courseBadge) {
-        const activeCourse = document.getElementById('teacher-course-select')?.value || 'MCA-301';
-        courseBadge.textContent = activeCourse;
-      }
-
-      updateSessionCountDisplay();
-      loadServiceAccountInfo();
-    }
-
-    // --- TEACHER SEMESTER & COURSE LOGIC ---
-    function onTeacherSemesterChange() {
-      // Prevent changing semester if an attendance session is active
-      if (activeSession) {
-        alert(`⚠️ An attendance session for "${activeSession.code}" (Semester ${activeSession.sem}) is currently running!\n\nPlease stop the active session before switching semesters.`);
-        document.getElementById('teacher-sem-select').value = activeSession.sem;
-        return;
-      }
-
-      const sem = parseInt(document.getElementById('teacher-sem-select').value, 10);
-      currentTeacherSem = sem;
-
+      const nameEl = document.getElementById('faculty-welcome-name');
+      const emailEl = document.getElementById('faculty-email-display');
+      const badgeCourse = document.getElementById('faculty-course-badge');
+      const navName = document.getElementById('nav-faculty-name');
+      const semSelect = document.getElementById('teacher-sem-select');
       const courseSelect = document.getElementById('teacher-course-select');
-      const courses = mcaSyllabus[sem] || [];
 
-      courseSelect.innerHTML = courses.map(c => `
-        <option value="${c.code}" data-name="${c.name}" data-sem="${sem}">
-          ${c.code}: ${c.name} (${c.type} • Sem ${sem})
-        </option>
-      `).join('');
+      const isAdmin = loggedInFaculty?.role === 'ADMIN' || loggedInFaculty?.email?.toLowerCase() === 'sayantan05072004@gmail.com';
 
-      // Update date in table header dynamically
-      const dateTh = document.getElementById('th-today-date');
-      if (dateTh) {
-        dateTh.textContent = `${getTodayDateStr()} (Today)`;
+      if (loggedInFaculty) {
+        if (nameEl) nameEl.textContent = loggedInFaculty.name || 'Faculty Member';
+        if (emailEl) emailEl.textContent = loggedInFaculty.email || 'faculty@college.edu';
+        if (navName) navName.textContent = loggedInFaculty.name ? `Prof. ${loggedInFaculty.name.split(' ')[0]}` : 'Faculty';
+        
+        // Show Admin badge if super admin
+        const deptBadge = document.getElementById('faculty-dept-badge');
+        if (deptBadge) {
+          deptBadge.innerHTML = isAdmin
+            ? '<span class="text-amber-400 font-bold">⭐ Super Faculty & Administrator</span>'
+            : 'Master of Computer Applications';
+        }
       }
 
+      // Check if faculty has assigned subject / semester from login or profile
+      let initialSem = '3';
+      let initialSubj = 'MCA-301';
+
+      if (!isAdmin) {
+        // Regular faculty: lock to assigned course
+        const assignedSubj = loggedInFaculty?.teacher?.subjects?.[0]?.code || localStorage.getItem('faculty_assigned_subject') || localStorage.getItem('faculty_active_subject') || 'MCA-301';
+        const assignedSem = loggedInFaculty?.teacher?.subjects?.[0]?.semester?.toString() || localStorage.getItem('faculty_assigned_sem') || localStorage.getItem('faculty_active_sem') || '3';
+
+        initialSem = assignedSem;
+        initialSubj = assignedSubj;
+
+        if (semSelect) {
+          semSelect.value = initialSem;
+          semSelect.disabled = true;
+          semSelect.classList.add('opacity-75', 'cursor-not-allowed');
+        }
+      } else {
+        // Super Admin has full dropdown freedom
+        if (semSelect) {
+          semSelect.disabled = false;
+          semSelect.classList.remove('opacity-75', 'cursor-not-allowed');
+        }
+      }
+
+      currentTeacherSem = parseInt(initialSem, 10);
+      if (semSelect) semSelect.value = initialSem;
+      populateTeacherCourses(currentTeacherSem);
+
+      if (courseSelect) {
+        courseSelect.value = initialSubj;
+        if (!isAdmin) {
+          courseSelect.disabled = true;
+          courseSelect.classList.add('opacity-75', 'cursor-not-allowed');
+        } else {
+          courseSelect.disabled = false;
+          courseSelect.classList.remove('opacity-75', 'cursor-not-allowed');
+        }
+      }
+
+      if (badgeCourse) badgeCourse.textContent = initialSubj;
+
+      connectTeacherWebSocket();
+      fetchAndRenderStudents(currentTeacherSem);
+      checkAndSyncActiveSession(initialSubj);
+      checkStoredSheetConfig(initialSubj);
       updateSessionCountDisplay();
-      const courseCode = courseSelect?.value || 'MCA-301';
-      checkAndSyncActiveSession(courseCode);
-      fetchAndRenderStudents(sem);
     }
-
-    function onTeacherCourseChange() {
-      if (activeSession) {
-        alert(`⚠️ An attendance session for "${activeSession.code}" is currently running!\n\nPlease stop the active session before switching subjects.`);
-        const courseSelect = document.getElementById('teacher-course-select');
-        if (courseSelect) courseSelect.value = activeSession.code;
-        return;
-      }
-      updateSessionCountDisplay();
-      const courseCode = document.getElementById('teacher-course-select')?.value || 'MCA-301';
-      checkAndSyncActiveSession(courseCode);
-      if (currentTeacherSem) {
-        fetchAndRenderStudents(currentTeacherSem);
-      }
-    }
-
-    let teacherWs = null;
-    function connectTeacherWebSocket() {
-      try {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const host = window.location.host || 'localhost:4000';
-        const wsUrl = `${protocol}//${host}/ws`;
-        teacherWs = new WebSocket(wsUrl);
-
-        teacherWs.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            if (data.type === 'STUDENT_CHECK_IN') {
-              const currentCourse = document.getElementById('teacher-course-select')?.value;
-              // Only apply check-in if it matches the currently selected course
-              if (!data.subjectCode || data.subjectCode === currentCourse || data.subjectId === currentCourse) {
-                const student = data.student || {};
-                const uniRoll = student.universityRoll || student.uniRoll;
-                const classRoll = student.classRoll;
-                const status = data.status === 'Half' ? 'H' : 'P';
-                
-                if (uniRoll) attendanceStatusByStudent[uniRoll] = status;
-                if (classRoll) attendanceStatusByStudent[classRoll] = status;
-
-                if (currentTeacherSem) {
-                  renderMatrixGoogleSheet(currentTeacherSem);
-                  renderAbsentStudents(currentTeacherSem);
-                }
-              }
-            } else if (data.type === 'SESSION_STARTED') {
-              const sess = data.session;
-              const courseSelect = document.getElementById('teacher-course-select');
-              const currentCourse = courseSelect ? courseSelect.value : 'MCA-301';
-              if (sess && (sess.subjectCode === currentCourse || sess.subjectId === currentCourse || sess.semester === currentTeacherSem)) {
-                applyActiveSessionState(sess, sess.remainingSeconds || 900);
-              }
-              if (currentTeacherSem) {
-                fetchAndRenderStudents(currentTeacherSem);
-              }
-            } else if (data.type === 'SESSION_STOPPED') {
-              applyInactiveSessionState();
-              if (currentTeacherSem) {
-                fetchAndRenderStudents(currentTeacherSem);
-              }
-            }
-          } catch (err) {
-            console.error('Error handling WebSocket message:', err);
-          }
-        };
-
-        teacherWs.onerror = (err) => {
-          console.warn('Teacher WebSocket encountered an error:', err);
-        };
-
-        teacherWs.onclose = () => {
-          console.log('Teacher WebSocket closed. Reconnecting in 3s...');
-          setTimeout(connectTeacherWebSocket, 3000);
-        };
-      } catch (err) {
-        console.warn('WebSocket connection not available:', err);
-      }
-    }
-
-    async function checkAndSyncActiveSession(courseCode) {
-      if (!courseCode) return;
-      try {
-        const res = await fetch(`/api/sessions/active/${courseCode}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.sessionsConductedToday !== undefined) {
-            sessionCountsByCourse[courseCode] = data.sessionsConductedToday;
-            updateSessionCountDisplay();
-          }
           if (data.isActive && data.session) {
             applyActiveSessionState(data.session, data.remainingSeconds);
           } else if (activeSession && (activeSession.code === courseCode || activeSession.id === courseCode)) {
@@ -1619,7 +1516,7 @@
 
     let activeSessionId = null;
 
-    function applyActiveSessionState(session, remainingSecs) {
+        function applyActiveSessionState(session, remainingSecs) {
       if (!session) return;
       activeSessionId = session.id;
       const code = session.subjectCode || session.subjectId || session.code || 'MCA-301';
@@ -1657,25 +1554,40 @@
       if (subjEl) subjEl.textContent = `${code}: ${name} (Sem ${sem})`;
       updateSessionCountDisplay();
 
+      const isAdmin = loggedInFaculty?.role === 'ADMIN' || loggedInFaculty?.email?.toLowerCase() === 'sayantan05072004@gmail.com';
+
       if (btn) {
-        btn.disabled = false;
-        btn.className = 'w-full py-3 bg-charcoal-900 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center space-x-2 border border-red-500/30';
+        if (isAdmin) {
+          btn.disabled = false;
+          btn.onclick = toggleAttendanceSession;
+          btn.className = 'w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-lg transition-all duration-200 flex items-center justify-center space-x-2 border border-red-400/40 cursor-pointer animate-pulse-glow';
+        } else {
+          btn.disabled = true;
+          btn.onclick = null;
+          btn.className = 'w-full py-3 bg-seagreen-700/80 text-white font-bold text-xs rounded-xl shadow transition-all duration-200 flex items-center justify-center space-x-2 border border-seagreen-500/30 cursor-not-allowed';
+        }
       }
 
       if (btnIcon) {
-        btnIcon.innerHTML = `
-          <svg class="w-4 h-4 text-red-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        btnIcon.innerHTML = isAdmin ? `
+          <svg class="w-4 h-4 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
           </svg>
+        ` : `
+          <span class="w-2.5 h-2.5 rounded-full bg-white animate-ping"></span>
         `;
       }
 
       const initialMins = Math.floor(sessionTimer / 60).toString().padStart(2, '0');
       const initialSecs = (sessionTimer % 60).toString().padStart(2, '0');
-      if (btnText) btnText.textContent = `Stop Session (${initialMins}:${initialSecs})`;
+      if (btnText) {
+        btnText.textContent = isAdmin
+          ? `🛑 Stop Session (${initialMins}:${initialSecs}) [Admin]`
+          : `🟢 Live Session (${initialMins}:${initialSecs})`;
+      }
       const countdownEl = document.getElementById('teacher-timer-countdown');
-      if (countdownEl) countdownEl.textContent = `${initialMins}:${initialSecs} Remaining`;
+      if (countdownEl) countdownEl.textContent = `${initialMins}:${initialSecs} Remaining (Auto-Ends in 15m)`;
 
       if (timerInterval) clearInterval(timerInterval);
       timerInterval = setInterval(() => {
@@ -1684,8 +1596,12 @@
           const mins = Math.floor(sessionTimer / 60).toString().padStart(2, '0');
           const secs = (sessionTimer % 60).toString().padStart(2, '0');
           const cEl = document.getElementById('teacher-timer-countdown');
-          if (cEl) cEl.textContent = `${mins}:${secs} Remaining`;
-          if (btnText) btnText.textContent = `Stop Session (${mins}:${secs})`;
+          if (cEl) cEl.textContent = `${mins}:${secs} Remaining (Auto-Ends in 15m)`;
+          if (btnText) {
+            btnText.textContent = isAdmin
+              ? `🛑 Stop Session (${mins}:${secs}) [Admin]`
+              : `🟢 Live Session (${mins}:${secs})`;
+          }
         } else {
           applyInactiveSessionState();
         }

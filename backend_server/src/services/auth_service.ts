@@ -22,6 +22,8 @@ export interface RegisterTeacherInput {
   email: string;
   password: string;
   departmentCode: string;
+  semester?: number;
+  subjectCode?: string;
 }
 
 interface StoredOtp {
@@ -45,27 +47,42 @@ export class AuthService {
   }
 
   public static async registerStudent(input: RegisterStudentInput) {
-    // 1. Check existing email / university roll / registration number
-    const existingEmail = await prisma.user.findUnique({ where: { email: input.email } });
+    const cleanRegNo = input.regNumber.trim();
+    const cleanUniRoll = input.universityRoll.trim();
+    const cleanEmail = input.email.toLowerCase().trim();
+
+    // 1. Strict Input Validation
+    // Registration Number: exactly 7 digits (e.g. 2080001)
+    if (!/^\d{7}$/.test(cleanRegNo)) {
+      throw new Error('Registration Number must be exactly 7 digits (e.g. 2080001).');
+    }
+
+    // University Roll Number: 2 digits / course name / 6 digits (e.g. 90/MCA/250001)
+    if (!/^\d{2}\/[A-Za-z]+\/\d{6}$/.test(cleanUniRoll)) {
+      throw new Error("University Roll Number must match format '2 digits/course/6 digits' (e.g. 90/MCA/250001).");
+    }
+
+    // 2. Check existing email / university roll / registration number
+    const existingEmail = await prisma.user.findUnique({ where: { email: cleanEmail } });
     if (existingEmail) {
       throw new Error('Email is already registered.');
     }
 
     const existingUniRoll = await prisma.studentProfile.findUnique({
-      where: { universityRoll: input.universityRoll },
+      where: { universityRoll: cleanUniRoll },
     });
     if (existingUniRoll) {
-      throw new Error(`University Roll Number '${input.universityRoll}' is already registered.`);
+      throw new Error(`University Roll Number '${cleanUniRoll}' is already registered.`);
     }
 
     const existingRegNo = await prisma.studentProfile.findUnique({
-      where: { regNumber: input.regNumber },
+      where: { regNumber: cleanRegNo },
     });
     if (existingRegNo) {
-      throw new Error(`Registration Number '${input.regNumber}' is already registered.`);
+      throw new Error(`Registration Number '${cleanRegNo}' is already registered.`);
     }
 
-    // 2. Find or create department
+    // 3. Find or create department
     let department = await prisma.department.findUnique({
       where: { code: input.departmentCode.toUpperCase() },
     });
@@ -82,21 +99,21 @@ export class AuthService {
       });
     }
 
-    // 3. Hash password & create user + student profile
+    // 4. Hash password & create user + student profile
     const passwordHash = await bcrypt.hash(input.password, 10);
 
     const user = await prisma.user.create({
       data: {
-        name: input.name,
-        email: input.email,
+        name: input.name.trim(),
+        email: cleanEmail,
         passwordHash,
         role: 'STUDENT',
         student: {
           create: {
-            classRoll: input.classRoll,
-            universityRoll: input.universityRoll,
-            regNumber: input.regNumber,
-            semester: input.semester,
+            classRoll: input.classRoll.trim(),
+            universityRoll: cleanUniRoll,
+            regNumber: cleanRegNo,
+            semester: Number(input.semester),
             departmentId: department.id,
             deviceUuid: input.deviceUuid,
           },
@@ -122,7 +139,8 @@ export class AuthService {
   }
 
   public static async registerTeacher(input: RegisterTeacherInput) {
-    const existingEmail = await prisma.user.findUnique({ where: { email: input.email } });
+    const cleanEmail = input.email.toLowerCase().trim();
+    const existingEmail = await prisma.user.findUnique({ where: { email: cleanEmail } });
     if (existingEmail) {
       throw new Error('Email is already registered.');
     }
@@ -145,12 +163,16 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(input.password, 10);
 
+    // Super Admin check
+    const isSuperAdmin = cleanEmail === 'sayantan05072004@gmail.com';
+    const role = isSuperAdmin ? 'ADMIN' : 'TEACHER';
+
     const user = await prisma.user.create({
       data: {
-        name: input.name,
-        email: input.email,
+        name: input.name.trim(),
+        email: cleanEmail,
         passwordHash,
-        role: 'TEACHER',
+        role,
         teacher: {
           create: {
             departmentId: department.id,
@@ -161,14 +183,30 @@ export class AuthService {
         teacher: {
           include: {
             department: true,
+            subjects: true,
           },
         },
       },
     });
 
+    // Link assigned subject to this teacher profile if provided
+    if (input.subjectCode && user.teacher) {
+      const cleanSubjectCode = input.subjectCode.trim();
+      const sem = input.semester ? Number(input.semester) : undefined;
+      await prisma.subject.updateMany({
+        where: {
+          code: { equals: cleanSubjectCode, mode: 'insensitive' },
+          ...(sem ? { semester: sem } : {}),
+        },
+        data: {
+          teacherId: user.teacher.id,
+        },
+      });
+    }
+
     const token = this.generateToken({
       userId: user.id,
-      role: 'TEACHER',
+      role: user.role,
       teacherId: user.teacher?.id,
       departmentId: department.id,
     });
@@ -177,9 +215,10 @@ export class AuthService {
   }
 
   public static async login(identifier: string, password: string) {
+    const cleanId = identifier.trim();
     // Identifier can be email, universityRoll, or classRoll
     let user = await prisma.user.findUnique({
-      where: { email: identifier },
+      where: { email: cleanId.toLowerCase() },
       include: {
         student: { include: { department: true } },
         teacher: { include: { department: true, subjects: true } },
@@ -189,7 +228,7 @@ export class AuthService {
     // If not found by email, check if student university roll
     if (!user) {
       const student = await prisma.studentProfile.findUnique({
-        where: { universityRoll: identifier },
+        where: { universityRoll: cleanId },
         include: {
           user: true,
           department: true,
@@ -207,7 +246,7 @@ export class AuthService {
     }
 
     if (!user) {
-      if (identifier.includes('@')) {
+      if (cleanId.includes('@')) {
         throw new Error('No registered account found with this email address.');
       }
       throw new Error('Invalid University Roll Number or Class Roll.');
@@ -219,6 +258,15 @@ export class AuthService {
         throw new Error('Incorrect password for faculty account. Please try again.');
       }
       throw new Error('Incorrect password. Please try again.');
+    }
+
+    // Ensure Sayantan Dasgupta gets ADMIN role
+    if (user.email.toLowerCase() === 'sayantan05072004@gmail.com' && user.role !== 'ADMIN') {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { role: 'ADMIN' },
+      });
+      user.role = 'ADMIN';
     }
 
     // 🔒 2FA OTP PROTECTION FOR FACULTY & ADMIN (Stops unauthorized students)
@@ -284,7 +332,7 @@ export class AuthService {
     // OTP verified -> remove from store
     this.otpStore.delete(cleanEmail);
 
-    const user = await prisma.user.findUnique({
+    let user = await prisma.user.findUnique({
       where: { id: stored.userId },
       include: {
         teacher: { include: { department: true, subjects: true } },
@@ -293,6 +341,14 @@ export class AuthService {
 
     if (!user) {
       throw new Error('User account not found.');
+    }
+
+    if (user.email.toLowerCase() === 'sayantan05072004@gmail.com' && user.role !== 'ADMIN') {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { role: 'ADMIN' },
+      });
+      user.role = 'ADMIN';
     }
 
     const token = this.generateToken({

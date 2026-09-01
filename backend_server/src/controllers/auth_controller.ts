@@ -43,7 +43,7 @@ export class AuthController {
 
   public static async registerTeacher(req: Request, res: Response) {
     try {
-      const { name, email, password, departmentCode } = req.body;
+      const { name, email, password, departmentCode, semester, subjectCode } = req.body;
 
       if (!name || !email || !password || !departmentCode) {
         return res.status(400).json({ error: 'Name, email, password, and departmentCode are required.' });
@@ -54,6 +54,8 @@ export class AuthController {
         email,
         password,
         departmentCode,
+        semester: semester ? parseInt(semester, 10) : undefined,
+        subjectCode,
       });
 
       return res.status(201).json({

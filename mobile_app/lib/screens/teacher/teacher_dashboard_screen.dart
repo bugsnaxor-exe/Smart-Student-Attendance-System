@@ -1297,28 +1297,33 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                     const SizedBox(height: 14),
 
                     // Start / Stop Session Button (Full Width)
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _isSessionActive
-                            ? _handleStopSession
-                            : (attendance.isLoading || currentCount >= 3 ? null : _handleStartSession),
-                        icon: Icon(_isSessionActive ? Icons.stop_circle_outlined : Icons.play_arrow_outlined, size: 18),
-                        label: Text(
-                          _isSessionActive
-                              ? 'Stop Session ($timerString)'
-                              : (currentCount >= 3 ? 'Max Daily Limit (3/3 Done)' : 'Start 15-Min Session'),
-                          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+                    Builder(builder: (context) {
+                      final auth = Provider.of<AuthProvider>(context, listen: false);
+                      final isSuperAdmin = auth.currentUser?.role == 'ADMIN' || auth.currentUser?.email.toLowerCase() == 'sayantan05072004@gmail.com';
+
+                      return SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _isSessionActive
+                              ? (isSuperAdmin ? _handleStopSession : null)
+                              : (attendance.isLoading || currentCount >= 3 ? null : _handleStartSession),
+                          icon: Icon(_isSessionActive ? (isSuperAdmin ? Icons.stop_circle_outlined : Icons.sensors_rounded) : Icons.play_arrow_outlined, size: 18),
+                          label: Text(
+                            _isSessionActive
+                                ? (isSuperAdmin ? 'Stop Session ($timerString) [Admin]' : 'Live Session Active ($timerString)')
+                                : (currentCount >= 3 ? 'Max Daily Limit (3/3 Done)' : 'Start 15-Min Session'),
+                            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _isSessionActive
+                                ? (isSuperAdmin ? const Color(0xFFDC2626) : const Color(0xFF047857))
+                                : (currentCount >= 3 ? const Color(0xFF9CA3AF) : AppTheme.seaGreen),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _isSessionActive
-                              ? const Color(0xFFDC2626)
-                              : (currentCount >= 3 ? const Color(0xFF9CA3AF) : AppTheme.seaGreen),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                    ),
+                      );
+                    }),
 
                     if (_isSessionActive) ...[
                       const SizedBox(height: 12),

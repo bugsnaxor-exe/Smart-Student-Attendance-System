@@ -374,10 +374,20 @@ export class SessionController {
   }
 
   /**
-   * Teacher manually closes active session by Session ID.
+   * Admin-Only: Manually closes active session by Session ID.
    */
   public static async closeSession(req: AuthRequest, res: Response) {
     try {
+      // Security Check: Only Admin (Sayantan Dasgupta) can terminate sessions manually
+      const user = req.user?.userId ? await prisma.user.findUnique({ where: { id: req.user.userId } }) : null;
+      const isAdmin = req.user?.role === 'ADMIN' || user?.role === 'ADMIN' || user?.email?.toLowerCase() === 'sayantan05072004@gmail.com';
+
+      if (!isAdmin) {
+        return res.status(403).json({
+          error: 'Forbidden: Active sessions run for the full 15-minute duration. Only the Administrator (Sayantan Dasgupta) can terminate sessions manually.',
+        });
+      }
+
       const { sessionId } = req.params;
       const session = await SessionService.closeSession(sessionId);
 
@@ -391,7 +401,7 @@ export class SessionController {
       }
 
       return res.json({
-        message: 'Attendance session closed.',
+        message: 'Attendance session closed by Administrator.',
         session,
       });
     } catch (error: any) {
@@ -400,10 +410,19 @@ export class SessionController {
   }
 
   /**
-   * Teacher manually closes active session by Course Code / Subject ID.
+   * Admin-Only: Manually closes active session by Course Code / Subject ID.
    */
   public static async closeSessionBySubject(req: AuthRequest, res: Response) {
     try {
+      const user = req.user?.userId ? await prisma.user.findUnique({ where: { id: req.user.userId } }) : null;
+      const isAdmin = req.user?.role === 'ADMIN' || user?.role === 'ADMIN' || user?.email?.toLowerCase() === 'sayantan05072004@gmail.com';
+
+      if (!isAdmin) {
+        return res.status(403).json({
+          error: 'Forbidden: Active sessions run for the full 15-minute duration. Only the Administrator (Sayantan Dasgupta) can terminate sessions manually.',
+        });
+      }
+
       const { subjectId } = req.params;
       const cleanCode = subjectId ? subjectId.trim() : '';
 
@@ -442,7 +461,7 @@ export class SessionController {
 
       return res.json({
         success: true,
-        message: `Active session for ${subject.name} (${subject.code}) stopped.`,
+        message: `Attendance session for ${subject.code} terminated by Administrator.`,
       });
     } catch (error: any) {
       return res.status(500).json({ error: error.message });

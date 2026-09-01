@@ -164,6 +164,8 @@ class AuthProvider extends ChangeNotifier {
     required String email,
     required String password,
     String departmentCode = 'MCA',
+    int? semester,
+    String? subjectCode,
   }) async {
     _isLoading = true;
     _errorMessage = null;
@@ -175,6 +177,8 @@ class AuthProvider extends ChangeNotifier {
         'email': email,
         'password': password,
         'departmentCode': departmentCode,
+        if (semester != null) 'semester': semester,
+        if (subjectCode != null) 'subjectCode': subjectCode,
       });
 
       _isLoading = false;

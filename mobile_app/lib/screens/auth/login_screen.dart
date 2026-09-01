@@ -36,6 +36,51 @@ class _LoginScreenState extends State<LoginScreen> {
   final _facultyPasswordController = TextEditingController();
   final _facultyNameController = TextEditingController();
 
+  int _facultySemester = 3;
+  String _facultySubjectCode = 'MCA-301';
+
+  final Map<int, List<Map<String, String>>> _mcaSyllabus = {
+    1: [
+      {'code': 'MCA-101', 'name': 'Mathematical Foundation'},
+      {'code': 'MCA-102', 'name': 'Computer Organization & Architecture'},
+      {'code': 'MCA-103', 'name': 'Data Structures with C/C++'},
+      {'code': 'MCA-104', 'name': 'Operating Systems'},
+      {'code': 'MCA-105', 'name': 'Object-Oriented Programming (Java)'},
+      {'code': 'MCA-191', 'name': 'Data Structures Lab'},
+      {'code': 'MCA-192', 'name': 'Java Programming Lab'},
+      {'code': 'MCA-193', 'name': 'OS & Linux Lab'},
+      {'code': 'MCA-194', 'name': 'Soft Skills & Communication'},
+      {'code': 'MCA-181', 'name': 'Bridge Course (Computer Basics)'},
+    ],
+    2: [
+      {'code': 'MCA-201', 'name': 'Database Management Systems'},
+      {'code': 'MCA-202', 'name': 'Design & Analysis of Algorithms'},
+      {'code': 'MCA-203', 'name': 'Software Engineering & TQM'},
+      {'code': 'MCA-204', 'name': 'Computer Networks'},
+      {'code': 'MCA-205', 'name': 'Web Technologies (HTML/JS/PHP)'},
+      {'code': 'MCA-291', 'name': 'DBMS & SQL Lab'},
+      {'code': 'MCA-292', 'name': 'Algorithm Lab (Python)'},
+      {'code': 'MCA-293', 'name': 'Web Development Lab'},
+      {'code': 'MCA-294', 'name': 'Mini Project & Seminar'},
+    ],
+    3: [
+      {'code': 'MCA-301', 'name': 'Artificial Intelligence & Machine Learning'},
+      {'code': 'MCA-302', 'name': 'Cloud Computing & DevOps'},
+      {'code': 'MCA-303', 'name': 'Information & Cyber Security'},
+      {'code': 'MCA-E304A', 'name': 'Mobile Application Development (Flutter)'},
+      {'code': 'MCA-E304B', 'name': 'Big Data Analytics'},
+      {'code': 'MCA-391', 'name': 'AI & Machine Learning Lab'},
+      {'code': 'MCA-392', 'name': 'Cloud & DevOps Lab'},
+      {'code': 'MCA-393', 'name': 'Mobile Application Lab'},
+      {'code': 'MCA-394', 'name': 'Industrial Training / Internship Viva'},
+      {'code': 'MCA-395', 'name': 'Major Project Phase I'},
+    ],
+    4: [
+      {'code': 'MCA-491', 'name': 'Major Project Phase II & Industry Dissertation'},
+      {'code': 'MCA-492', 'name': 'Comprehensive Grand Viva Voce'},
+    ],
+  };
+
   bool _obscurePassword = true;
 
   @override
@@ -87,6 +132,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (name.isEmpty || email.isEmpty || password.isEmpty || classRoll.isEmpty || uniRoll.isEmpty || regNumber.isEmpty) {
       _showSnackBar('Please fill in all student profile fields.', isError: true);
+      return;
+    }
+
+    // 1. Validate Registration Number: Exactly 7 digits
+    if (!RegExp(r'^\d{7}$').hasMatch(regNumber)) {
+      _showSnackBar('Registration Number must be exactly 7 digits (e.g. 2080001).', isError: true);
+      return;
+    }
+
+    // 2. Validate University Roll: 2 digits/course/6 digits
+    if (!RegExp(r'^\d{2}/[A-Za-z]+/\d{6}$').hasMatch(uniRoll)) {
+      _showSnackBar("University Roll Number must match format '2 digits/course/6 digits' (e.g. 90/MCA/250001).", isError: true);
       return;
     }
 
@@ -158,6 +215,8 @@ class _LoginScreenState extends State<LoginScreen> {
       email: email,
       password: password,
       departmentCode: 'MCA',
+      semester: _facultySemester,
+      subjectCode: _facultySubjectCode,
     );
 
     if (success && mounted) {
@@ -508,7 +567,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: TextField(
                 controller: _studentUniRollController,
                 style: const TextStyle(fontSize: 13),
-                decoration: const InputDecoration(labelText: 'University Roll', hintText: '120/001/26042'),
+                decoration: const InputDecoration(labelText: 'University Roll', hintText: '90/MCA/250001'),
               ),
             ),
             const SizedBox(width: 8),
@@ -563,7 +622,7 @@ class _LoginScreenState extends State<LoginScreen> {
         TextField(
           controller: _studentRegNoController,
           style: const TextStyle(fontSize: 13),
-          decoration: const InputDecoration(labelText: 'Reg Number', hintText: 'REG/2026/9042'),
+          decoration: const InputDecoration(labelText: 'Reg Number', hintText: '2080001'),
         ),
         const SizedBox(height: 10),
 
@@ -703,6 +762,54 @@ class _LoginScreenState extends State<LoginScreen> {
               Text('Department: MCA Department', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.charcoal)),
             ],
           ),
+        ),
+        const SizedBox(height: 10),
+
+        Row(
+          children: [
+            Expanded(
+              child: DropdownButtonFormField<int>(
+                value: _facultySemester,
+                dropdownColor: Colors.white,
+                style: const TextStyle(fontSize: 12, color: AppTheme.charcoal, fontWeight: FontWeight.w700),
+                decoration: const InputDecoration(labelText: 'Semester', contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10)),
+                items: [1, 2, 3, 4]
+                    .map((s) => DropdownMenuItem(value: s, child: Text('Sem $s', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700))))
+                    .toList(),
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() {
+                      _facultySemester = val;
+                      final subjects = _mcaSyllabus[val] ?? [];
+                      if (subjects.isNotEmpty) {
+                        _facultySubjectCode = subjects[0]['code']!;
+                      }
+                    });
+                  }
+                },
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              flex: 2,
+              child: DropdownButtonFormField<String>(
+                value: _facultySubjectCode,
+                dropdownColor: Colors.white,
+                isExpanded: true,
+                style: const TextStyle(fontSize: 12, color: AppTheme.charcoal, fontWeight: FontWeight.w700),
+                decoration: const InputDecoration(labelText: 'Assigned Subject', contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10)),
+                items: (_mcaSyllabus[_facultySemester] ?? [])
+                    .map((sub) => DropdownMenuItem(
+                          value: sub['code'],
+                          child: Text('${sub['code']}: ${sub['name']}', overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                        ))
+                    .toList(),
+                onChanged: (val) {
+                  if (val != null) setState(() => _facultySubjectCode = val);
+                },
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 10),
 

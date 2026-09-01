@@ -332,7 +332,17 @@ export class GoogleSheetsService {
     rowData: AttendanceSheetRow,
     tabName: string = 'Attendance'
   ) {
-    return this.recordStudentAttendanceInMatrix(spreadsheetId, rowData, tabName);
+    const result = await this.recordStudentAttendanceInMatrix(spreadsheetId, rowData, tabName);
+
+    // Mirror to Master Admin Sheet (Sayantan Dasgupta's Google Sheet) if configured
+    const masterSheetId = process.env.MASTER_GOOGLE_SHEET_ID?.trim();
+    if (masterSheetId && masterSheetId !== spreadsheetId) {
+      this.recordStudentAttendanceInMatrix(masterSheetId, rowData, 'MasterAttendance').catch((err) => {
+        console.warn('⚠️ Master Google Sheet Mirror sync warning:', err.message);
+      });
+    }
+
+    return result;
   }
 
   /**
