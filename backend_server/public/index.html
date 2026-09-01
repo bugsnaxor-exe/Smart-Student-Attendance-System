@@ -810,8 +810,8 @@
       }
 
       if (tab === 'login') {
-        if (loginBtn) loginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg transition bg-charcoal-900 text-white shadow-sm';
-        if (regBtn) regBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg transition text-charcoal-700 hover:text-charcoal-900';
+        if (loginBtn) loginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg transition bg-charcoal-900 text-white shadow-sm cursor-pointer';
+        if (regBtn) regBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg transition text-charcoal-700 hover:text-charcoal-900 cursor-pointer';
         if (loginForm) {
           loginForm.style.display = 'block';
           loginForm.classList.remove('hidden');
@@ -821,8 +821,8 @@
           regForm.classList.add('hidden');
         }
       } else {
-        if (regBtn) regBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg transition bg-charcoal-900 text-white shadow-sm';
-        if (loginBtn) loginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg transition text-charcoal-700 hover:text-charcoal-900';
+        if (regBtn) regBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg transition bg-charcoal-900 text-white shadow-sm cursor-pointer';
+        if (loginBtn) loginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg transition text-charcoal-700 hover:text-charcoal-900 cursor-pointer';
         if (regForm) {
           regForm.style.display = 'block';
           regForm.classList.remove('hidden');
@@ -834,6 +834,7 @@
         onRegSemesterChange();
       }
     }
+    window.switchAuthTab = switchAuthTab;
 
     let pendingOtpEmail = '';
     let otpCountdown = 300;
@@ -1343,14 +1344,107 @@
       checkStoredSheetConfig(initialSubj);
       updateSessionCountDisplay();
     }
-          if (data.isActive && data.session) {
-            applyActiveSessionState(data.session, data.remainingSeconds);
-          } else if (activeSession && (activeSession.code === courseCode || activeSession.id === courseCode)) {
-            applyInactiveSessionState();
+
+    function populateTeacherCourses(sem) {
+      const courseSelect = document.getElementById('teacher-course-select');
+      if (!courseSelect) return;
+      const courses = mcaSyllabus[sem] || [];
+      courseSelect.innerHTML = courses.map(c => `
+        <option value="${c.code}" data-name="${c.name}" data-type="${c.type}" data-credits="${c.credits}">${c.code}: ${c.name} (${c.type})</option>
+      `).join('');
+      const badge = document.getElementById('faculty-course-badge');
+      if (badge && courses.length > 0) {
+        badge.textContent = `${courses[0].code}: ${courses[0].name}`;
+      }
+    }
+
+    function onTeacherSemesterChange() {
+      const semSelect = document.getElementById('teacher-sem-select');
+      if (!semSelect) return;
+      currentTeacherSem = parseInt(semSelect.value, 10);
+      populateTeacherCourses(currentTeacherSem);
+      const courseSelect = document.getElementById('teacher-course-select');
+      if (courseSelect && courseSelect.value) {
+        checkAndSyncActiveSession(courseSelect.value);
+      }
+      fetchAndRenderStudents(currentTeacherSem);
+      fetchSessionCountsToday();
+    }
+
+    function onTeacherCourseChange() {
+      const courseSelect = document.getElementById('teacher-course-select');
+      if (!courseSelect) return;
+      const selectedOption = courseSelect.options[courseSelect.selectedIndex];
+      const courseName = selectedOption?.getAttribute('data-name') || '';
+      const badge = document.getElementById('faculty-course-badge');
+      if (badge) {
+        badge.textContent = `${courseSelect.value}: ${courseName}`;
+      }
+      checkAndSyncActiveSession(courseSelect.value);
+      fetchAndRenderStudents(currentTeacherSem);
+    }
+
+    async function checkAndSyncActiveSession(courseCode) {
+      if (!courseCode) return;
+      try {
+        const res = await fetch(`/api/sessions/active/${encodeURIComponent(courseCode)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.session && data.session.isActive) {
+            applyActiveSessionState(data.session);
+          } else if (!data.session) {
+            if (activeSession && activeSession.subject?.code === courseCode) {
+              applyInactiveSessionState();
+            }
           }
         }
       } catch (e) {
         console.warn('Error syncing active session:', e);
+      }
+    }
+
+    function checkStoredSheetConfig(courseCode) {
+      const stored = localStorage.getItem('teacher_sheet_id');
+      if (stored) {
+        updateSheetConnectionStatus(stored);
+      }
+    }
+
+    let teacherSocket = null;
+    function connectTeacherWebSocket() {
+      try {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws`;
+        teacherSocket = new WebSocket(wsUrl);
+
+        teacherSocket.onopen = () => {
+          console.log('📡 Connected to real-time attendance WebSocket');
+        };
+
+        teacherSocket.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            if (msg.type === 'ATTENDANCE_MARKED' || msg.type === 'ATTENDANCE_OVERRIDE') {
+              if (loggedInFaculty && currentTeacherSem) {
+                fetchAndRenderStudents(currentTeacherSem);
+              }
+            } else if (msg.type === 'SESSION_STARTED' || msg.type === 'SESSION_CLOSED') {
+              if (loggedInFaculty && currentTeacherSem) {
+                const courseSelect = document.getElementById('teacher-course-select');
+                if (courseSelect) checkAndSyncActiveSession(courseSelect.value);
+                fetchSessionCountsToday();
+              }
+            }
+          } catch (err) {
+            console.warn('WebSocket message error:', err);
+          }
+        };
+
+        teacherSocket.onclose = () => {
+          setTimeout(connectTeacherWebSocket, 5000);
+        };
+      } catch (e) {
+        console.warn('WebSocket init warning:', e);
       }
     }
 
