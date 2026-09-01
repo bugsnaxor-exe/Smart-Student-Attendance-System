@@ -51,52 +51,16 @@ export class OverrideController {
         },
       });
 
-      // 2. Identify the active session or specific session to filter absentees
-      let targetSession = null;
-      if (sessionId) {
-        targetSession = await prisma.activeSession.findUnique({
-          where: { id: sessionId as string },
-        });
-      }
+      // 2. Identify attendance records for THIS SUBJECT on targetDate
+      const subjectAttendances = await prisma.attendanceRecord.findMany({
+        where: {
+          subjectId: subject.id,
+          date: targetDate,
+        },
+      });
+      const markedStudentIds = new Set(subjectAttendances.map((a) => a.studentId));
 
-      if (!targetSession) {
-        targetSession = await SessionService.getActiveSession(subject.id);
-      }
-
-      let markedStudentIds = new Set<string>();
-
-      if (targetSession) {
-        // Find attendees specifically checked in for THIS session
-        const sessionAttendances = await prisma.attendanceRecord.findMany({
-          where: {
-            sessionId: targetSession.id,
-          },
-        });
-        markedStudentIds = new Set(sessionAttendances.map((a) => a.studentId));
-      } else {
-        // If no active session, find attendees from latest session today
-        const startOfDay = new Date(`${targetDate}T00:00:00+05:30`);
-        const endOfDay = new Date(`${targetDate}T23:59:59+05:30`);
-
-        const latestSession = await prisma.activeSession.findFirst({
-          where: {
-            subjectId: subject.id,
-            createdAt: { gte: startOfDay, lte: endOfDay },
-          },
-          orderBy: { createdAt: 'desc' },
-        });
-
-        if (latestSession) {
-          const sessionAttendances = await prisma.attendanceRecord.findMany({
-            where: {
-              sessionId: latestSession.id,
-            },
-          });
-          markedStudentIds = new Set(sessionAttendances.map((a) => a.studentId));
-        }
-      }
-
-      // 3. Filter for absent students for this specific session
+      // 3. Filter for absent students for this subject
       const absentStudents = allStudents
         .filter((student) => !markedStudentIds.has(student.id))
         .map((student) => ({
@@ -113,7 +77,6 @@ export class OverrideController {
         subjectName: subject.name,
         subjectCode: subject.code,
         date: targetDate,
-        sessionId: targetSession?.id || null,
         totalEnrolled: allStudents.length,
         totalPresent: markedStudentIds.size,
         totalAbsent: absentStudents.length,
@@ -125,7 +88,8 @@ export class OverrideController {
   }
 
   /**
-   * Teacher grants "Half Attendance" to a latecomer student.
+   * Teacher grants "Half Attendance" to a student for a subject.
+   * Works whether a session is active or not started yet.
    * Updates database and appends to Google Sheet with status: "Half".
    */
   public static async grantHalfAttendance(req: AuthRequest, res: Response) {
@@ -170,7 +134,7 @@ export class OverrideController {
       const kolkata = getKolkataTime();
       const targetDate = date || kolkata.dateString;
 
-      // Determine active session
+      // Determine active session if any
       let targetSession = null;
       if (sessionId) {
         targetSession = await prisma.activeSession.findUnique({
@@ -181,60 +145,29 @@ export class OverrideController {
         targetSession = await SessionService.getActiveSession(subject.id);
       }
 
-      // Calculate session number today
-      let sessionNumber = 1;
-      const todaySessions = await prisma.activeSession.findMany({
+      // Create or update attendance record as "Half" for this subject and date
+      const existing = await prisma.attendanceRecord.findFirst({
         where: {
+          studentId: student.id,
           subjectId: subject.id,
-          createdAt: {
-            gte: new Date(`${targetDate}T00:00:00+05:30`),
-            lte: new Date(`${targetDate}T23:59:59+05:30`),
-          },
+          date: targetDate,
         },
-        orderBy: { createdAt: 'asc' },
       });
 
-      if (targetSession) {
-        const idx = todaySessions.findIndex(s => s.id === targetSession.id);
-        if (idx !== -1) sessionNumber = idx + 1;
-      } else if (todaySessions.length > 0) {
-        sessionNumber = todaySessions.length;
-      }
-
-      // Create or update attendance record as "Half"
       let record;
-      if (targetSession) {
-        const existing = await prisma.attendanceRecord.findFirst({
-          where: {
-            studentId: student.id,
-            sessionId: targetSession.id,
+      if (existing) {
+        record = await prisma.attendanceRecord.update({
+          where: { id: existing.id },
+          data: {
+            status: 'Half',
+            time: kolkata.formattedTime,
+            ...(targetSession ? { sessionId: targetSession.id } : {}),
           },
         });
-
-        if (existing) {
-          record = await prisma.attendanceRecord.update({
-            where: { id: existing.id },
-            data: {
-              status: 'Half',
-              time: kolkata.formattedTime,
-            },
-          });
-        } else {
-          record = await prisma.attendanceRecord.create({
-            data: {
-              sessionId: targetSession.id,
-              studentId: student.id,
-              subjectId: subject.id,
-              date: targetDate,
-              time: kolkata.formattedTime,
-              status: 'Half',
-              syncedToSheet: false,
-            },
-          });
-        }
       } else {
         record = await prisma.attendanceRecord.create({
           data: {
+            sessionId: targetSession ? targetSession.id : null,
             studentId: student.id,
             subjectId: subject.id,
             date: targetDate,
@@ -269,7 +202,6 @@ export class OverrideController {
             subjectCode: subject.code,
             subjectName: subject.name,
             semester: subject.semester,
-            sessionNumber,
           },
           subject.sheetTabName || 'Attendance'
         );
@@ -393,38 +325,27 @@ export class OverrideController {
 
       let dbRecord = null;
       if (student && subject) {
-        if (targetSession) {
-          const existing = await prisma.attendanceRecord.findFirst({
-            where: {
-              studentId: student.id,
-              sessionId: targetSession.id,
+        const existing = await prisma.attendanceRecord.findFirst({
+          where: {
+            studentId: student.id,
+            subjectId: subject.id,
+            date: targetDate,
+          },
+        });
+
+        if (existing) {
+          dbRecord = await prisma.attendanceRecord.update({
+            where: { id: existing.id },
+            data: {
+              status: status === 'Full' ? 'Full' : 'Half',
+              time: kolkata.formattedTime,
+              ...(targetSession ? { sessionId: targetSession.id } : {}),
             },
           });
-
-          if (existing) {
-            dbRecord = await prisma.attendanceRecord.update({
-              where: { id: existing.id },
-              data: {
-                status: status === 'Full' ? 'Full' : 'Half',
-                time: kolkata.formattedTime,
-              },
-            });
-          } else {
-            dbRecord = await prisma.attendanceRecord.create({
-              data: {
-                sessionId: targetSession.id,
-                studentId: student.id,
-                subjectId: subject.id,
-                date: targetDate,
-                time: kolkata.formattedTime,
-                status: status === 'Full' ? 'Full' : 'Half',
-                syncedToSheet: false,
-              },
-            });
-          }
         } else {
           dbRecord = await prisma.attendanceRecord.create({
             data: {
+              sessionId: targetSession ? targetSession.id : null,
               studentId: student.id,
               subjectId: subject.id,
               date: targetDate,
@@ -452,7 +373,6 @@ export class OverrideController {
             subjectCode: subject?.code || subjectCode,
             subjectName: subject?.name,
             semester: subject?.semester || student?.semester || semester || 3,
-            sessionNumber,
           }
         );
         sheetSyncSuccess = sheetRes.success;

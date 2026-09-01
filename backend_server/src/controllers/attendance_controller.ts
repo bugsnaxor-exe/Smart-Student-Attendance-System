@@ -136,7 +136,8 @@ export class AttendanceController {
       let record = await prisma.attendanceRecord.findFirst({
         where: {
           studentId: student.id,
-          sessionId: activeSession.id,
+          subjectId: subject.id,
+          date: todayDate,
         },
       });
 
