@@ -9,7 +9,10 @@ export class SessionService {
     subjectId: string,
     teacherId: string,
     semester: number,
-    durationMinutes: number = 15
+    durationMinutes: number = 15,
+    latitude?: number,
+    longitude?: number,
+    radiusMeters: number = 50.0
   ) {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + durationMinutes * 60 * 1000);
@@ -56,6 +59,9 @@ export class SessionService {
         isActive: true,
         createdAt: now,
         expiresAt,
+        latitude: latitude !== undefined ? latitude : null,
+        longitude: longitude !== undefined ? longitude : null,
+        radiusMeters: radiusMeters || 50.0,
       },
       include: {
         subject: true,
@@ -63,7 +69,7 @@ export class SessionService {
     });
 
     console.log(
-      `⏱️ [Session Started] Subject: ${session.subject.name} (${session.subject.code}) | Session #${todaySessionsCount + 1} | Expires in ${durationMinutes} mins at ${expiresAt.toLocaleTimeString()}`
+      `⏱️ [Session Started] Subject: ${session.subject.name} (${session.subject.code}) | Session #${todaySessionsCount + 1} | Location: ${latitude != null ? `${latitude}, ${longitude}` : 'Campus Default'} (50m) | Expires in ${durationMinutes} mins at ${expiresAt.toLocaleTimeString()}`
     );
 
     return session;

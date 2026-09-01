@@ -126,13 +126,43 @@ class ApiService {
   }
 
   // --- TEACHER ACTIVE SESSION & OVERRIDE FLOW ---
-  static Future<Map<String, dynamic>> startTeacherSession(String subjectId, {int durationMinutes = 15}) async {
+  static Future<Map<String, dynamic>> startTeacherSession(
+    String subjectId, {
+    int durationMinutes = 15,
+    double? latitude,
+    double? longitude,
+    double? radiusMeters,
+  }) async {
     final res = await http.post(
       Uri.parse('$baseUrl/sessions/start'),
       headers: await _getHeaders(),
       body: jsonEncode({
         'subjectId': subjectId,
         'durationMinutes': durationMinutes,
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
+        if (radiusMeters != null) 'radiusMeters': radiusMeters,
+      }),
+    );
+    return jsonDecode(res.body);
+  }
+
+  static Future<Map<String, dynamic>> updateSessionLocation({
+    String? subjectId,
+    String? sessionId,
+    required double latitude,
+    required double longitude,
+    double radiusMeters = 50.0,
+  }) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/sessions/update-location'),
+      headers: await _getHeaders(),
+      body: jsonEncode({
+        if (subjectId != null) 'subjectId': subjectId,
+        if (sessionId != null) 'sessionId': sessionId,
+        'latitude': latitude,
+        'longitude': longitude,
+        'radiusMeters': radiusMeters,
       }),
     );
     return jsonDecode(res.body);

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/services/api_service.dart';
 import '../../models/attendance_model.dart';
@@ -26,6 +27,12 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   int _countdownSeconds = 900; // 15 mins
   Timer? _sessionTimer;
   Timer? _syncTimer;
+
+  // Teacher Detected Location
+  double? _detectedLatitude;
+  double? _detectedLongitude;
+  double? _detectedAccuracy;
+  bool _isDetectingLocation = false;
 
   // Session limits (Max 3 per day)
   final Map<String, int> _sessionCountsByCourse = {};
@@ -282,7 +289,12 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     }
 
     final attendance = Provider.of<AttendanceProvider>(context, listen: false);
-    final success = await attendance.startSession(_selectedCourseCode!, durationMinutes: 15);
+    final success = await attendance.startSession(
+      _selectedCourseCode!,
+      durationMinutes: 15,
+      latitude: _detectedLatitude,
+      longitude: _detectedLongitude,
+    );
 
     if (success && mounted) {
       _sessionTimer?.cancel();
@@ -358,6 +370,217 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         ),
       );
     }
+  }
+
+  Future<void> _detectLocation() async {
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Location permission denied.'), backgroundColor: AppTheme.statusDanger),
+            );
+          }
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location permissions permanently denied. Please enable in settings.'), backgroundColor: AppTheme.statusDanger),
+          );
+        }
+        return;
+      }
+
+      final pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      if (mounted) {
+        setState(() {
+          _detectedLatitude = pos.latitude;
+          _detectedLongitude = pos.longitude;
+          _detectedAccuracy = pos.accuracy;
+        });
+
+        // If session is active, push update to backend
+        if (_isSessionActive && _activeSessionId != null) {
+          final attendance = Provider.of<AttendanceProvider>(context, listen: false);
+          await attendance.updateSessionLocation(
+            sessionId: _activeSessionId,
+            subjectId: _selectedCourseCode,
+            latitude: pos.latitude,
+            longitude: pos.longitude,
+          );
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✅ Location updated: ${pos.latitude.toStringAsFixed(5)}, ${pos.longitude.toStringAsFixed(5)} (±${pos.accuracy.toStringAsFixed(1)}m)'),
+            backgroundColor: AppTheme.seaGreen,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error detecting location: $e'), backgroundColor: AppTheme.statusDanger),
+        );
+      }
+    }
+  }
+
+  void _openLocationSettingsModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _buildLocationSettingsSheet(),
+    );
+  }
+
+  Widget _buildLocationSettingsSheet() {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    return StatefulBuilder(
+      builder: (context, setModalState) {
+        final isCustomLoc = _detectedLatitude != null && _detectedLongitude != null;
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(color: AppTheme.creamBorder, borderRadius: BorderRadius.circular(2)),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: AppTheme.seaGreenTint,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Center(child: Text('👨‍🏫', style: TextStyle(fontSize: 22))),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(auth.currentUser?.name ?? 'Faculty', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.charcoal)),
+                        Text(auth.currentUser?.email ?? 'faculty@smartattend.edu', style: const TextStyle(fontSize: 11, color: AppTheme.charcoalMuted)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFAF7F0),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: isCustomLoc ? AppTheme.seaGreen : AppTheme.creamBorder),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Row(
+                          children: [
+                            Text('📍 ', style: TextStyle(fontSize: 13)),
+                            Text('Classroom Anchor', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppTheme.charcoal)),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: isCustomLoc ? AppTheme.seaGreenTint : const Color(0xFFF3F4F6),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: isCustomLoc ? AppTheme.seaGreen : AppTheme.creamBorder),
+                          ),
+                          child: Text(
+                            isCustomLoc ? '🛰️ Custom GPS' : '🏫 Campus Default',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: isCustomLoc ? AppTheme.seaGreenDark : AppTheme.charcoalMuted,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    if (isCustomLoc) ...[
+                      Text('🎯 Coords: ${_detectedLatitude!.toStringAsFixed(5)}°, ${_detectedLongitude!.toStringAsFixed(5)}°', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppTheme.charcoal, fontFamily: 'monospace')),
+                      const SizedBox(height: 2),
+                      Text('Accuracy: ±${_detectedAccuracy?.toStringAsFixed(1) ?? "5.0"}m • Radius: 50m', style: const TextStyle(fontSize: 10, color: AppTheme.charcoalMuted)),
+                    ] else ...[
+                      const Text('Using Department Central Coordinates (50.0m Geofence Radius).', style: TextStyle(fontSize: 11, color: AppTheme.charcoalMuted)),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: _isDetectingLocation
+                    ? null
+                    : () async {
+                        setModalState(() => _isDetectingLocation = true);
+                        await _detectLocation();
+                        setModalState(() => _isDetectingLocation = false);
+                        if (mounted) setState(() {});
+                      },
+                icon: _isDetectingLocation
+                    ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.my_location, size: 16),
+                label: Text(_isDetectingLocation ? 'Acquiring GPS...' : 'Detect Current Location', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.seaGreen,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _detectedLatitude = null;
+                    _detectedLongitude = null;
+                    _detectedAccuracy = null;
+                  });
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Reset to Campus Default coordinates.')),
+                  );
+                },
+                icon: const Icon(Icons.refresh, size: 14, color: AppTheme.charcoal),
+                label: const Text('Reset to Campus Default', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.charcoal)),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  side: const BorderSide(color: AppTheme.creamBorder),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _openGoogleSheetSettingsModal() {
@@ -827,6 +1050,41 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           ],
         ),
         actions: [
+          // Teacher Location Pill Button
+          InkWell(
+            onTap: _openLocationSettingsModal,
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              margin: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF3F4F6),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: _detectedLatitude != null ? AppTheme.seaGreen : AppTheme.creamBorder),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('👨‍🏫', style: TextStyle(fontSize: 12)),
+                  const SizedBox(width: 4),
+                  Text(
+                    auth.currentUser?.name.split(' ').first ?? 'Faculty',
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppTheme.charcoal),
+                  ),
+                  const SizedBox(width: 4),
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: _detectedLatitude != null ? AppTheme.seaGreen : Colors.grey,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: ElevatedButton(

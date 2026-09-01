@@ -90,6 +90,7 @@ app.get('/api/sessions/active/:subjectId', SessionController.getActiveSession);
 app.get('/api/sessions/student-active', optionalAuth, SessionController.getStudentActiveSessions);
 app.post('/api/sessions/close/:sessionId', optionalAuth, SessionController.closeSession);
 app.post('/api/sessions/close-subject/:subjectId', optionalAuth, SessionController.closeSessionBySubject);
+app.post('/api/sessions/update-location', optionalAuth, SessionController.updateLocation);
 
 // --- ATTENDANCE ROUTES ---
 app.post('/api/attendance/mark', requireAuth, AttendanceController.markAttendance);

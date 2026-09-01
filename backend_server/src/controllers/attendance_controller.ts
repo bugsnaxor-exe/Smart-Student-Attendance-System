@@ -76,18 +76,22 @@ export class AttendanceController {
       // 4. Verify Standard College Hours (10:15 AM to 5:00 PM)
       const now = new Date();
       const timeValidation = GeofenceService.validateCollegeHours(now);
-      if (!timeValidation.isValid) {
+      if (!timeValidation.isValid && process.env.NODE_ENV === 'production' && !activeSession) {
         return res.status(403).json({ error: timeValidation.reason });
       }
 
-      // 5. Verify Anti-Spoofing & 50-Meter Department Geofence
+      // 5. Verify Anti-Spoofing & 50-Meter Classroom / Faculty Geofence
       const dept = student.department;
+      const targetLat = activeSession.latitude != null ? activeSession.latitude : dept.latitude;
+      const targetLng = activeSession.longitude != null ? activeSession.longitude : dept.longitude;
+      const targetRadius = activeSession.radiusMeters != null ? activeSession.radiusMeters : (dept.radiusMeters || 50.0);
+
       const locationValidation = GeofenceService.validateStudentLocation(
         parseFloat(latitude),
         parseFloat(longitude),
-        dept.latitude,
-        dept.longitude,
-        dept.radiusMeters || 50.0,
+        targetLat,
+        targetLng,
+        targetRadius,
         isMockLocation === true || isMockLocation === 'true',
         accuracyMeters ? parseFloat(accuracyMeters) : undefined
       );

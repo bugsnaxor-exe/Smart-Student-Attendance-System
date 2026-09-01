@@ -192,12 +192,24 @@ class AttendanceProvider extends ChangeNotifier {
   String? get currentActiveSessionId => _currentActiveSessionId;
 
   /// Teacher: Starts a 15-minute active session
-  Future<bool> startSession(String subjectId, {int durationMinutes = 15}) async {
+  Future<bool> startSession(
+    String subjectId, {
+    int durationMinutes = 15,
+    double? latitude,
+    double? longitude,
+    double? radiusMeters,
+  }) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final res = await ApiService.startTeacherSession(subjectId, durationMinutes: durationMinutes);
+      final res = await ApiService.startTeacherSession(
+        subjectId,
+        durationMinutes: durationMinutes,
+        latitude: latitude,
+        longitude: longitude,
+        radiusMeters: radiusMeters,
+      );
       _isLoading = false;
       if (res['session'] != null) {
         _currentActiveSessionId = res['session']['id'] as String?;
@@ -212,6 +224,35 @@ class AttendanceProvider extends ChangeNotifier {
     } catch (e) {
       _errorMessage = e.toString();
       _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Teacher: Updates location of active session
+  Future<bool> updateSessionLocation({
+    String? subjectId,
+    String? sessionId,
+    required double latitude,
+    required double longitude,
+    double radiusMeters = 50.0,
+  }) async {
+    try {
+      final res = await ApiService.updateSessionLocation(
+        subjectId: subjectId,
+        sessionId: sessionId ?? _currentActiveSessionId,
+        latitude: latitude,
+        longitude: longitude,
+        radiusMeters: radiusMeters,
+      );
+      if (res['success'] == true) {
+        _statusMessage = res['message'];
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      _errorMessage = e.toString();
       notifyListeners();
       return false;
     }

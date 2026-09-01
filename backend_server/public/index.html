@@ -978,6 +978,166 @@
       `;
     }
 
+    function getLocationDisplayHtml() {
+      const lat = localStorage.getItem('faculty_detected_lat');
+      const lng = localStorage.getItem('faculty_detected_lng');
+      const acc = localStorage.getItem('faculty_detected_acc');
+      const time = localStorage.getItem('faculty_detected_time');
+
+      if (lat && lng) {
+        return `
+          <div class="space-y-1">
+            <p class="text-charcoal-900 font-bold">🎯 Coords: <span class="text-seagreen-700">${parseFloat(lat).toFixed(5)}°, ${parseFloat(lng).toFixed(5)}°</span></p>
+            <p class="text-[10px] text-charcoal-500">Accuracy: ±${acc ? parseFloat(acc).toFixed(1) : '5.0'}m • Radius: 50m</p>
+            ${time ? `<p class="text-[9px] text-charcoal-400">Captured at ${time}</p>` : ''}
+          </div>
+        `;
+      }
+      return `
+        <div class="space-y-1">
+          <p class="text-charcoal-700 font-medium">🏫 Using Department Central Anchor</p>
+          <p class="text-[10px] text-charcoal-500">Radius: 50.0 meters from Department center</p>
+        </div>
+      `;
+    }
+
+    function toggleLocationDropdown(event) {
+      if (event) event.stopPropagation();
+      const dropdown = document.getElementById('faculty-location-dropdown');
+      if (!dropdown) return;
+      const isHidden = dropdown.classList.contains('hidden');
+      if (isHidden) {
+        dropdown.classList.remove('hidden');
+        const coordsEl = document.getElementById('location-coords-display');
+        if (coordsEl) coordsEl.innerHTML = getLocationDisplayHtml();
+      } else {
+        dropdown.classList.add('hidden');
+      }
+    }
+
+    // Close dropdown on click outside
+    document.addEventListener('click', (e) => {
+      const dropdown = document.getElementById('faculty-location-dropdown');
+      const btn = document.getElementById('teacher-profile-btn');
+      if (dropdown && !dropdown.classList.contains('hidden')) {
+        if (!dropdown.contains(e.target) && (!btn || !btn.contains(e.target))) {
+          dropdown.classList.add('hidden');
+        }
+      }
+    });
+
+    async function detectFacultyLocation(event) {
+      if (event) event.stopPropagation();
+      const btnText = document.getElementById('detect-loc-text');
+      const btnIcon = document.getElementById('detect-loc-icon');
+      const btn = document.getElementById('btn-detect-location');
+
+      if (!navigator.geolocation) {
+        alert('⚠️ Geolocation is not supported by your browser.');
+        return;
+      }
+
+      if (btnText) btnText.textContent = 'Acquiring GPS...';
+      if (btnIcon) btnIcon.textContent = '⏳';
+      if (btn) btn.disabled = true;
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          const acc = position.coords.accuracy;
+          const nowStr = new Date().toLocaleTimeString();
+
+          localStorage.setItem('faculty_detected_lat', lat.toString());
+          localStorage.setItem('faculty_detected_lng', lng.toString());
+          localStorage.setItem('faculty_detected_acc', acc.toString());
+          localStorage.setItem('faculty_detected_time', nowStr);
+
+          if (btnText) btnText.textContent = 'Location Updated!';
+          if (btnIcon) btnIcon.textContent = '✅';
+          if (btn) btn.disabled = false;
+
+          // Update Dropdown display
+          const coordsEl = document.getElementById('location-coords-display');
+          if (coordsEl) coordsEl.innerHTML = getLocationDisplayHtml();
+          const modeBadge = document.getElementById('location-mode-badge');
+          if (modeBadge) {
+            modeBadge.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-seagreen-100 text-seagreen-800 border border-seagreen-300';
+            modeBadge.textContent = '🛰️ Custom GPS';
+          }
+          const ind = document.getElementById('teacher-loc-indicator');
+          if (ind) {
+            ind.className = 'w-2 h-2 rounded-full bg-seagreen-500 animate-pulse';
+            ind.title = 'Live GPS Detected';
+          }
+
+          // If a session is currently active, push location update to backend immediately
+          if (activeSessionId) {
+            try {
+              const token = localStorage.getItem('edu_faculty_token');
+              const courseSelect = document.getElementById('teacher-course-select');
+              await fetch('/api/sessions/update-location', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
+                body: JSON.stringify({
+                  sessionId: activeSessionId,
+                  subjectId: courseSelect?.value,
+                  latitude: lat,
+                  longitude: lng,
+                  radiusMeters: 50.0
+                })
+              });
+              console.log('✅ Active session location updated on server.');
+            } catch (err) {
+              console.warn('Could not update active session location on server:', err);
+            }
+          }
+
+          setTimeout(() => {
+            if (btnText) btnText.textContent = 'Detect Current Location';
+            if (btnIcon) btnIcon.textContent = '🛰️';
+          }, 2500);
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          if (btnText) btnText.textContent = 'Detect Current Location';
+          if (btnIcon) btnIcon.textContent = '🛰️';
+          if (btn) btn.disabled = false;
+
+          let msg = 'Could not access device location.';
+          if (error.code === 1) msg = 'Location permission was denied. Please allow location access in your browser settings.';
+          else if (error.code === 2) msg = 'Location is unavailable. Please check your GPS / network connection.';
+          else if (error.code === 3) msg = 'Location request timed out. Please try again.';
+          alert('⚠️ ' + msg);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    }
+
+    async function resetFacultyLocation(event) {
+      if (event) event.stopPropagation();
+      localStorage.removeItem('faculty_detected_lat');
+      localStorage.removeItem('faculty_detected_lng');
+      localStorage.removeItem('faculty_detected_acc');
+      localStorage.removeItem('faculty_detected_time');
+
+      const coordsEl = document.getElementById('location-coords-display');
+      if (coordsEl) coordsEl.innerHTML = getLocationDisplayHtml();
+      const modeBadge = document.getElementById('location-mode-badge');
+      if (modeBadge) {
+        modeBadge.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-charcoal-100 text-charcoal-700 border border-charcoal-200';
+        modeBadge.textContent = '🏫 Campus Default';
+      }
+      const ind = document.getElementById('teacher-loc-indicator');
+      if (ind) {
+        ind.className = 'w-2 h-2 rounded-full bg-charcoal-400';
+        ind.title = 'Campus Default Location';
+      }
+    }
+
     function showDashboardView() {
       document.getElementById('auth-section').classList.add('hidden');
       document.getElementById('dashboard-section').classList.remove('hidden');
@@ -985,10 +1145,68 @@
       document.getElementById('faculty-welcome-name').textContent = loggedInFaculty.name;
       document.getElementById('faculty-email-display').textContent = `${loggedInFaculty.email}`;
       
+      const isCustomLoc = !!localStorage.getItem('faculty_detected_lat');
+
       document.getElementById('nav-auth-controls').innerHTML = `
-        <span class="hidden sm:inline-block text-xs font-bold text-charcoal-900 bg-cream-100 px-3 py-1.5 rounded-xl border border-cream-200">
-          👨‍🏫 ${loggedInFaculty.name}
-        </span>
+        <div class="relative inline-block text-left">
+          <button id="teacher-profile-btn" onclick="toggleLocationDropdown(event)" class="cursor-pointer hover:bg-cream-200 transition flex items-center space-x-1.5 text-xs font-bold text-charcoal-900 bg-cream-100 px-3 py-1.5 rounded-xl border border-cream-300 shadow-xs">
+            <span>👨‍🏫</span>
+            <span id="teacher-nav-name">${loggedInFaculty.name}</span>
+            <span id="teacher-loc-indicator" class="w-2 h-2 rounded-full ${isCustomLoc ? 'bg-seagreen-500 animate-pulse' : 'bg-charcoal-400'}" title="${isCustomLoc ? 'Live GPS Detected' : 'Campus Default Location'}"></span>
+            <svg class="w-3 h-3 text-charcoal-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+
+          <!-- Location & Faculty Settings Dropdown Card -->
+          <div id="faculty-location-dropdown" class="hidden absolute right-0 mt-2 w-80 bg-white border border-cream-300 rounded-2xl shadow-xl z-50 p-4 text-left">
+            <div class="flex items-center space-x-3 pb-3 border-b border-cream-200">
+              <div class="w-10 h-10 rounded-xl bg-seagreen-100 border border-seagreen-200 flex items-center justify-center text-lg">
+                👨‍🏫
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="text-xs font-bold text-charcoal-900 truncate">${loggedInFaculty.name}</p>
+                <p class="text-[11px] text-charcoal-500 truncate">${loggedInFaculty.email}</p>
+              </div>
+            </div>
+
+            <!-- Location Status Card -->
+            <div class="mt-3 p-3 bg-[#FAF7F0] border border-cream-200 rounded-xl">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-charcoal-800 flex items-center space-x-1">
+                  <span>📍</span>
+                  <span>Classroom Location</span>
+                </span>
+                <span id="location-mode-badge" class="px-2 py-0.5 text-[10px] font-bold rounded-full ${isCustomLoc ? 'bg-seagreen-100 text-seagreen-800 border border-seagreen-300' : 'bg-charcoal-100 text-charcoal-700 border border-charcoal-200'}">
+                  ${isCustomLoc ? '🛰️ Custom GPS' : '🏫 Campus Default'}
+                </span>
+              </div>
+              <div id="location-coords-display" class="mt-2 text-[11px] text-charcoal-600 font-mono">
+                ${getLocationDisplayHtml()}
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-3 space-y-2">
+              <button 
+                id="btn-detect-location" 
+                onclick="detectFacultyLocation(event)" 
+                class="w-full py-2.5 px-3 bg-seagreen-600 hover:bg-seagreen-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center space-x-2">
+                <span id="detect-loc-icon">🛰️</span>
+                <span id="detect-loc-text">Detect Current Location</span>
+              </button>
+
+              <button 
+                id="btn-reset-location" 
+                onclick="resetFacultyLocation(event)" 
+                class="w-full py-2 px-3 bg-cream-100 hover:bg-cream-200 text-charcoal-700 font-bold text-[11px] rounded-xl border border-cream-300 transition flex items-center justify-center space-x-1.5">
+                <span>🔄</span>
+                <span>Reset to Campus Default</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         <button onclick="logoutFaculty()" class="px-3 py-1.5 bg-charcoal-900 hover:bg-charcoal-800 text-white text-xs font-bold rounded-xl transition shadow-sm">
           Logout
         </button>
@@ -1504,6 +1722,9 @@
       }
 
       const token = localStorage.getItem('edu_faculty_token');
+      const detectedLat = localStorage.getItem('faculty_detected_lat');
+      const detectedLng = localStorage.getItem('faculty_detected_lng');
+
       try {
         const res = await fetch('/api/sessions/start', {
           method: 'POST',
@@ -1513,7 +1734,10 @@
           },
           body: JSON.stringify({
             subjectId: courseCode,
-            durationMinutes: 15
+            durationMinutes: 15,
+            latitude: detectedLat ? parseFloat(detectedLat) : undefined,
+            longitude: detectedLng ? parseFloat(detectedLng) : undefined,
+            radiusMeters: 50.0
           })
         });
 

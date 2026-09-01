@@ -52,7 +52,10 @@ export class SessionController {
    */
   public static async startSession(req: AuthRequest, res: Response) {
     try {
-      const { subjectId, durationMinutes = 15 } = req.body;
+      const { subjectId, durationMinutes = 15, latitude, longitude, radiusMeters = 50.0 } = req.body;
+      const parsedLat = latitude !== undefined && latitude !== null && !isNaN(parseFloat(latitude)) ? parseFloat(latitude) : undefined;
+      const parsedLng = longitude !== undefined && longitude !== null && !isNaN(parseFloat(longitude)) ? parseFloat(longitude) : undefined;
+      const parsedRadius = radiusMeters !== undefined && radiusMeters !== null && !isNaN(parseFloat(radiusMeters)) ? parseFloat(radiusMeters) : 50.0;
 
       if (!subjectId) {
         return res.status(400).json({ error: 'subjectId is required.' });
@@ -133,8 +136,23 @@ export class SessionController {
         subject.id,
         teacherId,
         subject.semester,
-        durationMinutes
+        durationMinutes,
+        parsedLat,
+        parsedLng,
+        parsedRadius
       );
+
+      // Save teacher's last detected location
+      if (teacherId && parsedLat !== undefined && parsedLng !== undefined) {
+        await prisma.teacherProfile.update({
+          where: { id: teacherId },
+          data: {
+            lastLatitude: parsedLat,
+            lastLongitude: parsedLng,
+            lastLocationAt: new Date(),
+          },
+        }).catch(() => {});
+      }
 
       // Broadcast SESSION_STARTED to all WebSocket clients (Web + Mobile)
       if (sessionBroadcastCallback) {
@@ -148,6 +166,9 @@ export class SessionController {
             semester: session.semester,
             remainingSeconds: durationMinutes * 60,
             expiresAt: session.expiresAt.toISOString(),
+            latitude: session.latitude,
+            longitude: session.longitude,
+            radiusMeters: session.radiusMeters,
           },
         });
       }
@@ -368,6 +389,72 @@ export class SessionController {
       return res.json({
         success: true,
         message: `Active session for ${subject.name} (${subject.code}) stopped.`,
+      });
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
+   * Teacher manually updates or detects location for ongoing or future sessions.
+   */
+  public static async updateLocation(req: AuthRequest, res: Response) {
+    try {
+      const { subjectId, sessionId, latitude, longitude, radiusMeters = 50.0 } = req.body;
+
+      if (latitude === undefined || longitude === undefined || isNaN(parseFloat(latitude)) || isNaN(parseFloat(longitude))) {
+        return res.status(400).json({ error: 'Valid latitude and longitude are required.' });
+      }
+
+      const parsedLat = parseFloat(latitude);
+      const parsedLng = parseFloat(longitude);
+      const parsedRadius = parseFloat(radiusMeters) || 50.0;
+
+      let targetSession = null;
+      if (sessionId) {
+        targetSession = await prisma.activeSession.findUnique({
+          where: { id: sessionId },
+        });
+      }
+
+      if (!targetSession && subjectId) {
+        targetSession = await SessionService.getActiveSession(subjectId);
+      }
+
+      if (targetSession) {
+        targetSession = await prisma.activeSession.update({
+          where: { id: targetSession.id },
+          data: {
+            latitude: parsedLat,
+            longitude: parsedLng,
+            radiusMeters: parsedRadius,
+          },
+          include: {
+            subject: true,
+          },
+        });
+      }
+
+      // If teacher profile exists, update profile
+      const teacherId = req.user?.teacherId;
+      if (teacherId) {
+        await prisma.teacherProfile.update({
+          where: { id: teacherId },
+          data: {
+            lastLatitude: parsedLat,
+            lastLongitude: parsedLng,
+            lastLocationAt: new Date(),
+          },
+        }).catch(() => {});
+      }
+
+      return res.json({
+        success: true,
+        message: 'Location updated successfully.',
+        latitude: parsedLat,
+        longitude: parsedLng,
+        radiusMeters: parsedRadius,
+        session: targetSession,
       });
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
