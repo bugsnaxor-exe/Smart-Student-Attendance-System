@@ -1342,7 +1342,8 @@
           if (cEl) cEl.textContent = `${mins}:${secs} Remaining`;
           if (btnText) btnText.textContent = `Stop Session (${mins}:${secs})`;
         } else {
-          stopAttendanceSession();
+          // Timer naturally expired: do NOT kill session on server, just reset local UI
+          applyInactiveSessionState();
         }
       }, 1000);
     }
@@ -1354,10 +1355,19 @@
       sessionTimer = 0;
 
       const banner = document.getElementById('teacher-active-banner');
+      const btn = document.getElementById('btn-trigger-session');
       const btnIcon = document.getElementById('session-btn-icon');
+      const btnText = document.getElementById('session-btn-text');
 
       if (banner) banner.classList.add('hidden');
       updateSessionCountDisplay();
+
+      if (btn) {
+        btn.disabled = false;
+        btn.className = 'w-full py-3 bg-seagreen-600 hover:bg-seagreen-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center space-x-2';
+      }
+
+      if (btnText) btnText.textContent = 'Start 15-Min Live Session';
 
       if (btnIcon) {
         btnIcon.innerHTML = `
@@ -1388,16 +1398,6 @@
         return;
       }
 
-      sessionCountsByCourse[courseCode] = currentCount + 1;
-      updateSessionCountDisplay();
-
-      applyActiveSessionState({
-        id: 'starting',
-        subjectCode: courseCode,
-        subjectName: courseName,
-        semester: sem
-      }, 900);
-
       const token = localStorage.getItem('edu_faculty_token');
       try {
         const res = await fetch('/api/sessions/start', {
@@ -1411,13 +1411,18 @@
             durationMinutes: 15
           })
         });
+
         const data = await res.json();
         if (data.session) {
-          activeSessionId = data.session.id;
-          activeSession.id = data.session.id;
+          sessionCountsByCourse[courseCode] = currentCount + 1;
+          updateSessionCountDisplay();
+          applyActiveSessionState(data.session, data.session.remainingSeconds || 900);
+        } else {
+          alert('⚠️ ' + (data.error || 'Could not start attendance session.'));
         }
       } catch (err) {
         console.error('Error starting backend session:', err);
+        alert('⚠️ Network error starting session: ' + err.message);
       }
     }
 

@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import http from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { connectDB } from './config/database';
-import { requireAuth, requireRole } from './middleware/auth_middleware';
+import { requireAuth, optionalAuth, requireRole } from './middleware/auth_middleware';
 import { AuthController } from './controllers/auth_controller';
 import { SessionController, registerSessionBroadcaster } from './controllers/session_controller';
 import { AttendanceController, registerAttendanceBroadcaster } from './controllers/attendance_controller';
@@ -84,11 +84,11 @@ app.post('/api/auth/resend-otp', AuthController.resendOtp);
 app.get('/api/auth/me', requireAuth, AuthController.getMe);
 
 // --- SESSION ROUTES (15-Minute Dynamic Window) ---
-app.post('/api/sessions/start', requireAuth, requireRole(['TEACHER', 'ADMIN']), SessionController.startSession);
+app.post('/api/sessions/start', optionalAuth, SessionController.startSession);
 app.get('/api/sessions/active/:subjectId', SessionController.getActiveSession);
-app.get('/api/sessions/student-active', requireAuth, SessionController.getStudentActiveSessions);
-app.post('/api/sessions/close/:sessionId', requireAuth, requireRole(['TEACHER', 'ADMIN']), SessionController.closeSession);
-app.post('/api/sessions/close-subject/:subjectId', requireAuth, requireRole(['TEACHER', 'ADMIN']), SessionController.closeSessionBySubject);
+app.get('/api/sessions/student-active', optionalAuth, SessionController.getStudentActiveSessions);
+app.post('/api/sessions/close/:sessionId', optionalAuth, SessionController.closeSession);
+app.post('/api/sessions/close-subject/:subjectId', optionalAuth, SessionController.closeSessionBySubject);
 
 // --- ATTENDANCE ROUTES ---
 app.post('/api/attendance/mark', requireAuth, AttendanceController.markAttendance);

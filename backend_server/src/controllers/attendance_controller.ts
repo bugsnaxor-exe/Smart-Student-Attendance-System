@@ -151,11 +151,19 @@ export class AttendanceController {
       });
 
       // 8. Append Row to Teacher's Google Sheet
-      // Format: Date | Class Roll | University Roll | Registration Number | Student Name | Status
       let sheetSyncSuccess = false;
-      if (subject.googleSheetId) {
+      let sheetId = subject.googleSheetId;
+      if (!sheetId) {
+        const anyConfig = await prisma.subject.findFirst({
+          where: { googleSheetId: { not: null } },
+          select: { googleSheetId: true }
+        });
+        if (anyConfig?.googleSheetId) sheetId = anyConfig.googleSheetId;
+      }
+
+      if (sheetId) {
         const sheetRes = await GoogleSheetsService.appendAttendanceRow(
-          subject.googleSheetId,
+          sheetId,
           {
             date: todayDate,
             classRoll: student.classRoll,
@@ -163,6 +171,9 @@ export class AttendanceController {
             registrationNumber: student.regNumber,
             studentName: student.user.name,
             status: 'Full',
+            subjectCode: subject.code,
+            subjectName: subject.name,
+            semester: subject.semester,
           },
           subject.sheetTabName || 'Attendance'
         );

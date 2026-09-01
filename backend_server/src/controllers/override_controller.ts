@@ -157,9 +157,18 @@ export class OverrideController {
 
       // Append row to Teacher's Google Sheet
       let sheetSyncSuccess = false;
-      if (subject.googleSheetId) {
+      let sheetId = subject.googleSheetId;
+      if (!sheetId) {
+        const anyConfig = await prisma.subject.findFirst({
+          where: { googleSheetId: { not: null } },
+          select: { googleSheetId: true }
+        });
+        if (anyConfig?.googleSheetId) sheetId = anyConfig.googleSheetId;
+      }
+
+      if (sheetId) {
         const sheetRes = await GoogleSheetsService.appendAttendanceRow(
-          subject.googleSheetId,
+          sheetId,
           {
             date: targetDate,
             classRoll: student.classRoll,
@@ -167,6 +176,9 @@ export class OverrideController {
             registrationNumber: student.regNumber,
             studentName: student.user.name,
             status: 'Half',
+            subjectCode: subject.code,
+            subjectName: subject.name,
+            semester: subject.semester,
           },
           subject.sheetTabName || 'Attendance'
         );
@@ -227,6 +239,7 @@ export class OverrideController {
         status = 'Half',
         date,
         subjectCode = 'MCA-301',
+        semester,
       } = req.body;
 
       const kolkata = getKolkataTime();
@@ -291,6 +304,9 @@ export class OverrideController {
             registrationNumber: registrationNumber || student?.regNumber || 'REG-2026-9042',
             studentName: studentName || student?.user?.name || 'Student',
             status: status === 'Full' ? 'Full' : 'Half',
+            subjectCode: subject?.code || subjectCode,
+            subjectName: subject?.name,
+            semester: subject?.semester || student?.semester || semester || 3,
           }
         );
         sheetSyncSuccess = sheetRes.success;

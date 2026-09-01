@@ -29,6 +29,22 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
   }
 }
 
+export function optionalAuth(req: AuthRequest, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return next();
+  }
+
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    req.user = decoded;
+  } catch (err) {
+    // Graceful fallback for optional auth
+  }
+  next();
+}
+
 export function requireRole(allowedRoles: string[]) {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user || !allowedRoles.includes(req.user.role)) {

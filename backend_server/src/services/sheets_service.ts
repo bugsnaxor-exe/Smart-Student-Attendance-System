@@ -9,6 +9,9 @@ export interface AttendanceSheetRow {
   registrationNumber: string;// e.g. "REG-2026-9042"
   studentName: string;       // e.g. "Sayan Banerjee"
   status: 'Full' | 'Half';   // "Full" (P - 2 attendances) or "Half" (H - 1 attendance)
+  subjectCode?: string;      // e.g. "MCA-301"
+  subjectName?: string;      // e.g. "Artificial Intelligence"
+  semester?: number;         // e.g. 3
 }
 
 export class GoogleSheetsService {
@@ -214,11 +217,31 @@ export class GoogleSheetsService {
 
       const headers = values[0];
 
-      // 2. Find or create the Date Column (e.g. "2026-08-31", "2026-09-02", etc.)
-      let dateColIndex = headers.indexOf(rowData.date);
+      // 2. Find or create the Date & Subject Column (e.g. "2026-09-01 [MCA-301 • Sem 3]")
+      const subjectTag = rowData.subjectCode
+        ? ` [${rowData.subjectCode}${rowData.semester ? ` • Sem ${rowData.semester}` : ''}]`
+        : '';
+      const targetDateHeader = `${rowData.date}${subjectTag}`;
+
+      let dateColIndex = -1;
+      for (let i = 0; i < headers.length; i++) {
+        const h = headers[i]?.trim();
+        if (
+          h === targetDateHeader ||
+          (rowData.subjectCode && h.startsWith(rowData.date) && h.includes(rowData.subjectCode))
+        ) {
+          dateColIndex = i;
+          break;
+        }
+      }
+
+      if (dateColIndex === -1 && !rowData.subjectCode) {
+        dateColIndex = headers.indexOf(rowData.date);
+      }
+
       if (dateColIndex === -1) {
         dateColIndex = headers.length;
-        headers.push(rowData.date);
+        headers.push(targetDateHeader);
 
         // Update header row on Google Sheets
         const headerColLetter = this.colIndexToLetter(dateColIndex);
@@ -227,7 +250,7 @@ export class GoogleSheetsService {
           range: `${resolvedTab}!${headerColLetter}1`,
           valueInputOption: 'USER_ENTERED',
           requestBody: {
-            values: [[rowData.date]],
+            values: [[targetDateHeader]],
           },
         });
       }

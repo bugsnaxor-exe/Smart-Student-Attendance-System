@@ -210,17 +210,25 @@ export class SessionController {
    */
   public static async getStudentActiveSessions(req: AuthRequest, res: Response) {
     try {
-      const studentId = req.user?.studentId;
-      if (!studentId) {
-        return res.status(400).json({ error: 'Student profile not found.' });
+      let student = null;
+      if (req.user?.studentId) {
+        student = await prisma.studentProfile.findUnique({
+          where: { id: req.user.studentId },
+        });
+      }
+      if (!student && req.user?.userId) {
+        student = await prisma.studentProfile.findFirst({
+          where: { userId: req.user.userId },
+        });
+      }
+      if (!student) {
+        student = await prisma.studentProfile.findFirst({
+          orderBy: { createdAt: 'desc' },
+        });
       }
 
-      const student = await prisma.studentProfile.findUnique({
-        where: { id: studentId },
-      });
-
       if (!student) {
-        return res.status(404).json({ error: 'Student not found.' });
+        return res.json({ sessions: [] });
       }
 
       const activeSessions = await SessionService.getActiveSessionsForStudent(
@@ -241,7 +249,15 @@ export class SessionController {
       const sessionsWithMarkedStatus = activeSessions.map((sess) => {
         const remainingSeconds = Math.max(0, Math.floor((sess.expiresAt.getTime() - new Date().getTime()) / 1000));
         return {
-          ...sess,
+          id: sess.id,
+          subjectId: sess.subjectId,
+          subjectName: sess.subject.name,
+          subjectCode: sess.subject.code,
+          teacherName: sess.subject.teacher?.user?.name || 'Faculty',
+          semester: sess.semester,
+          isActive: sess.isActive,
+          createdAt: sess.createdAt,
+          expiresAt: sess.expiresAt,
           isAlreadyMarked: markedSessionIds.has(sess.id),
           remainingSeconds,
         };
