@@ -132,7 +132,13 @@ class _LoginScreenState extends State<LoginScreen> {
         MaterialPageRoute(builder: (_) => const TeacherDashboardScreen()),
       );
     } else if (mounted) {
-      _showSnackBar(result.error ?? 'Faculty login failed. Check email/password.', isError: true);
+      String msg = result.error ?? 'Faculty login failed. Check email/password.';
+      if (msg.contains('roll number') || msg.contains('No registered account') || msg.contains('Invalid email') || msg.contains('not found')) {
+        msg = 'Faculty account not found for this email. Please check your email or register.';
+      } else if (msg.toLowerCase().contains('password')) {
+        msg = 'Incorrect password for faculty account. Please try again.';
+      }
+      _showSnackBar(msg, isError: true);
     }
   }
 

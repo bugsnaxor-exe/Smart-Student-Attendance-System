@@ -207,12 +207,18 @@ export class AuthService {
     }
 
     if (!user) {
-      throw new Error('Invalid email or roll number.');
+      if (identifier.includes('@')) {
+        throw new Error('No registered account found with this email address.');
+      }
+      throw new Error('Invalid University Roll Number or Class Roll.');
     }
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {
-      throw new Error('Invalid password.');
+      if (user.role === 'TEACHER' || user.role === 'ADMIN') {
+        throw new Error('Incorrect password for faculty account. Please try again.');
+      }
+      throw new Error('Incorrect password. Please try again.');
     }
 
     // 🔒 2FA OTP PROTECTION FOR FACULTY & ADMIN (Stops unauthorized students)

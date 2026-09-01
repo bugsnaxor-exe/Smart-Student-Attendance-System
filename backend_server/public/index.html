@@ -830,7 +830,13 @@
             showDashboardView();
           }
         } else {
-          alert(data.error || 'Invalid email or password. Please check your credentials.');
+          let errorMsg = data.error || 'Invalid credentials.';
+          if (errorMsg.includes('roll number') || errorMsg.includes('No registered account') || errorMsg.includes('Invalid email') || errorMsg.includes('not found')) {
+            errorMsg = '⚠️ Faculty account not found for this email address.\n\nPlease check your email or click "Register New Faculty" to create an account.';
+          } else if (errorMsg.toLowerCase().includes('password')) {
+            errorMsg = '⚠️ Incorrect password.\n\nPlease verify your faculty password and try again.';
+          }
+          alert(errorMsg);
         }
       } catch (err) {
         alert('Server connection error. Please make sure backend is online.');
