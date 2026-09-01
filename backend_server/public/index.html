@@ -1241,29 +1241,13 @@
         }
       }
 
-      // Check if faculty has assigned subject / semester from login or profile
-      let initialSem = '3';
-      let initialSubj = 'MCA-301';
+      // Initial semester / subject selection
+      let initialSem = localStorage.getItem('faculty_assigned_sem') || localStorage.getItem('faculty_active_sem') || loggedInFaculty?.teacher?.subjects?.[0]?.semester?.toString() || '3';
+      let initialSubj = localStorage.getItem('faculty_assigned_subject') || localStorage.getItem('faculty_active_subject') || loggedInFaculty?.teacher?.subjects?.[0]?.code || 'MCA-301';
 
-      if (!isAdmin) {
-        // Regular faculty: lock to assigned course
-        const assignedSubj = loggedInFaculty?.teacher?.subjects?.[0]?.code || localStorage.getItem('faculty_assigned_subject') || localStorage.getItem('faculty_active_subject') || 'MCA-301';
-        const assignedSem = loggedInFaculty?.teacher?.subjects?.[0]?.semester?.toString() || localStorage.getItem('faculty_assigned_sem') || localStorage.getItem('faculty_active_sem') || '3';
-
-        initialSem = assignedSem;
-        initialSubj = assignedSubj;
-
-        if (semSelect) {
-          semSelect.value = initialSem;
-          semSelect.disabled = true;
-          semSelect.classList.add('opacity-75', 'cursor-not-allowed');
-        }
-      } else {
-        // Super Admin has full dropdown freedom
-        if (semSelect) {
-          semSelect.disabled = false;
-          semSelect.classList.remove('opacity-75', 'cursor-not-allowed');
-        }
+      if (semSelect) {
+        semSelect.disabled = false;
+        semSelect.classList.remove('opacity-75', 'cursor-not-allowed');
       }
 
       currentTeacherSem = parseInt(initialSem, 10);
@@ -1271,17 +1255,12 @@
       populateTeacherCourses(currentTeacherSem);
 
       if (courseSelect) {
-        courseSelect.value = initialSubj;
-        if (!isAdmin) {
-          courseSelect.disabled = true;
-          courseSelect.classList.add('opacity-75', 'cursor-not-allowed');
-        } else {
-          courseSelect.disabled = false;
-          courseSelect.classList.remove('opacity-75', 'cursor-not-allowed');
-        }
+        courseSelect.disabled = false;
+        courseSelect.classList.remove('opacity-75', 'cursor-not-allowed');
+        if (initialSubj) courseSelect.value = initialSubj;
       }
 
-      if (badgeCourse) badgeCourse.textContent = initialSubj;
+      if (badgeCourse) badgeCourse.textContent = courseSelect?.value || initialSubj;
 
       const navControls = document.getElementById('nav-auth-controls');
       if (navControls && loggedInFaculty) {
@@ -1834,10 +1813,16 @@
         alert('Please select a course to start an attendance session.');
         return;
       }
-      const selectedOption = courseSelect.options[courseSelect.selectedIndex];
+      const selectedOption = (courseSelect.selectedIndex >= 0 && courseSelect.options[courseSelect.selectedIndex]) 
+        ? courseSelect.options[courseSelect.selectedIndex] 
+        : (courseSelect.options[0] || null);
+      if (!selectedOption || !selectedOption.value) {
+        alert('Please select a valid course to start an attendance session.');
+        return;
+      }
       const courseCode = selectedOption.value;
-      const courseName = selectedOption.getAttribute('data-name');
-      const sem = parseInt(selectedOption.getAttribute('data-sem'), 10);
+      const courseName = selectedOption.getAttribute('data-name') || courseCode;
+      const sem = parseInt(selectedOption.getAttribute('data-sem') || currentTeacherSem.toString(), 10);
 
       // Max 3 session enforcement
       const currentCount = sessionCountsByCourse[courseCode] || 0;

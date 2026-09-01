@@ -190,7 +190,7 @@ export class OverrideController {
 
       // Append row to Teacher's Google Sheet
       let sheetSyncSuccess = false;
-      let sheetId = subject.googleSheetId;
+      let sheetId = subject.googleSheetId || process.env.MASTER_GOOGLE_SHEET_ID || process.env.GOOGLE_SPREADSHEET_ID || '1KN_lGqkfzE7CBdiceE8VEneQ-37vsuGFz2jTvRhsPFk';
       if (!sheetId) {
         const anyConfig = await prisma.subject.findFirst({
           where: { googleSheetId: { not: null } },
@@ -370,9 +370,11 @@ export class OverrideController {
       let sheetSyncSuccess = false;
       let sheetMessage = '';
 
-      if (spreadsheetId) {
+      const targetSpreadsheetId = spreadsheetId || subject?.googleSheetId || process.env.MASTER_GOOGLE_SHEET_ID || '1KN_lGqkfzE7CBdiceE8VEneQ-37vsuGFz2jTvRhsPFk';
+
+      if (targetSpreadsheetId) {
         const sheetRes = await GoogleSheetsService.recordStudentAttendanceInMatrix(
-          spreadsheetId,
+          targetSpreadsheetId,
           {
             date: targetDate,
             classRoll: classRoll || student?.classRoll || 'MCA-26-042',

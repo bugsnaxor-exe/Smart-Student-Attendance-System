@@ -79,8 +79,35 @@ export class GoogleSheetsService {
       } catch (err: any) {
         console.warn('⚠️ Error loading Google Service Account Key:', err.message);
       }
-    } else {
-      console.log(`ℹ️ No live service-account-credentials.json found at ${resolvedPath}.`);
+    }
+
+    // 3. Fallback to embedded default service account credentials
+    try {
+      const fallbackCredentials = {
+        type: "service_account",
+        project_id: "total-byte-507113-g0",
+        private_key_id: "1cdf7c3135f30c14bc75cc581a63178907bef144",
+        private_key: "-----BEGIN PRIVATE KEY-----\nMIIEuwIBADANBgkqhkiG9w0BAQEFAASCBKUwggShAgEAAoIBAQCkuaQoKJucfbKN\nYmE8jIDknlUItJZRbnGKlepEzcYrTk2a18Ub4lxEkO4+Dv+BUDDmtC9sSV5WUb97\nudc4Ek+OMi6UDyR7XkkjZd/pTSHYyzVb2W9H+k9HB8q5mvB1wDaigWSzP5aY4f1F\nxEEhxE15nCdecrYPP+6zWAo9P/Y449VmjiqnTa9rnZ3f7HggSVpeXqNfKHHubimC\nrmoU4WYOr8K3tEj05/190ZpqB8INRB2luy4vYKSyxyb7gUimu2tR6eraVeuSxfhw\nJfXE+RqFxwi4y7NSTJR0yecaLe6uzc8SIDhjObmQDe8AGL5m0ZMi9HaoKg1j9dXR\neFiUCIrRAgMBAAECgf9h6bMvjZlbC74cDDbLebFJfq4fsWVGfk6ol3AYF5pAzPmU\nFl5gstts/M+RRMYmgqBSY4/FOWZBVg6nFRXHqd5vErQg2TIydXjpj64G0+6MZVvF\nBkb/R3GnMkeqcV2XkWO7KUjdd+kONvsXKIdKxVN8sCYJaVcG+YL6SJFGAHlc0tD8\nNlccvKfU14w4ZU6xJEUK9fdEMSIbKQa3FJ71K1spw0cyi/zjhgmHC782HgywXe8H\nKnO0rs56cRARieBbVqSPRR00VKT3GmKPaGOHTYwNoH130hFzLTniIory4rstebYI\n0NRpnVg102nKjG85tjX/Lx5QiI5cQHSNNitjMIECgYEAzuwisA45aG80zhpeT4W7\nwYxvCKsh4tnpYTfsPCIF7GVU1pmr240KRvK8ymKe1SJ/08YMWBpbIRddboZS8I2b\n3fOYWDWShsZEZ1reTBs2pnlEp6xFgnTMuWOwT/ybytswfygPXchyHnE4bPyor2dD\nprqVd2q7WHWoZKfLsCXlXRECgYEAy8tiPDBfRavMHLIeMwuHVx8CjZeX5DFHwrM0\nm1wrtkKYJFti7MDZmDmFcE8Wi/B8dYtACJUsCeX7sX0WllKhGve4EGRbvSsLAOTw\nkFmDfF5asm7gQj93njQn2opWkmh5vMFC2PVyjJulg6W2KfloZovAz9Cts+jfpUZj\nqTD7UcECgYANoVZjnHxBmdmznd8Kg/erNzH1MzinNc1+vu1LxL35JW+iNzsv2imM\nJN80waxOw9gBvjD/+LR6CIz6A9UgzWMwCqTFYroFMLg+yqiMANrnumNAXEOz5Te7\nGor5qd0lTqzyI1RnzBVgVfruivIdo8K8D9xaomg22oE+KCNttgFW0QKBgQCEcP27\nffg8kASLVZpYtBJVpRqEqFMXAovPVaVHniPuQ+MaJaXplP8UdbVpooxVj4li3odT\nzJYdLLBgzZlDQhnfK8QcKwyPqIxzHVXVicbwqWUp9vKZOyPi1aRc23Cdn3YWHEb0\nNrcl9/Ud1DDJoIOfuQ0qQUTR2fKWN2OHTgTWQQKBgGGsTyp6seqPiPIZZxf7SJSP\n3KY7eH9GN0Bkjom7zitZtSrAQU5XBFEC4NCGq+MP4iuDu7NqYhPnUL7lVhiIFMuG\ne0+xqfTxG+/ukdw5qVrAWbX+plIt9g7qsD/Es/vTM/FtJmH7vZX6bJqqeMdBuKx8\nzR8+KMxsunAwSADDGWPT\n-----END PRIVATE KEY-----\n",
+        client_email: "attendance-sync@total-byte-507113-g0.iam.gserviceaccount.com",
+        client_id: "113102791627364438145",
+        auth_uri: "https://accounts.google.com/o/oauth2/auth",
+        token_uri: "https://oauth2.googleapis.com/token",
+        auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+        client_x509_cert_url: "https://www.googleapis.com/robot/v1/metadata/x509/attendance-sync%40total-byte-507113-g0.iam.gserviceaccount.com",
+        universe_domain: "googleapis.com"
+      };
+
+      this.serviceAccountEmail = fallbackCredentials.client_email;
+      const auth = new google.auth.GoogleAuth({
+        credentials: fallbackCredentials,
+        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+      });
+
+      this.sheetsClient = google.sheets({ version: 'v4', auth });
+      console.log(`✅ Google Sheets API initialized with fallback credentials: ${this.serviceAccountEmail}`);
+      return this.sheetsClient;
+    } catch (err: any) {
+      console.warn('⚠️ Error initializing fallback Google Sheets credentials:', err.message);
     }
 
     return null;
@@ -167,12 +194,16 @@ export class GoogleSheetsService {
     rowData: AttendanceSheetRow,
     tabName: string = 'Attendance'
   ): Promise<{ success: boolean; message: string }> {
+    const targetSheetId = (spreadsheetId && spreadsheetId.trim().length > 0)
+      ? spreadsheetId.trim()
+      : (process.env.MASTER_GOOGLE_SHEET_ID || process.env.GOOGLE_SPREADSHEET_ID || '1KN_lGqkfzE7CBdiceE8VEneQ-37vsuGFz2jTvRhsPFk');
+
     const sheets = this.getClient();
     const mark = rowData.status === 'Full' ? 'P' : 'H';
 
     if (!sheets) {
       console.log(
-        `📊 [Simulated Matrix GSheets] Sheet: ${spreadsheetId} [${tabName}] | Date: ${rowData.date} | Student: ${rowData.studentName} (${rowData.universityRoll}) -> Mark: '${mark}' (Absent = Blank)`
+        `📊 [Simulated Matrix GSheets] Sheet: ${targetSheetId} [${tabName}] | Date: ${rowData.date} | Student: ${rowData.studentName} (${rowData.universityRoll}) -> Mark: '${mark}' (Absent = Blank)`
       );
       return {
         success: true,
@@ -184,7 +215,7 @@ export class GoogleSheetsService {
       // 0. Auto-resolve tab name from Google Spreadsheet metadata
       let resolvedTab = tabName;
       try {
-        const meta = await sheets.spreadsheets.get({ spreadsheetId });
+        const meta = await sheets.spreadsheets.get({ spreadsheetId: targetSheetId });
         const existingTabs = meta.data.sheets || [];
         const hasTab = existingTabs.some((s: any) => s.properties?.title === tabName);
         if (!hasTab && existingTabs.length > 0 && existingTabs[0].properties?.title) {
@@ -197,7 +228,7 @@ export class GoogleSheetsService {
       // 1. Read all current values from sheet
       const range = `${resolvedTab}!A1:ZZ1000`;
       const response = await sheets.spreadsheets.values.get({
-        spreadsheetId,
+        spreadsheetId: targetSheetId,
         range,
       });
 
@@ -207,7 +238,7 @@ export class GoogleSheetsService {
       if (values.length === 0 || values[0].length === 0) {
         values = [['Class Roll', 'University Roll', 'Registration Number', 'Student Name']];
         await sheets.spreadsheets.values.update({
-          spreadsheetId,
+          spreadsheetId: targetSheetId,
           range: `${resolvedTab}!A1:D1`,
           valueInputOption: 'USER_ENTERED',
           requestBody: {
@@ -247,7 +278,7 @@ export class GoogleSheetsService {
         // Update header row on Google Sheets
         const headerColLetter = this.colIndexToLetter(dateColIndex);
         await sheets.spreadsheets.values.update({
-          spreadsheetId,
+          spreadsheetId: targetSheetId,
           range: `${resolvedTab}!${headerColLetter}1`,
           valueInputOption: 'USER_ENTERED',
           requestBody: {
@@ -285,7 +316,7 @@ export class GoogleSheetsService {
         newRow[dateColIndex] = mark;
 
         await sheets.spreadsheets.values.append({
-          spreadsheetId,
+          spreadsheetId: targetSheetId,
           range: `${resolvedTab}!A:Z`,
           valueInputOption: 'USER_ENTERED',
           insertDataOption: 'INSERT_ROWS',
@@ -299,7 +330,7 @@ export class GoogleSheetsService {
         const cellRange = `${resolvedTab}!${cellLetter}${studentRowIndex}`;
 
         await sheets.spreadsheets.values.update({
-          spreadsheetId,
+          spreadsheetId: targetSheetId,
           range: cellRange,
           valueInputOption: 'USER_ENTERED',
           requestBody: {
@@ -309,14 +340,14 @@ export class GoogleSheetsService {
       }
 
       console.log(
-        `✅ Synced Matrix Google Sheet: ${spreadsheetId} [${resolvedTab}] | Cell (${studentRowIndex}, ${dateColIndex}) set to '${mark}' for ${rowData.studentName} on ${rowData.date}`
+        `✅ Synced Matrix Google Sheet: ${targetSheetId} [${resolvedTab}] | Cell (${studentRowIndex}, ${dateColIndex}) set to '${mark}' for ${rowData.studentName} on ${rowData.date}`
       );
       return {
         success: true,
         message: `Successfully marked '${mark}' in Google Sheet [${resolvedTab}] on ${rowData.date}.`,
       };
     } catch (error: any) {
-      console.error(`❌ Failed to update Matrix Google Sheet (${spreadsheetId}):`, error.message);
+      console.error(`❌ Failed to update Matrix Google Sheet (${targetSheetId}):`, error.message);
       return {
         success: false,
         message: `Google Sheets matrix sync failed: ${error.message}`,
@@ -332,12 +363,15 @@ export class GoogleSheetsService {
     rowData: AttendanceSheetRow,
     tabName: string = 'Attendance'
   ) {
-    const result = await this.recordStudentAttendanceInMatrix(spreadsheetId, rowData, tabName);
+    const targetSheetId = (spreadsheetId && spreadsheetId.trim().length > 0)
+      ? spreadsheetId.trim()
+      : (process.env.MASTER_GOOGLE_SHEET_ID || process.env.GOOGLE_SPREADSHEET_ID || '1KN_lGqkfzE7CBdiceE8VEneQ-37vsuGFz2jTvRhsPFk');
+    const result = await this.recordStudentAttendanceInMatrix(targetSheetId, rowData, tabName);
 
     // Mirror to Master Admin Sheet (Sayantan Dasgupta's Google Sheet) if configured
     const masterSheetId = process.env.MASTER_GOOGLE_SHEET_ID?.trim();
-    if (masterSheetId && masterSheetId !== spreadsheetId) {
-      this.recordStudentAttendanceInMatrix(masterSheetId, rowData, 'MasterAttendance').catch((err) => {
+    if (masterSheetId && masterSheetId !== targetSheetId) {
+      this.recordStudentAttendanceInMatrix(masterSheetId, rowData, tabName).catch((err) => {
         console.warn('⚠️ Master Google Sheet Mirror sync warning:', err.message);
       });
     }

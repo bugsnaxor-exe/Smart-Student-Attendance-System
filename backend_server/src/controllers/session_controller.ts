@@ -85,6 +85,26 @@ export class SessionController {
         teacherProfile = await prisma.teacherProfile.findUnique({
           where: { userId: req.user.userId },
         });
+        if (!teacherProfile) {
+          let mcaDept = await prisma.department.findFirst();
+          if (!mcaDept) {
+            mcaDept = await prisma.department.create({
+              data: {
+                name: 'Master of Computer Applications (MCA)',
+                code: 'MCA',
+                latitude: 22.5726,
+                longitude: 88.3639,
+                radiusMeters: 50.0,
+              },
+            });
+          }
+          teacherProfile = await prisma.teacherProfile.create({
+            data: {
+              userId: req.user.userId,
+              departmentId: mcaDept.id,
+            },
+          });
+        }
       }
       if (!teacherProfile) {
         teacherProfile = await prisma.teacherProfile.findFirst({
