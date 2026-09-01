@@ -36,6 +36,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
 
   // Session limits (Max 3 per day)
   final Map<String, int> _sessionCountsByCourse = {};
+  bool _isStartingSession = false;
 
   // Real roster & attendance state
   List<Map<String, dynamic>> _rosterStudents = [];
@@ -275,7 +276,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   }
 
   Future<void> _handleStartSession() async {
-    if (_selectedCourseCode == null) return;
+    if (_selectedCourseCode == null || _isStartingSession) return;
 
     final count = _sessionCountsByCourse[_selectedCourseCode!] ?? 0;
     if (count >= 3) {
@@ -288,50 +289,55 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
       return;
     }
 
+    setState(() => _isStartingSession = true);
     final attendance = Provider.of<AttendanceProvider>(context, listen: false);
 
-    // Auto-acquire high-accuracy GPS if not yet detected
-    if (_detectedLatitude == null || _detectedLongitude == null) {
-      await _detectLocation();
-    }
+    try {
+      // Auto-acquire high-accuracy GPS if not yet detected
+      if (_detectedLatitude == null || _detectedLongitude == null) {
+        await _detectLocation();
+      }
 
-    final success = await attendance.startSession(
-      _selectedCourseCode!,
-      durationMinutes: 15,
-      latitude: _detectedLatitude,
-      longitude: _detectedLongitude,
-    );
-
-    if (success && mounted) {
-      _sessionTimer?.cancel();
-      final sessionId = attendance.currentActiveSessionId;
-      setState(() {
-        _activeSessionId = sessionId;
-        _isSessionActive = true;
-        _countdownSeconds = 900;
-        _sessionCountsByCourse[_selectedCourseCode!] = count + 1;
-        // Clean slate for the new active session
-        _attendanceStatusByUniRoll.clear();
-      });
-
-      // Refresh absent students for this fresh session
-      await attendance.fetchAbsentStudents(_selectedCourseCode!, sessionId: sessionId);
-
-      _sessionTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        if (_countdownSeconds > 0) {
-          if (mounted) setState(() => _countdownSeconds--);
-        } else {
-          _sessionTimer?.cancel();
-          if (mounted) setState(() => _isSessionActive = false);
-        }
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('⚡ 15-Min Live Session started for $_selectedCourseCode: $_selectedCourseName! Geofence broadcasted to all students.'),
-          backgroundColor: AppTheme.seaGreen,
-        ),
+      final success = await attendance.startSession(
+        _selectedCourseCode!,
+        durationMinutes: 15,
+        latitude: _detectedLatitude,
+        longitude: _detectedLongitude,
       );
+
+      if (success && mounted) {
+        _sessionTimer?.cancel();
+        final sessionId = attendance.currentActiveSessionId;
+        setState(() {
+          _activeSessionId = sessionId;
+          _isSessionActive = true;
+          _countdownSeconds = 900;
+          _sessionCountsByCourse[_selectedCourseCode!] = count + 1;
+          // Clean slate for the new active session
+          _attendanceStatusByUniRoll.clear();
+        });
+
+        // Refresh absent students for this fresh session
+        await attendance.fetchAbsentStudents(_selectedCourseCode!, sessionId: sessionId);
+
+        _sessionTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+          if (_countdownSeconds > 0) {
+            if (mounted) setState(() => _countdownSeconds--);
+          } else {
+            _sessionTimer?.cancel();
+            if (mounted) setState(() => _isSessionActive = false);
+          }
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('⚡ 15-Min Live Session started for $_selectedCourseCode: $_selectedCourseName! Geofence broadcasted to all students.'),
+            backgroundColor: AppTheme.seaGreen,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isStartingSession = false);
     }
   }
 
@@ -1289,6 +1295,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                                   _selectedCourseName = matched['name'];
                                   _attendanceStatusByUniRoll.clear();
                                 });
+                                _fetchTodaySessionCounts();
                                 _fetchTodayCheckIns();
                                 _checkOngoingSession();
                               }
@@ -1307,7 +1314,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                         child: ElevatedButton.icon(
                           onPressed: _isSessionActive
                               ? (isSuperAdmin ? _handleStopSession : null)
-                              : (attendance.isLoading || currentCount >= 3 ? null : _handleStartSession),
+                              : (_isStartingSession || currentCount >= 3 ? null : _handleStartSession),
                           icon: Icon(_isSessionActive ? (isSuperAdmin ? Icons.stop_circle_outlined : Icons.sensors_rounded) : Icons.play_arrow_outlined, size: 18),
                           label: Text(
                             _isSessionActive
