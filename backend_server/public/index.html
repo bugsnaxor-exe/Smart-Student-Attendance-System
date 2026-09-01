@@ -1228,6 +1228,7 @@
 
     function renderAbsentStudents(sem) {
       const container = document.getElementById('absent-students-list');
+      if (!container) return;
       const roster = enrolledStudents[sem] || [];
 
       if (roster.length === 0) {
@@ -1284,8 +1285,11 @@
     }
 
     function renderMatrixGoogleSheet(sem) {
-      const tbody = document.getElementById('sheet-matrix-tbody');
+      const tbody = document.getElementById('attendance-table-body') || document.getElementById('sheet-matrix-tbody');
+      if (!tbody) return;
       const roster = enrolledStudents[sem] || [];
+
+      const counter = document.getElementById('total-checked-in-count');
 
       if (roster.length === 0) {
         tbody.innerHTML = `
@@ -1295,7 +1299,7 @@
             </td>
           </tr>
         `;
-        document.getElementById('total-checked-in-count').textContent = '0';
+        if (counter) counter.textContent = '0';
         return;
       }
 
@@ -1328,7 +1332,7 @@
         `;
       }).join('');
 
-      document.getElementById('total-checked-in-count').textContent = presentCount;
+      if (counter) counter.textContent = presentCount;
     }
 
     // --- ATTENDANCE SESSION CONTROLS (MAX 3 SESSIONS PER DAY & REAL-TIME SYNC) ---
