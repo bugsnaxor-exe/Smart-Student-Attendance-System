@@ -16,6 +16,8 @@ service-account-credentials.json
 .pub-cache/
 .pub/
 build/
+.gradle/
+android/.gradle/
 ios/Flutter/Generated.xcconfig
 ios/Flutter/flutter_export_environment.sh
 ios/ServiceDefinitions.json
