@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/services/location_service.dart';
 import '../../core/services/api_service.dart';
@@ -25,6 +27,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   bool _hasLocationPermission = true;
 
   final Set<String> _notifiedSessionIds = {};
+  Set<String> _pinnedSubjectCodes = {};
 
   // Complete MCA Curriculum Directory across all 4 Semesters (31 Courses)
   // Teacher names stay blank until real faculty registers and is assigned in database.
@@ -74,6 +77,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   void initState() {
     super.initState();
     _checkLocationPermission();
+    _loadPinnedSubjects();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = Provider.of<AuthProvider>(context, listen: false);
       final studentSem = auth.currentUser?.student?.semester ?? 3;
@@ -84,6 +88,51 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       attendance.startStudentSessionPolling();
       attendance.fetchStudentDashboard();
     });
+  }
+
+  Future<void> _loadPinnedSubjects() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final list = prefs.getStringList('student_pinned_subjects') ?? [];
+      if (mounted) {
+        setState(() {
+          _pinnedSubjectCodes = list.toSet();
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _togglePinSubject(String code, String name) async {
+    HapticFeedback.mediumImpact();
+    setState(() {
+      if (_pinnedSubjectCodes.contains(code)) {
+        _pinnedSubjectCodes.remove(code);
+      } else {
+        _pinnedSubjectCodes.add(code);
+      }
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('student_pinned_subjects', _pinnedSubjectCodes.toList());
+    } catch (_) {}
+
+    final isPinned = _pinnedSubjectCodes.contains(code);
+    if (mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isPinned ? '📌 Pinned $code ($name) to top' : '📍 Unpinned $code',
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+          ),
+          backgroundColor: isPinned ? AppTheme.seaGreen : AppTheme.charcoal,
+          duration: const Duration(milliseconds: 1500),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    }
   }
 
   @override
@@ -550,172 +599,268 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     ),
                     const SizedBox(height: 14),
 
-                    // Curriculum & Subject Attendance List
-                    ...currentSemCurriculum.map((course) {
-                      final code = course['code'] as String;
-                      final name = course['name'] as String;
-                      final type = course['type'] as String;
-                      final credits = course['credits'] as int;
-                      final hours = course['hours'] as String;
-                      final defaultTeacher = course['teacher'] as String;
-
-                      // Check if real live stats exist from backend
-                      SubjectAttendanceStats? liveStat;
-                      try {
-                        liveStat = attendance.subjectStats.firstWhere(
-                          (s) => s.code.toLowerCase().trim() == code.toLowerCase().trim(),
-                        );
-                      } catch (_) {
-                        liveStat = null;
-                      }
-
-                      final percentage = liveStat?.percentage ?? 100.0;
-                      final attended = liveStat?.classesAttended ?? 0;
-                      final conducted = liveStat?.classesConducted ?? 0;
-                      final teacher = (liveStat?.teacherName != null && liveStat!.teacherName.trim().isNotEmpty)
-                          ? liveStat.teacherName
-                          : (defaultTeacher.isNotEmpty ? defaultTeacher : ' — ');
-
-                      final isPractical = type.contains('Practical');
-                      final isBridge = type.contains('Bridge');
-                      final isProject = type.contains('Project');
-                      final isViva = type.contains('Viva');
-
-                      return InkWell(
-                        onTap: () => _showSubjectDetailsModal(
-                          context,
-                          code: code,
-                          name: name,
-                          type: type,
-                          credits: credits,
-                          hours: hours,
-                          teacher: teacher,
-                          percentage: percentage,
-                          attended: attended,
-                          conducted: conducted,
-                          student: student,
-                          studentName: auth.currentUser?.name ?? 'Student',
-                        ),
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppTheme.creamCard,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: AppTheme.creamBorder, width: 1.0),
+                    // Tip banner explaining tap & hold pinning
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1EDE4).withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppTheme.creamBorder),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.push_pin_outlined, size: 14, color: AppTheme.charcoalMuted),
+                          const SizedBox(width: 6),
+                          const Expanded(
+                            child: Text(
+                              'Tap & hold any subject card to pin it to the top.',
+                              style: TextStyle(fontSize: 11, color: AppTheme.charcoalMuted, fontWeight: FontWeight.w600),
+                            ),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                                              decoration: BoxDecoration(
-                                                color: AppTheme.charcoal,
-                                                borderRadius: BorderRadius.circular(5),
-                                              ),
-                                              child: Text(
-                                                code,
-                                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11, color: Colors.white),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 6),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                              decoration: BoxDecoration(
-                                                color: isPractical
-                                                    ? AppTheme.seaGreenTint
-                                                    : isBridge
-                                                        ? const Color(0xFFFEF3C7)
-                                                        : isProject || isViva
-                                                            ? const Color(0xFFEDE9FE)
-                                                            : const Color(0xFFF3F4F6),
-                                                borderRadius: BorderRadius.circular(5),
-                                              ),
-                                              child: Text(
-                                                type,
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w700,
-                                                  fontSize: 10,
-                                                  color: isPractical
-                                                      ? AppTheme.seaGreenDark
-                                                      : isBridge
-                                                          ? const Color(0xFF92400E)
-                                                          : isProject || isViva
-                                                              ? const Color(0xFF5B21B6)
-                                                              : AppTheme.charcoalMuted,
+                          if (_pinnedSubjectCodes.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppTheme.seaGreenTint,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: AppTheme.seaGreen.withOpacity(0.3)),
+                              ),
+                              child: Text(
+                                '${_pinnedSubjectCodes.length} Pinned',
+                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.seaGreenDark),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+
+                    // Curriculum & Subject Attendance List (Sorted with Pinned Subjects at Top)
+                    ...() {
+                      final rawList = mcaCurriculum[_selectedSemester] ?? [];
+                      final List<Map<String, dynamic>> sortedList = List.from(rawList);
+                      sortedList.sort((a, b) {
+                        final aPinned = _pinnedSubjectCodes.contains(a['code']);
+                        final bPinned = _pinnedSubjectCodes.contains(b['code']);
+                        if (aPinned && !bPinned) return -1;
+                        if (!aPinned && bPinned) return 1;
+                        return 0;
+                      });
+
+                      return sortedList.map((course) {
+                        final code = course['code'] as String;
+                        final name = course['name'] as String;
+                        final type = course['type'] as String;
+                        final credits = course['credits'] as int;
+                        final hours = course['hours'] as String;
+                        final defaultTeacher = course['teacher'] as String;
+                        final isPinned = _pinnedSubjectCodes.contains(code);
+
+                        // Check if real live stats exist from backend
+                        SubjectAttendanceStats? liveStat;
+                        try {
+                          liveStat = attendance.subjectStats.firstWhere(
+                            (s) => s.code.toLowerCase().trim() == code.toLowerCase().trim(),
+                          );
+                        } catch (_) {
+                          liveStat = null;
+                        }
+
+                        final percentage = liveStat?.percentage ?? 100.0;
+                        final attended = liveStat?.classesAttended ?? 0;
+                        final conducted = liveStat?.classesConducted ?? 0;
+                        final teacher = (liveStat?.teacherName != null && liveStat!.teacherName.trim().isNotEmpty)
+                            ? liveStat.teacherName
+                            : (defaultTeacher.isNotEmpty ? defaultTeacher : ' — ');
+
+                        final isPractical = type.contains('Practical');
+                        final isBridge = type.contains('Bridge');
+                        final isProject = type.contains('Project');
+                        final isViva = type.contains('Viva');
+
+                        return InkWell(
+                          onTap: () => _showSubjectDetailsModal(
+                            context,
+                            code: code,
+                            name: name,
+                            type: type,
+                            credits: credits,
+                            hours: hours,
+                            teacher: teacher,
+                            percentage: percentage,
+                            attended: attended,
+                            conducted: conducted,
+                            student: student,
+                            studentName: auth.currentUser?.name ?? 'Student',
+                          ),
+                          onLongPress: () => _togglePinSubject(code, name),
+                          borderRadius: BorderRadius.circular(14),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            curve: Curves.easeInOut,
+                            margin: const EdgeInsets.only(bottom: 10),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: isPinned ? const Color(0xFFFBFBF6) : AppTheme.creamCard,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: isPinned ? AppTheme.seaGreen.withOpacity(0.5) : AppTheme.creamBorder,
+                                width: isPinned ? 1.5 : 1.0,
+                              ),
+                              boxShadow: isPinned
+                                  ? [BoxShadow(color: AppTheme.seaGreen.withOpacity(0.08), blurRadius: 8, offset: const Offset(0, 2))]
+                                  : null,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: AppTheme.charcoal,
+                                                  borderRadius: BorderRadius.circular(5),
+                                                ),
+                                                child: Text(
+                                                  code,
+                                                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11, color: Colors.white),
                                                 ),
                                               ),
-                                            ),
-                                            if (credits > 0) ...[
+                                              if (isPinned) ...[
+                                                const SizedBox(width: 5),
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                                  decoration: BoxDecoration(
+                                                    color: const Color(0xFFFEF3C7),
+                                                    borderRadius: BorderRadius.circular(4),
+                                                    border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.5)),
+                                                  ),
+                                                  child: const Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      Icon(Icons.push_pin_rounded, size: 10, color: Color(0xFFD97706)),
+                                                      SizedBox(width: 2),
+                                                      Text(
+                                                        'PINNED',
+                                                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 8.5, color: Color(0xFF92400E)),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
                                               const SizedBox(width: 6),
-                                              Text(
-                                                '$credits Credits',
-                                                style: const TextStyle(color: AppTheme.charcoalLight, fontSize: 11, fontWeight: FontWeight.w600),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: isPractical
+                                                      ? AppTheme.seaGreenTint
+                                                      : isBridge
+                                                          ? const Color(0xFFFEF3C7)
+                                                          : isProject || isViva
+                                                              ? const Color(0xFFEDE9FE)
+                                                              : const Color(0xFFF3F4F6),
+                                                  borderRadius: BorderRadius.circular(5),
+                                                ),
+                                                child: Text(
+                                                  type,
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w700,
+                                                    fontSize: 10,
+                                                    color: isPractical
+                                                        ? AppTheme.seaGreenDark
+                                                        : isBridge
+                                                            ? const Color(0xFF92400E)
+                                                            : isProject || isViva
+                                                                ? const Color(0xFF5B21B6)
+                                                                : AppTheme.charcoalMuted,
+                                                  ),
+                                                ),
                                               ),
+                                              if (credits > 0) ...[
+                                                const SizedBox(width: 6),
+                                                Text(
+                                                  '$credits Credits',
+                                                  style: const TextStyle(color: AppTheme.charcoalLight, fontSize: 11, fontWeight: FontWeight.w600),
+                                                ),
+                                              ],
                                             ],
-                                          ],
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          name,
-                                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppTheme.charcoal),
-                                        ),
-                                      ],
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            name,
+                                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppTheme.charcoal),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  Text(
-                                    '${percentage.toStringAsFixed(1)}%',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 14,
-                                      color: _getStatusColor(percentage),
+                                    GestureDetector(
+                                      onTap: () => _togglePinSubject(code, name),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: isPinned ? const Color(0xFFFEF3C7) : Colors.transparent,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          isPinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
+                                          size: 16,
+                                          color: isPinned ? const Color(0xFFD97706) : AppTheme.charcoalMuted.withOpacity(0.4),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'Faculty: $teacher  •  Load: $hours',
-                                style: const TextStyle(color: AppTheme.charcoalMuted, fontSize: 11),
-                              ),
-                              const SizedBox(height: 10),
-                              LinearPercentIndicator(
-                                lineHeight: 5.0,
-                                percent: (percentage / 100).clamp(0.0, 1.0),
-                                progressColor: _getStatusColor(percentage),
-                                backgroundColor: const Color(0xFFF1EDE4),
-                                barRadius: const Radius.circular(3),
-                                padding: EdgeInsets.zero,
-                              ),
-                              const SizedBox(height: 6),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    conducted > 0 ? '$attended / $conducted classes attended' : '0 / 0 Conducted • Term Starting',
-                                    style: const TextStyle(color: AppTheme.charcoalLight, fontSize: 11),
-                                  ),
-                                  const Text(
-                                    'View Details ➔',
-                                    style: TextStyle(color: AppTheme.seaGreen, fontSize: 11, fontWeight: FontWeight.w700),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '${percentage.toStringAsFixed(1)}%',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 14,
+                                        color: _getStatusColor(percentage),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Faculty: $teacher  •  Load: $hours',
+                                  style: const TextStyle(color: AppTheme.charcoalMuted, fontSize: 11),
+                                ),
+                                const SizedBox(height: 10),
+                                LinearPercentIndicator(
+                                  lineHeight: 5.0,
+                                  percent: (percentage / 100).clamp(0.0, 1.0),
+                                  progressColor: _getStatusColor(percentage),
+                                  backgroundColor: const Color(0xFFF1EDE4),
+                                  barRadius: const Radius.circular(3),
+                                  padding: EdgeInsets.zero,
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      conducted > 0 ? '$attended / $conducted classes attended' : '0 / 0 Conducted • Term Starting',
+                                      style: const TextStyle(color: AppTheme.charcoalLight, fontSize: 11),
+                                    ),
+                                    const Text(
+                                      'View Details ➔',
+                                      style: TextStyle(color: AppTheme.seaGreen, fontSize: 11, fontWeight: FontWeight.w700),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    }),
+                        );
+                      }).toList();
+                    }(),
                   ],
                 ),
               ),
