@@ -201,34 +201,17 @@
         </div>
 
         <!-- Login Form -->
-        <form id="form-login" onsubmit="handleFacultyLogin(event)" class="space-y-3.5">
+        <form id="form-login" onsubmit="handleFacultyLogin(event)" class="space-y-4">
           <div>
-            <label class="block text-xs font-bold text-charcoal-700 uppercase tracking-wider mb-1">Email Address</label>
+            <label class="block text-xs font-bold text-charcoal-700 uppercase tracking-wider mb-1">Faculty Email Address</label>
             <input type="email" id="login-email" required placeholder="prof.sharma@college.edu" class="w-full px-3.5 py-2.5 bg-[#FAF7F0] border border-cream-200 rounded-xl text-xs font-medium text-charcoal-900 focus:outline-none focus:border-seagreen-600">
           </div>
           <div>
             <label class="block text-xs font-bold text-charcoal-700 uppercase tracking-wider mb-1">Password</label>
             <input type="password" id="login-password" required placeholder="••••••••" class="w-full px-3.5 py-2.5 bg-[#FAF7F0] border border-cream-200 rounded-xl text-xs font-medium text-charcoal-900 focus:outline-none focus:border-seagreen-600">
           </div>
-          <div class="grid grid-cols-2 gap-2 pt-1">
-            <div>
-              <label class="block text-[11px] font-bold text-charcoal-700 uppercase tracking-wider mb-1">Teaching Sem</label>
-              <select id="login-sem-select" onchange="onLoginSemesterChange()" class="w-full px-2.5 py-2 bg-[#FAF7F0] border border-cream-200 rounded-xl text-xs font-bold text-charcoal-900 focus:outline-none focus:border-seagreen-600 cursor-pointer">
-                <option value="1">Sem 1</option>
-                <option value="2">Sem 2</option>
-                <option value="3" selected>Sem 3 (Current)</option>
-                <option value="4">Sem 4</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold text-charcoal-700 uppercase tracking-wider mb-1">Assigned Subject</label>
-              <select id="login-course-select" class="w-full px-2.5 py-2 bg-[#FAF7F0] border border-cream-200 rounded-xl text-xs font-semibold text-charcoal-900 focus:outline-none focus:border-seagreen-600 cursor-pointer">
-                <!-- Dynamically populated via JS -->
-              </select>
-            </div>
-          </div>
           <button type="submit" id="btn-login-submit" class="w-full py-3 bg-seagreen-600 hover:bg-seagreen-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center space-x-1.5 mt-2">
-            <span>Sign In to Faculty Portal</span>
+            <span>Sign In to Faculty Portal (2FA)</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
           </button>
         </form>
@@ -809,6 +792,12 @@
       const regBtn = document.getElementById('tab-btn-register');
       const loginForm = document.getElementById('form-login');
       const regForm = document.getElementById('form-register');
+      const otpForm = document.getElementById('form-otp');
+
+      if (otpForm) otpForm.classList.add('hidden');
+      if (document.getElementById('tab-btn-login')?.parentElement) {
+        document.getElementById('tab-btn-login').parentElement.classList.remove('hidden');
+      }
 
       if (tab === 'login') {
         loginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg transition bg-charcoal-900 text-white shadow-sm';
@@ -824,8 +813,6 @@
     }
 
     let pendingOtpEmail = '';
-    let pendingFacultySem = '3';
-    let pendingFacultyCourse = 'MCA-301';
     let otpCountdown = 300;
     let otpTimerInterval = null;
 
@@ -833,8 +820,6 @@
       e.preventDefault();
       const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
-      const selectedSem = document.getElementById('login-sem-select')?.value || '3';
-      const selectedCourse = document.getElementById('login-course-select')?.value || 'MCA-301';
       const btn = document.getElementById('btn-login-submit');
 
       btn.disabled = true;
@@ -851,21 +836,17 @@
         if (res.ok) {
           if (data.requiresOtp) {
             pendingOtpEmail = data.email || email;
-            pendingFacultySem = selectedSem;
-            pendingFacultyCourse = selectedCourse;
             showOtpScreen(pendingOtpEmail);
           } else if (data.token) {
             loggedInFaculty = data.user;
             localStorage.setItem('edu_faculty_token', data.token);
             localStorage.setItem('edu_faculty_user', JSON.stringify(data.user));
-            localStorage.setItem('faculty_active_sem', selectedSem);
-            localStorage.setItem('faculty_active_subject', selectedCourse);
             showDashboardView();
           }
         } else {
           let errorMsg = data.error || 'Invalid credentials.';
           if (errorMsg.includes('roll number') || errorMsg.includes('No registered account') || errorMsg.includes('Invalid email') || errorMsg.includes('not found')) {
-            errorMsg = '⚠️ Faculty account not found for this email address.\n\nPlease check your email or click "Register New Faculty" to create an account.';
+            errorMsg = '⚠️ Faculty account not found for this email address.\n\nPlease check your email or click "Register Account" to create your faculty profile.';
           } else if (errorMsg.toLowerCase().includes('password')) {
             errorMsg = '⚠️ Incorrect password.\n\nPlease verify your faculty password and try again.';
           }
@@ -875,7 +856,7 @@
         alert('Server connection error. Please make sure backend is online.');
       } finally {
         btn.disabled = false;
-        btn.innerHTML = `<span>Sign In to Faculty Portal</span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>`;
+        btn.innerHTML = `<span>Sign In to Faculty Portal (2FA)</span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>`;
       }
     }
 
@@ -945,8 +926,6 @@
           loggedInFaculty = data.user;
           localStorage.setItem('edu_faculty_token', data.token);
           localStorage.setItem('edu_faculty_user', JSON.stringify(data.user));
-          localStorage.setItem('faculty_active_sem', pendingFacultySem);
-          localStorage.setItem('faculty_active_subject', pendingFacultyCourse);
           showDashboardView();
         } else {
           alert(data.error || 'Invalid or expired OTP code. Please check your email.');

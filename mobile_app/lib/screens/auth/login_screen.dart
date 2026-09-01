@@ -395,54 +395,67 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 14),
 
                 // Sub-Action Selector: [ Sign In ] | [ Create Account ]
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => setState(() => _selectedMode = AuthMode.login),
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: _selectedMode == AuthMode.login ? AppTheme.seaGreenTint : Colors.transparent,
-                          side: BorderSide(
-                            color: _selectedMode == AuthMode.login ? AppTheme.seaGreen : AppTheme.creamBorder,
-                            width: _selectedMode == AuthMode.login ? 1.5 : 1.0,
-                          ),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                        ),
-                        child: Text(
-                          'Sign In',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: _selectedMode == AuthMode.login ? AppTheme.seaGreenDark : AppTheme.charcoalMuted,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => setState(() => _selectedMode = AuthMode.register),
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: _selectedMode == AuthMode.register ? AppTheme.seaGreenTint : Colors.transparent,
-                          side: BorderSide(
-                            color: _selectedMode == AuthMode.register ? AppTheme.seaGreen : AppTheme.creamBorder,
-                            width: _selectedMode == AuthMode.register ? 1.5 : 1.0,
-                          ),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                        ),
-                        child: Text(
-                          'Create Account',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: _selectedMode == AuthMode.register ? AppTheme.seaGreenDark : AppTheme.charcoalMuted,
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.creamCard,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppTheme.creamBorder),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _selectedMode = AuthMode.login),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 9),
+                            decoration: BoxDecoration(
+                              color: _selectedMode == AuthMode.login ? AppTheme.seaGreen : Colors.transparent,
+                              borderRadius: BorderRadius.circular(9),
+                              boxShadow: _selectedMode == AuthMode.login
+                                  ? [BoxShadow(color: AppTheme.seaGreen.withOpacity(0.25), blurRadius: 4, offset: const Offset(0, 2))]
+                                  : null,
+                            ),
+                            child: Text(
+                              'Sign In',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: _selectedMode == AuthMode.login ? Colors.white : AppTheme.charcoalMuted,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _selectedMode = AuthMode.register),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 9),
+                            decoration: BoxDecoration(
+                              color: _selectedMode == AuthMode.register ? AppTheme.seaGreen : Colors.transparent,
+                              borderRadius: BorderRadius.circular(9),
+                              boxShadow: _selectedMode == AuthMode.register
+                                  ? [BoxShadow(color: AppTheme.seaGreen.withOpacity(0.25), blurRadius: 4, offset: const Offset(0, 2))]
+                                  : null,
+                            ),
+                            child: Text(
+                              'Create Account',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: _selectedMode == AuthMode.register ? Colors.white : AppTheme.charcoalMuted,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 20),
 
