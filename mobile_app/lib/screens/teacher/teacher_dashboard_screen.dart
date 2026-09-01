@@ -157,15 +157,17 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     final attendance = Provider.of<AttendanceProvider>(context, listen: false);
     await attendance.fetchTeacherAttendance(_selectedCourseCode!);
     if (mounted) {
-      for (final rec in attendance.liveTeacherCheckIns) {
-        if (rec.universityRoll.isNotEmpty) {
-          _attendanceStatusByUniRoll[rec.universityRoll] = (rec.status == 'Half') ? 'H' : 'P';
+      setState(() {
+        _attendanceStatusByUniRoll.clear();
+        for (final rec in attendance.liveTeacherCheckIns) {
+          if (rec.universityRoll.isNotEmpty) {
+            _attendanceStatusByUniRoll[rec.universityRoll] = (rec.status == 'Half') ? 'H' : 'P';
+          }
+          if (rec.classRoll.isNotEmpty) {
+            _attendanceStatusByUniRoll[rec.classRoll] = (rec.status == 'Half') ? 'H' : 'P';
+          }
         }
-        if (rec.classRoll.isNotEmpty) {
-          _attendanceStatusByUniRoll[rec.classRoll] = (rec.status == 'Half') ? 'H' : 'P';
-        }
-      }
-      setState(() {});
+      });
     }
   }
 
@@ -241,8 +243,18 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   }
 
   void _onSemesterChanged(int newSem) {
+    if (_isSessionActive) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('⚠️ Session currently active for $_selectedCourseCode! Please stop the active session before switching semesters.'),
+          backgroundColor: AppTheme.statusDanger,
+        ),
+      );
+      return;
+    }
     setState(() {
       _selectedSemester = newSem;
+      _attendanceStatusByUniRoll.clear();
       final courses = _curriculum[newSem] ?? [];
       if (courses.isNotEmpty) {
         _selectedCourseCode = courses[0]['code'];
@@ -1011,6 +1023,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                                 setState(() {
                                   _selectedCourseCode = val;
                                   _selectedCourseName = matched['name'];
+                                  _attendanceStatusByUniRoll.clear();
                                 });
                                 _fetchTodayCheckIns();
                                 _checkOngoingSession();

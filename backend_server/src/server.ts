@@ -95,7 +95,7 @@ app.post('/api/sessions/close-subject/:subjectId', optionalAuth, SessionControll
 app.post('/api/attendance/mark', requireAuth, AttendanceController.markAttendance);
 app.get('/api/attendance/student/dashboard', requireAuth, AttendanceController.getStudentDashboardStats);
 app.get('/api/attendance/student/subject-history/:subjectId', requireAuth, AttendanceController.getStudentSubjectAttendanceHistory);
-app.get('/api/attendance/teacher/:subjectId', requireAuth, requireRole(['TEACHER', 'ADMIN']), AttendanceController.getTeacherSubjectAttendance);
+app.get('/api/attendance/teacher/:subjectId', optionalAuth, AttendanceController.getTeacherSubjectAttendance);
 
 // --- TEACHER OVERRIDE ROUTES (Full / Half Attendance) ---
 app.get('/api/override/absent/:subjectId', optionalAuth, OverrideController.getAbsentStudentsForSubject);

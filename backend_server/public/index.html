@@ -1050,6 +1050,12 @@
     }
 
     function onTeacherCourseChange() {
+      if (activeSession) {
+        alert(`⚠️ An attendance session for "${activeSession.code}" is currently running!\n\nPlease stop the active session before switching subjects.`);
+        const courseSelect = document.getElementById('teacher-course-select');
+        if (courseSelect) courseSelect.value = activeSession.code;
+        return;
+      }
       updateSessionCountDisplay();
       const courseCode = document.getElementById('teacher-course-select')?.value || 'MCA-301';
       checkAndSyncActiveSession(courseCode);
@@ -1070,17 +1076,21 @@
           try {
             const data = JSON.parse(event.data);
             if (data.type === 'STUDENT_CHECK_IN') {
-              const student = data.student || {};
-              const uniRoll = student.universityRoll || student.uniRoll;
-              const classRoll = student.classRoll;
-              const status = data.status === 'Half' ? 'H' : 'P';
-              
-              if (uniRoll) attendanceStatusByStudent[uniRoll] = status;
-              if (classRoll) attendanceStatusByStudent[classRoll] = status;
+              const currentCourse = document.getElementById('teacher-course-select')?.value;
+              // Only apply check-in if it matches the currently selected course
+              if (!data.subjectCode || data.subjectCode === currentCourse || data.subjectId === currentCourse) {
+                const student = data.student || {};
+                const uniRoll = student.universityRoll || student.uniRoll;
+                const classRoll = student.classRoll;
+                const status = data.status === 'Half' ? 'H' : 'P';
+                
+                if (uniRoll) attendanceStatusByStudent[uniRoll] = status;
+                if (classRoll) attendanceStatusByStudent[classRoll] = status;
 
-              if (currentTeacherSem) {
-                renderMatrixGoogleSheet(currentTeacherSem);
-                renderAbsentStudents(currentTeacherSem);
+                if (currentTeacherSem) {
+                  renderMatrixGoogleSheet(currentTeacherSem);
+                  renderAbsentStudents(currentTeacherSem);
+                }
               }
             } else if (data.type === 'SESSION_STARTED') {
               const sess = data.session;
@@ -1098,12 +1108,17 @@
                 fetchAndRenderStudents(currentTeacherSem);
               }
             }
-          } catch (e) {
-            console.error('WebSocket message parsing error:', e);
+          } catch (err) {
+            console.error('Error handling WebSocket message:', err);
           }
         };
 
+        teacherWs.onerror = (err) => {
+          console.warn('Teacher WebSocket encountered an error:', err);
+        };
+
         teacherWs.onclose = () => {
+          console.log('Teacher WebSocket closed. Reconnecting in 3s...');
           setTimeout(connectTeacherWebSocket, 3000);
         };
       } catch (err) {
@@ -1152,10 +1167,16 @@
       const courseCode = courseSelect?.value || 'MCA-301';
       const todayDateStr = getTodayDateStr();
 
+      // Reset active status map specifically for this selected course so other courses' attendance doesn't bleed through
+      attendanceStatusByStudent = {};
+
       try {
+        const token = localStorage.getItem('edu_faculty_token');
         const [studRes, attRes] = await Promise.all([
           fetch(`/api/students/semester/${sem}`),
-          fetch(`/api/attendance/teacher/${courseCode}?date=${todayDateStr}`)
+          fetch(`/api/attendance/teacher/${courseCode}?date=${todayDateStr}`, {
+            headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) }
+          })
         ]);
 
         if (studRes.ok) {
@@ -1223,43 +1244,58 @@
 
       if (unmarked.length === 0) {
         container.innerHTML = `
-          <div class="p-4 bg-seagreen-50/70 border border-seagreen-600/20 rounded-2xl text-center">
-            <p class="text-xs text-seagreen-800 font-bold">🎉 All students for Semester ${sem} have recorded attendance or been processed.</p>
+          <div class="p-5 bg-seagreen-50 border border-seagreen-200 rounded-2xl flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <span class="text-xl">🎉</span>
+              <div>
+                <p class="text-xs font-bold text-seagreen-900">100% Attendance Completed!</p>
+                <p class="text-[11px] text-seagreen-700 font-medium">All students registered in Semester ${sem} have marked attendance or were granted overrides.</p>
+              </div>
+            </div>
+            <span class="px-3 py-1 bg-seagreen-600 text-white font-bold text-[11px] rounded-lg">Full Class Present</span>
           </div>
         `;
         return;
       }
 
-      container.innerHTML = unmarked.map(s => `
-        <div class="flex items-center justify-between p-3.5 rounded-2xl bg-[#FAF7F0] border border-cream-200 hover:border-cream-300 transition">
-          <div>
-            <div class="flex items-center space-x-2">
-              <span class="font-bold text-xs text-charcoal-900">${s.name}</span>
-              <span class="text-[10px] font-bold px-1.5 py-0.5 bg-red-50 text-red-700 rounded border border-red-200">Unmarked (0)</span>
+      container.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          ${unmarked.map(s => `
+            <div class="p-3 bg-cream-50 hover:bg-white border border-cream-200 rounded-xl transition flex items-center justify-between shadow-sm hover:shadow">
+              <div class="flex items-center space-x-3 min-w-0">
+                <div class="w-9 h-9 rounded-lg bg-cream-200 flex items-center justify-center font-bold text-xs text-charcoal-800 shrink-0">
+                  ${s.classRoll ? s.classRoll.slice(-2) : 'ST'}
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs font-bold text-charcoal-900 truncate">${s.name}</p>
+                  <p class="text-[10px] text-charcoal-500 font-mono">Roll: ${s.classRoll} • Uni: ${s.uniRoll}</p>
+                </div>
+              </div>
+              <button 
+                onclick="grantHalfOverride('${s.classRoll}', '${s.uniRoll}', '${s.regNo}', '${s.name.replace(/'/g, "\\'")}')" 
+                class="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-[10px] rounded-lg shadow transition flex items-center space-x-1 shrink-0 ml-2">
+                <span>⏱️</span>
+                <span>Grant Half</span>
+              </button>
             </div>
-            <span class="text-[11px] text-charcoal-700 font-mono mt-0.5 block">Roll: ${s.classRoll} • Uni: ${s.uniRoll} • Reg: ${s.regNo}</span>
-          </div>
-          <button onclick="grantHalfOverride('${s.classRoll}', '${s.uniRoll}', '${s.regNo}', '${s.name}')" class="px-3.5 py-2 bg-charcoal-900 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition flex items-center space-x-1.5 shadow-sm">
-            <span>⏱️ Grant Half (+1)</span>
-          </button>
+          `).join('')}
         </div>
-      `).join('');
+      `;
     }
 
     function renderMatrixGoogleSheet(sem) {
-      const tbody = document.getElementById('attendance-table-body');
+      const tbody = document.getElementById('sheet-matrix-tbody');
       const roster = enrolledStudents[sem] || [];
 
       if (roster.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="6" class="py-8 px-4 text-center text-charcoal-500 italic bg-[#FAF7F0]/50">
-              🌱 No registered students found for Semester ${sem} in database.<br/>
-              <span class="text-[11px] text-charcoal-400 font-normal">Newly registered students from the mobile app will automatically populate this matrix.</span>
+            <td colspan="6" class="py-8 text-center text-xs text-charcoal-400 font-medium italic">
+              No students enrolled in Semester ${sem} yet.
             </td>
           </tr>
         `;
-        document.getElementById('total-checked-in-count').textContent = 0;
+        document.getElementById('total-checked-in-count').textContent = '0';
         return;
       }
 
@@ -1327,6 +1363,18 @@
       const btnIcon = document.getElementById('session-btn-icon');
       const btnText = document.getElementById('session-btn-text');
       const subjEl = document.getElementById('active-subj-label');
+      const courseSelect = document.getElementById('teacher-course-select');
+      const semSelect = document.getElementById('teacher-sem-select');
+
+      // Lock subject and semester dropdowns during ongoing session
+      if (courseSelect) {
+        courseSelect.disabled = true;
+        courseSelect.classList.add('opacity-60', 'cursor-not-allowed');
+      }
+      if (semSelect) {
+        semSelect.disabled = true;
+        semSelect.classList.add('opacity-60', 'cursor-not-allowed');
+      }
 
       if (banner) banner.classList.remove('hidden');
       if (subjEl) subjEl.textContent = `${code}: ${name} (Sem ${sem})`;
@@ -1361,7 +1409,6 @@
           if (cEl) cEl.textContent = `${mins}:${secs} Remaining`;
           if (btnText) btnText.textContent = `Stop Session (${mins}:${secs})`;
         } else {
-          // Timer naturally expired: do NOT kill session on server, just reset local UI
           applyInactiveSessionState();
         }
       }, 1000);
@@ -1377,6 +1424,18 @@
       const btn = document.getElementById('btn-trigger-session');
       const btnIcon = document.getElementById('session-btn-icon');
       const btnText = document.getElementById('session-btn-text');
+      const courseSelect = document.getElementById('teacher-course-select');
+      const semSelect = document.getElementById('teacher-sem-select');
+
+      // Unlock subject and semester dropdowns when session ends
+      if (courseSelect) {
+        courseSelect.disabled = false;
+        courseSelect.classList.remove('opacity-60', 'cursor-not-allowed');
+      }
+      if (semSelect) {
+        semSelect.disabled = false;
+        semSelect.classList.remove('opacity-60', 'cursor-not-allowed');
+      }
 
       if (banner) banner.classList.add('hidden');
       updateSessionCountDisplay();

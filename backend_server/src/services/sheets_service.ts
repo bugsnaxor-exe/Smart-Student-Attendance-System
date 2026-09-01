@@ -218,31 +218,21 @@ export class GoogleSheetsService {
 
       const headers = values[0];
 
-      // 2. Find or create the Date & Subject Column (e.g. "2026-09-01 [MCA-301 • Sem 3]" or "2026-09-01 [MCA-301 • Sem 3 • S2]")
-      const sessionTag = (rowData.sessionNumber && rowData.sessionNumber > 1)
-        ? ` • S${rowData.sessionNumber}`
-        : '';
+      // 2. Find or create the Date & Subject Column (e.g. "2026-09-01 [MCA-301 • Sem 3]")
       const subjectTag = rowData.subjectCode
-        ? ` [${rowData.subjectCode}${rowData.semester ? ` • Sem ${rowData.semester}` : ''}${sessionTag}]`
+        ? ` [${rowData.subjectCode}${rowData.semester ? ` • Sem ${rowData.semester}` : ''}]`
         : '';
       const targetDateHeader = `${rowData.date}${subjectTag}`;
 
       let dateColIndex = -1;
       for (let i = 0; i < headers.length; i++) {
         const h = headers[i]?.trim();
-        if (h === targetDateHeader) {
+        if (
+          h === targetDateHeader ||
+          (rowData.subjectCode && h.startsWith(rowData.date) && h.includes(rowData.subjectCode))
+        ) {
           dateColIndex = i;
           break;
-        }
-      }
-
-      if (dateColIndex === -1 && !rowData.sessionNumber) {
-        for (let i = 0; i < headers.length; i++) {
-          const h = headers[i]?.trim();
-          if (rowData.subjectCode && h.startsWith(rowData.date) && h.includes(rowData.subjectCode)) {
-            dateColIndex = i;
-            break;
-          }
         }
       }
 
