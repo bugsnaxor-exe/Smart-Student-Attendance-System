@@ -19,27 +19,6 @@ export class SessionService {
     const startOfDay = new Date(`${kolkata.dateString}T00:00:00+05:30`);
     const endOfDay = new Date(`${kolkata.dateString}T23:59:59+05:30`);
 
-    // Clean up empty inactive sessions from today (0 attendances) so accidental clicks don't waste daily slots
-    const emptySessions = await prisma.activeSession.findMany({
-      where: {
-        subjectId,
-        isActive: false,
-        attendances: { none: {} },
-        createdAt: {
-          gte: startOfDay,
-          lte: endOfDay,
-        },
-      },
-    });
-
-    if (emptySessions.length > 0) {
-      await prisma.activeSession.deleteMany({
-        where: {
-          id: { in: emptySessions.map((s) => s.id) },
-        },
-      });
-    }
-
     // Count non-empty or currently active sessions conducted today
     const todaySessionsCount = await prisma.activeSession.count({
       where: {
@@ -110,19 +89,6 @@ export class SessionService {
 
     if (!subject) return 0;
 
-    // Clean up empty inactive sessions from today with 0 attendances
-    await prisma.activeSession.deleteMany({
-      where: {
-        subjectId: subject.id,
-        isActive: false,
-        attendances: { none: {} },
-        createdAt: {
-          gte: startOfDay,
-          lte: endOfDay,
-        },
-      },
-    });
-
     const count = await prisma.activeSession.count({
       where: {
         subjectId: subject.id,
@@ -144,18 +110,6 @@ export class SessionService {
     const kolkata = getKolkataTime(now);
     const startOfDay = new Date(`${kolkata.dateString}T00:00:00+05:30`);
     const endOfDay = new Date(`${kolkata.dateString}T23:59:59+05:30`);
-
-    // Clean up empty inactive sessions with 0 attendances
-    await prisma.activeSession.deleteMany({
-      where: {
-        isActive: false,
-        attendances: { none: {} },
-        createdAt: {
-          gte: startOfDay,
-          lte: endOfDay,
-        },
-      },
-    });
 
     const todaySessions = await prisma.activeSession.findMany({
       where: {

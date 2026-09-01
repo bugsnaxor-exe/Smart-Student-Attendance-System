@@ -1550,44 +1550,64 @@
 
     // --- LATE COMER HALF ATTENDANCE OVERRIDE (1 COUNT) & REAL GOOGLE SHEET SYNC ---
     async function grantHalfOverride(classRoll, uniRoll, regNo, name) {
-      attendanceStatusByStudent[uniRoll] = 'H';
+      const courseSelect = document.getElementById('teacher-course-select');
+      const courseCode = courseSelect?.value || 'MCA-301';
+      const todayDateStr = getTodayDateStr();
+
+      // Optimistically update local UI immediately
+      if (uniRoll) attendanceStatusByStudent[uniRoll] = 'H';
+      if (classRoll) attendanceStatusByStudent[classRoll] = 'H';
       renderMatrixGoogleSheet(currentTeacherSem);
       renderAbsentStudents(currentTeacherSem);
 
-      const sheetId = localStorage.getItem('teacher_sheet_id') || document.getElementById('sheet-id-input')?.value.trim();
-      const todayDateStr = getTodayDateStr();
-      const courseSelect = document.getElementById('teacher-course-select');
-      const courseCode = courseSelect?.value || 'MCA-301';
-
-      if (!sheetId) {
-        console.log('ℹ️ No Google Spreadsheet ID linked. Marked locally.');
-        return;
-      }
-
+      const token = localStorage.getItem('edu_faculty_token');
       try {
-        const res = await fetch('/api/override/grant-half-matrix', {
+        const res = await fetch('/api/override/grant-half', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
           body: JSON.stringify({
-            spreadsheetId: sheetId,
-            classRoll,
-            universityRoll: uniRoll,
-            registrationNumber: regNo,
-            studentName: name,
-            status: 'Half',
+            subjectId: courseCode,
+            studentId: uniRoll || classRoll,
             date: todayDateStr,
-            subjectCode: courseCode,
             sessionId: activeSessionId
           })
         });
+
         const data = await res.json();
-        if (data.sheetSynced) {
-          console.log(`✅ Google Sheet synced successfully for ${name}: ${data.sheetMessage}`);
+        if (res.ok) {
+          console.log(`✅ Half attendance recorded in DB for ${name} (${classRoll}):`, data);
+          if (data.sheetSynced) {
+            console.log(`✅ Google Sheet synced successfully for ${name}.`);
+          }
+
+          // Optional custom sheet sync if configured in local storage
+          const customSheetId = localStorage.getItem('teacher_sheet_id');
+          if (customSheetId) {
+            fetch('/api/override/grant-half-matrix', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                spreadsheetId: customSheetId,
+                classRoll,
+                universityRoll: uniRoll,
+                registrationNumber: regNo,
+                studentName: name,
+                status: 'Half',
+                date: todayDateStr,
+                subjectCode: courseCode,
+                sessionId: activeSessionId
+              })
+            }).catch(e => console.warn('Custom sheet sync background error:', e));
+          }
         } else {
-          console.log(`ℹ️ Google Sheet response: ${data.sheetMessage}`);
+          console.error('Error granting half attendance:', data.error);
+          alert('⚠️ Failed to grant half attendance: ' + (data.error || 'Server error'));
         }
       } catch (err) {
-        console.error('Error calling /api/override/grant-half-matrix:', err);
+        console.error('Error calling /api/override/grant-half:', err);
       }
     }
 

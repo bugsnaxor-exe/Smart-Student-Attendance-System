@@ -155,6 +155,7 @@ export class OverrideController {
             { id: studentId },
             { classRoll: studentId },
             { universityRoll: studentId },
+            { regNumber: studentId },
           ],
         },
         include: {
