@@ -69,14 +69,25 @@ export class SessionService {
   }
 
   /**
-   * Retrieves active session for a specific subject, ensuring it hasn't expired.
+   * Retrieves active session for a specific subject (by ID or course code), ensuring it hasn't expired.
    */
-  public static async getActiveSession(subjectId: string) {
+  public static async getActiveSession(subjectIdentifier: string) {
     const now = new Date();
+
+    const subject = await prisma.subject.findFirst({
+      where: {
+        OR: [
+          { id: subjectIdentifier },
+          { code: { equals: subjectIdentifier, mode: 'insensitive' } },
+        ],
+      },
+    });
+
+    const targetSubjectId = subject ? subject.id : subjectIdentifier;
 
     const session = await prisma.activeSession.findFirst({
       where: {
-        subjectId,
+        subjectId: targetSubjectId,
         isActive: true,
         expiresAt: {
           gt: now,
@@ -108,7 +119,7 @@ export class SessionService {
     if (!session) {
       await prisma.activeSession.updateMany({
         where: {
-          subjectId,
+          subjectId: targetSubjectId,
           isActive: true,
           expiresAt: {
             lte: now,

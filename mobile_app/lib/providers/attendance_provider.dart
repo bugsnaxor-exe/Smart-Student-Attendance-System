@@ -33,6 +33,14 @@ class AttendanceProvider extends ChangeNotifier {
 
   Timer? _studentPollingTimer;
 
+  bool _isTeacherSessionActive = false;
+  Map<String, dynamic>? _teacherActiveSession;
+  int _teacherRemainingSeconds = 0;
+
+  bool get isTeacherSessionActive => _isTeacherSessionActive;
+  Map<String, dynamic>? get teacherActiveSession => _teacherActiveSession;
+  int get teacherRemainingSeconds => _teacherRemainingSeconds;
+
   /// Connects to real-time WebSocket attendance broadcast stream
   void connectRealTimeStream() {
     try {
@@ -45,21 +53,35 @@ class AttendanceProvider extends ChangeNotifier {
               _liveTeacherCheckIns.insert(
                 0,
                 StudentAttendanceCheckIn(
-                  id: payload['student']['id'],
-                  studentName: payload['student']['name'],
-                  classRoll: payload['student']['classRoll'],
-                  universityRoll: payload['student']['universityRoll'],
-                  regNumber: payload['student']['regNumber'],
-                  status: payload['status'],
-                  time: payload['time'],
+                  id: payload['student']?['id'] ?? '',
+                  studentName: payload['student']?['name'] ?? 'Student',
+                  classRoll: payload['student']?['classRoll'] ?? '',
+                  universityRoll: payload['student']?['universityRoll'] ?? '',
+                  regNumber: payload['student']?['regNumber'] ?? '',
+                  status: payload['status'] ?? 'Present',
+                  time: payload['time'] ?? '',
                   distanceMeters: (payload['distanceMeters'] as num?)?.toDouble(),
                   syncedToSheet: true,
                 ),
               );
               notifyListeners();
             } else if (payload['type'] == 'SESSION_STARTED') {
-              // Immediately fetch active sessions when teacher starts a session
+              final sess = payload['session'];
+              if (sess != null) {
+                _isTeacherSessionActive = true;
+                _currentActiveSessionId = sess['id'];
+                _teacherRemainingSeconds = (sess['remainingSeconds'] as num?)?.toInt() ?? 900;
+                _teacherActiveSession = sess;
+              }
               fetchStudentActiveSessions();
+              notifyListeners();
+            } else if (payload['type'] == 'SESSION_STOPPED') {
+              _isTeacherSessionActive = false;
+              _currentActiveSessionId = null;
+              _teacherRemainingSeconds = 0;
+              _teacherActiveSession = null;
+              fetchStudentActiveSessions();
+              notifyListeners();
             }
           } catch (err) {
             // Ignore parse errors
@@ -258,12 +280,46 @@ class AttendanceProvider extends ChangeNotifier {
     }
   }
 
-  /// Teacher: Closes an active session
-  Future<bool> closeSession(String sessionId) async {
+  /// Teacher: Queries active session for a subject/course code to sync running sessions
+  Future<Map<String, dynamic>?> checkActiveTeacherSession(String courseCode) async {
     try {
-      final res = await ApiService.closeSession(sessionId);
+      final res = await ApiService.getTeacherActiveSession(courseCode);
+      if (res['isActive'] == true && res['session'] != null) {
+        _isTeacherSessionActive = true;
+        _currentActiveSessionId = res['session']['id'];
+        _teacherRemainingSeconds = (res['remainingSeconds'] as num?)?.toInt() ?? 900;
+        _teacherActiveSession = res['session'];
+      } else if (_isTeacherSessionActive && _teacherActiveSession?['subjectCode'] == courseCode) {
+        _isTeacherSessionActive = false;
+        _currentActiveSessionId = null;
+        _teacherRemainingSeconds = 0;
+        _teacherActiveSession = null;
+      }
       notifyListeners();
-      return res['session'] != null;
+      return res;
+    } catch (e) {
+      print('Error checking active teacher session: $e');
+      return null;
+    }
+  }
+
+  /// Teacher: Closes an active session by Session ID or Course Code
+  Future<bool> closeSession(String? sessionId, {String? subjectId}) async {
+    try {
+      Map<String, dynamic> res;
+      if (sessionId != null && sessionId.isNotEmpty && sessionId != 'starting') {
+        res = await ApiService.closeSession(sessionId);
+      } else if (subjectId != null && subjectId.isNotEmpty) {
+        res = await ApiService.closeSessionBySubject(subjectId);
+      } else {
+        return false;
+      }
+      _isTeacherSessionActive = false;
+      _currentActiveSessionId = null;
+      _teacherRemainingSeconds = 0;
+      _teacherActiveSession = null;
+      notifyListeners();
+      return res['session'] != null || res['success'] == true;
     } catch (e) {
       return false;
     }

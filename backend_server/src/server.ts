@@ -85,9 +85,10 @@ app.get('/api/auth/me', requireAuth, AuthController.getMe);
 
 // --- SESSION ROUTES (15-Minute Dynamic Window) ---
 app.post('/api/sessions/start', requireAuth, requireRole(['TEACHER', 'ADMIN']), SessionController.startSession);
-app.get('/api/sessions/active/:subjectId', requireAuth, SessionController.getActiveSession);
+app.get('/api/sessions/active/:subjectId', SessionController.getActiveSession);
 app.get('/api/sessions/student-active', requireAuth, SessionController.getStudentActiveSessions);
 app.post('/api/sessions/close/:sessionId', requireAuth, requireRole(['TEACHER', 'ADMIN']), SessionController.closeSession);
+app.post('/api/sessions/close-subject/:subjectId', requireAuth, requireRole(['TEACHER', 'ADMIN']), SessionController.closeSessionBySubject);
 
 // --- ATTENDANCE ROUTES ---
 app.post('/api/attendance/mark', requireAuth, AttendanceController.markAttendance);

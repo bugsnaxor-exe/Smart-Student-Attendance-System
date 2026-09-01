@@ -206,6 +206,14 @@ class ApiService {
     return jsonDecode(res.body);
   }
 
+  static Future<Map<String, dynamic>> closeSessionBySubject(String subjectId) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/sessions/close-subject/$subjectId'),
+      headers: await _getHeaders(),
+    );
+    return jsonDecode(res.body);
+  }
+
   // --- GOOGLE SHEETS MANAGEMENT ---
   static Future<Map<String, dynamic>> getActiveSheet() async {
     final res = await http.get(

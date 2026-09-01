@@ -96,10 +96,14 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
       _fetchActiveSheetFromBackend();
       _loadStudentsForSemester(_selectedSemester);
       _fetchTodayCheckIns();
+      _checkOngoingSession();
     });
 
     _syncTimer = Timer.periodic(const Duration(seconds: 4), (_) {
-      if (mounted) _fetchTodayCheckIns();
+      if (mounted) {
+        _fetchTodayCheckIns();
+        _checkOngoingSession();
+      }
     });
   }
 
@@ -152,9 +156,47 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     await attendance.fetchTeacherAttendance(_selectedCourseCode!);
     if (mounted) {
       for (final rec in attendance.liveTeacherCheckIns) {
-        _attendanceStatusByUniRoll[rec.universityRoll] = (rec.status == 'Half') ? 'H' : 'P';
+        if (rec.universityRoll.isNotEmpty) {
+          _attendanceStatusByUniRoll[rec.universityRoll] = (rec.status == 'Half') ? 'H' : 'P';
+        }
+        if (rec.classRoll.isNotEmpty) {
+          _attendanceStatusByUniRoll[rec.classRoll] = (rec.status == 'Half') ? 'H' : 'P';
+        }
       }
       setState(() {});
+    }
+  }
+
+  Future<void> _checkOngoingSession() async {
+    if (_selectedCourseCode == null) return;
+    final attendance = Provider.of<AttendanceProvider>(context, listen: false);
+    final res = await attendance.checkActiveTeacherSession(_selectedCourseCode!);
+    if (res != null && res['isActive'] == true && res['session'] != null && mounted) {
+      final sess = res['session'];
+      final remaining = (res['remainingSeconds'] as num?)?.toInt() ?? 900;
+      _activeSessionId = sess['id'];
+      if (!_isSessionActive || _countdownSeconds == 0) {
+        setState(() {
+          _isSessionActive = true;
+          _countdownSeconds = remaining;
+        });
+        _sessionTimer?.cancel();
+        _sessionTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+          if (_countdownSeconds > 0) {
+            if (mounted) setState(() => _countdownSeconds--);
+          } else {
+            _sessionTimer?.cancel();
+            if (mounted) setState(() => _isSessionActive = false);
+          }
+        });
+      }
+    } else if (_isSessionActive && attendance.teacherActiveSession == null && mounted) {
+      _sessionTimer?.cancel();
+      setState(() {
+        _isSessionActive = false;
+        _activeSessionId = null;
+        _countdownSeconds = 0;
+      });
     }
   }
 
@@ -169,6 +211,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     });
     _loadStudentsForSemester(newSem);
     _fetchTodayCheckIns();
+    _checkOngoingSession();
   }
 
   Future<void> _handleStartSession() async {
@@ -219,17 +262,19 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   Future<void> _handleStopSession() async {
     _sessionTimer?.cancel();
     final attendance = Provider.of<AttendanceProvider>(context, listen: false);
-    if (_activeSessionId != null) {
-      await attendance.closeSession(_activeSessionId!);
-    }
+    final sId = _activeSessionId;
+    final courseCode = _selectedCourseCode;
     setState(() {
       _isSessionActive = false;
       _activeSessionId = null;
       _countdownSeconds = 0;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Attendance session closed.'), backgroundColor: AppTheme.charcoal),
-    );
+    await attendance.closeSession(sId, subjectId: courseCode);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Attendance session closed.'), backgroundColor: AppTheme.charcoal),
+      );
+    }
   }
 
   Future<void> _handleGrantHalf(Map<String, dynamic> student) async {
@@ -922,6 +967,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                                   _selectedCourseName = matched['name'];
                                 });
                                 _fetchTodayCheckIns();
+                                _checkOngoingSession();
                               }
                             },
                     ),
