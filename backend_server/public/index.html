@@ -684,12 +684,14 @@
     const sessionCountsByCourse = {};
     const attendanceStatusByStudent = {}; // Key: uniRoll -> 'P' | 'H' | null
 
-    // Get current local date in YYYY-MM-DD format
+    // Get current Kolkata / IST date in YYYY-MM-DD format
     function getTodayDateStr() {
       const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
+      const kolkataTimeStr = now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+      const kolkataDate = new Date(kolkataTimeStr);
+      const year = kolkataDate.getFullYear();
+      const month = String(kolkataDate.getMonth() + 1).padStart(2, '0');
+      const day = String(kolkataDate.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     }
 
@@ -699,6 +701,12 @@
       onRegSemesterChange();
       checkStoredAuth();
       loadServiceAccountInfo();
+      connectTeacherWebSocket();
+      setInterval(() => {
+        if (currentTeacherSem) {
+          fetchAndRenderStudents(currentTeacherSem);
+        }
+      }, 4000);
     });
 
     function onLoginSemesterChange() {
@@ -1037,17 +1045,82 @@
       fetchAndRenderStudents(sem);
     }
 
-    async function fetchAndRenderStudents(sem) {
+    let teacherWs = null;
+    function connectTeacherWebSocket() {
       try {
-        const res = await fetch(`/api/students/semester/${sem}`);
-        if (res.ok) {
-          const data = await res.json();
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const host = window.location.host || 'localhost:4000';
+        const wsUrl = `${protocol}//${host}/ws`;
+        teacherWs = new WebSocket(wsUrl);
+
+        teacherWs.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'STUDENT_CHECK_IN') {
+              const student = data.student || {};
+              const uniRoll = student.universityRoll || student.uniRoll;
+              const classRoll = student.classRoll;
+              const status = data.status === 'Half' ? 'H' : 'P';
+              
+              if (uniRoll) attendanceStatusByStudent[uniRoll] = status;
+              if (classRoll) attendanceStatusByStudent[classRoll] = status;
+
+              if (currentTeacherSem) {
+                renderMatrixGoogleSheet(currentTeacherSem);
+                renderAbsentStudents(currentTeacherSem);
+              }
+            } else if (data.type === 'SESSION_STARTED') {
+              if (currentTeacherSem) {
+                fetchAndRenderStudents(currentTeacherSem);
+              }
+            }
+          } catch (e) {
+            console.error('WebSocket message parsing error:', e);
+          }
+        };
+
+        teacherWs.onclose = () => {
+          setTimeout(connectTeacherWebSocket, 3000);
+        };
+      } catch (err) {
+        console.warn('WebSocket connection not available:', err);
+      }
+    }
+
+    async function fetchAndRenderStudents(sem) {
+      const courseSelect = document.getElementById('teacher-course-select');
+      const courseCode = courseSelect?.value || 'MCA-301';
+      const todayDateStr = getTodayDateStr();
+
+      try {
+        const [studRes, attRes] = await Promise.all([
+          fetch(`/api/students/semester/${sem}`),
+          fetch(`/api/attendance/teacher/${courseCode}?date=${todayDateStr}`)
+        ]);
+
+        if (studRes.ok) {
+          const data = await studRes.json();
           if (data.students && Array.isArray(data.students)) {
             enrolledStudents[sem] = data.students;
           }
         }
+
+        if (attRes.ok) {
+          const attData = await attRes.json();
+          if (attData.records && Array.isArray(attData.records)) {
+            attData.records.forEach(r => {
+              const status = r.status === 'Half' ? 'H' : 'P';
+              if (r.universityRoll) attendanceStatusByStudent[r.universityRoll] = status;
+              if (r.classRoll) attendanceStatusByStudent[r.classRoll] = status;
+              if (r.student) {
+                if (r.student.universityRoll) attendanceStatusByStudent[r.student.universityRoll] = status;
+                if (r.student.classRoll) attendanceStatusByStudent[r.student.classRoll] = status;
+              }
+            });
+          }
+        }
       } catch (err) {
-        console.warn(`Could not fetch live students for semester ${sem}:`, err);
+        console.warn(`Could not fetch live students or attendance for semester ${sem}:`, err);
       }
 
       renderAbsentStudents(sem);

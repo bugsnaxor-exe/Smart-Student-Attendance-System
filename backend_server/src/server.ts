@@ -8,7 +8,7 @@ import { requireAuth, requireRole } from './middleware/auth_middleware';
 import { AuthController } from './controllers/auth_controller';
 import { SessionController, registerSessionBroadcaster } from './controllers/session_controller';
 import { AttendanceController, registerAttendanceBroadcaster } from './controllers/attendance_controller';
-import { OverrideController } from './controllers/override_controller';
+import { OverrideController, registerOverrideBroadcaster } from './controllers/override_controller';
 import { GeofenceController } from './controllers/geofence_controller';
 import { SheetsController } from './controllers/sheets_controller';
 
@@ -53,6 +53,7 @@ function broadcastToAll(payload: any) {
 // Register real-time broadcasters
 registerAttendanceBroadcaster(broadcastToAll);
 registerSessionBroadcaster(broadcastToAll);
+registerOverrideBroadcaster(broadcastToAll);
 
 // Health check & System Info
 app.get('/api/status', (req, res) => {

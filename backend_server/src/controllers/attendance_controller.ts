@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth_middleware';
 import { prisma } from '../config/database';
-import { GeofenceService } from '../services/geofence_service';
+import { GeofenceService, getKolkataTime } from '../services/geofence_service';
 import { GoogleSheetsService } from '../services/sheets_service';
 import { SessionService } from '../services/session_service';
 
@@ -115,7 +115,8 @@ export class AttendanceController {
       }
 
       // 7. Save Attendance Record with Status "Full"
-      const todayDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
+      const kolkata = getKolkataTime();
+      const todayDate = kolkata.dateString; // YYYY-MM-DD in Kolkata Mean Time
       const record = await prisma.attendanceRecord.upsert({
         where: {
           studentId_subjectId_date: {
@@ -340,7 +341,8 @@ export class AttendanceController {
       const { subjectId } = req.params;
       const { date } = req.query;
 
-      const targetDate = (date as string) || new Date().toISOString().split('T')[0];
+      const kolkata = getKolkataTime();
+      const targetDate = (date as string) || kolkata.dateString;
 
       const subject = await prisma.subject.findFirst({
         where: {

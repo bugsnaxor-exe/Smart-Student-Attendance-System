@@ -17,6 +17,58 @@ export interface TimeValidationResult {
   reason?: string;
 }
 
+export function getKolkataTime(date: Date = new Date()): {
+  hours: number;
+  minutes: number;
+  totalMinutes: number;
+  formattedTime: string;
+  dateString: string;
+  year: number;
+  month: number;
+  day: number;
+} {
+  // Use Intl.DateTimeFormat explicitly with Asia/Kolkata timezone
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+
+  const parts = formatter.formatToParts(date);
+  const getPart = (type: string) => parts.find((p) => p.type === type)?.value || '';
+
+  const day = parseInt(getPart('day'), 10) || date.getDate();
+  const month = parseInt(getPart('month'), 10) || date.getMonth() + 1;
+  const year = parseInt(getPart('year'), 10) || date.getFullYear();
+  const hourStr = getPart('hour') || '10';
+  const minuteStr = getPart('minute') || '15';
+  const dayPeriod = (getPart('dayPeriod') || 'AM').toUpperCase();
+
+  let hours24 = parseInt(hourStr, 10);
+  if (dayPeriod === 'PM' && hours24 !== 12) hours24 += 12;
+  if (dayPeriod === 'AM' && hours24 === 12) hours24 = 0;
+
+  const minutes = parseInt(minuteStr, 10);
+  const totalMinutes = hours24 * 60 + minutes;
+  const formattedTime = `${hourStr}:${minuteStr.padStart(2, '0')} ${dayPeriod}`;
+  const dateString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+  return {
+    hours: hours24,
+    minutes,
+    totalMinutes,
+    formattedTime,
+    dateString,
+    year,
+    month,
+    day,
+  };
+}
+
 export class GeofenceService {
   /**
    * Calculates the Great-Circle distance between two points in meters using the Haversine Formula.
@@ -92,36 +144,27 @@ export class GeofenceService {
   }
 
   /**
-   * Validates if current timestamp is within standard college hours (10:15 AM to 5:00 PM).
+   * Validates if current timestamp is within standard college hours (10:15 AM to 5:00 PM IST / Kolkata).
    * Standard College Hours:
    *  Start: 10:15 AM (615 minutes from midnight)
    *  End:   5:00 PM (1020 minutes from midnight / 17:00)
    */
   public static validateCollegeHours(date: Date = new Date()): TimeValidationResult {
-    // Format time in 12-hour format
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    const totalMinutes = hours * 60 + minutes;
-
+    const kolkata = getKolkataTime(date);
     const startMinutes = 10 * 60 + 15; // 10:15 AM -> 615
     const endMinutes = 17 * 60;        // 05:00 PM -> 1020
 
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const displayHours = hours % 12 || 12;
-    const displayMinutes = minutes < 10 ? `0${minutes}` : minutes;
-    const formattedTime = `${displayHours}:${displayMinutes} ${ampm}`;
-
-    if (totalMinutes < startMinutes || totalMinutes > endMinutes) {
+    if (kolkata.totalMinutes < startMinutes || kolkata.totalMinutes > endMinutes) {
       return {
         isValid: false,
-        formattedTime,
-        reason: `Attendance is only permitted during college hours (10:15 AM to 5:00 PM). Current time: ${formattedTime}`,
+        formattedTime: kolkata.formattedTime,
+        reason: `Attendance is only permitted during college hours (10:15 AM to 5:00 PM IST / Kolkata). Current time: ${kolkata.formattedTime}`,
       };
     }
 
     return {
       isValid: true,
-      formattedTime,
+      formattedTime: kolkata.formattedTime,
     };
   }
 }

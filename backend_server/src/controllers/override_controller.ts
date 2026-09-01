@@ -2,7 +2,14 @@ import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth_middleware';
 import { prisma } from '../config/database';
 import { GoogleSheetsService } from '../services/sheets_service';
-import { GeofenceService } from '../services/geofence_service';
+import { GeofenceService, getKolkataTime } from '../services/geofence_service';
+
+type OverrideBroadcastCallback = (data: any) => void;
+let overrideBroadcastCallback: OverrideBroadcastCallback | null = null;
+
+export function registerOverrideBroadcaster(callback: OverrideBroadcastCallback) {
+  overrideBroadcastCallback = callback;
+}
 
 export class OverrideController {
   /**
@@ -14,7 +21,8 @@ export class OverrideController {
       const { subjectId } = req.params;
       const { date } = req.query;
 
-      const targetDate = (date as string) || new Date().toISOString().split('T')[0];
+      const kolkata = getKolkataTime();
+      const targetDate = (date as string) || kolkata.dateString;
 
       const subject = await prisma.subject.findFirst({
         where: {
@@ -121,9 +129,8 @@ export class OverrideController {
         return res.status(404).json({ error: 'Student not found.' });
       }
 
-      const targetDate = date || new Date().toISOString().split('T')[0];
-      const now = new Date();
-      const timeValidation = GeofenceService.validateCollegeHours(now);
+      const kolkata = getKolkataTime();
+      const targetDate = date || kolkata.dateString;
 
       // Create or update attendance record as "Half"
       const record = await prisma.attendanceRecord.upsert({
@@ -138,18 +145,17 @@ export class OverrideController {
           studentId: student.id,
           subjectId: subject.id,
           date: targetDate,
-          time: timeValidation.formattedTime,
+          time: kolkata.formattedTime,
           status: 'Half',
           syncedToSheet: false,
         },
         update: {
           status: 'Half',
-          time: timeValidation.formattedTime,
+          time: kolkata.formattedTime,
         },
       });
 
       // Append row to Teacher's Google Sheet
-      // Format: Date | Class Roll | University Roll | Registration Number | Student Name | Status
       let sheetSyncSuccess = false;
       if (subject.googleSheetId) {
         const sheetRes = await GoogleSheetsService.appendAttendanceRow(
@@ -174,11 +180,31 @@ export class OverrideController {
         }
       }
 
+      // Broadcast real-time event to Web App & Mobile App
+      if (overrideBroadcastCallback) {
+        overrideBroadcastCallback({
+          type: 'STUDENT_CHECK_IN',
+          subjectId: subject.id,
+          subjectCode: subject.code,
+          subjectName: subject.name,
+          student: {
+            id: student.id,
+            name: student.user.name,
+            classRoll: student.classRoll,
+            universityRoll: student.universityRoll,
+            regNumber: student.regNumber,
+          },
+          status: 'Half',
+          date: targetDate,
+          time: kolkata.formattedTime,
+        });
+      }
+
       return res.json({
         message: `Half attendance granted for ${student.user.name} (${student.classRoll}).`,
         status: 'Half',
         date: targetDate,
-        time: timeValidation.formattedTime,
+        time: kolkata.formattedTime,
         sheetSynced: sheetSyncSuccess,
         attendance: record,
       });
@@ -200,9 +226,57 @@ export class OverrideController {
         studentName,
         status = 'Half',
         date,
+        subjectCode = 'MCA-301',
       } = req.body;
 
-      const targetDate = date || new Date().toISOString().split('T')[0];
+      const kolkata = getKolkataTime();
+      const targetDate = date || kolkata.dateString;
+
+      // Find student and subject to save to PostgreSQL
+      const student = await prisma.studentProfile.findFirst({
+        where: {
+          OR: [
+            { universityRoll: universityRoll || 'N/A' },
+            { classRoll: classRoll || 'N/A' },
+            { regNumber: registrationNumber || 'N/A' },
+          ],
+        },
+        include: { user: true },
+      });
+
+      const subject = await prisma.subject.findFirst({
+        where: {
+          OR: [
+            { code: { equals: subjectCode, mode: 'insensitive' } },
+            { id: subjectCode },
+          ],
+        },
+      });
+
+      let dbRecord = null;
+      if (student && subject) {
+        dbRecord = await prisma.attendanceRecord.upsert({
+          where: {
+            studentId_subjectId_date: {
+              studentId: student.id,
+              subjectId: subject.id,
+              date: targetDate,
+            },
+          },
+          create: {
+            studentId: student.id,
+            subjectId: subject.id,
+            date: targetDate,
+            time: kolkata.formattedTime,
+            status: status === 'Full' ? 'Full' : 'Half',
+            syncedToSheet: false,
+          },
+          update: {
+            status: status === 'Full' ? 'Full' : 'Half',
+            time: kolkata.formattedTime,
+          },
+        });
+      }
 
       let sheetSyncSuccess = false;
       let sheetMessage = '';
@@ -212,10 +286,10 @@ export class OverrideController {
           spreadsheetId,
           {
             date: targetDate,
-            classRoll: classRoll || 'MCA-26-042',
-            universityRoll: universityRoll || '12000126042',
-            registrationNumber: registrationNumber || 'REG-2026-9042',
-            studentName: studentName || 'Student',
+            classRoll: classRoll || student?.classRoll || 'MCA-26-042',
+            universityRoll: universityRoll || student?.universityRoll || '12000126042',
+            registrationNumber: registrationNumber || student?.regNumber || 'REG-2026-9042',
+            studentName: studentName || student?.user?.name || 'Student',
             status: status === 'Full' ? 'Full' : 'Half',
           }
         );
@@ -225,12 +299,34 @@ export class OverrideController {
         sheetMessage = 'No Google Spreadsheet ID provided.';
       }
 
+      // Broadcast real-time check-in to Mobile App & Web App
+      if (overrideBroadcastCallback && (student || classRoll)) {
+        overrideBroadcastCallback({
+          type: 'STUDENT_CHECK_IN',
+          subjectId: subject?.id || '',
+          subjectCode: subject?.code || subjectCode,
+          subjectName: subject?.name || 'Subject',
+          student: {
+            id: student?.id || '',
+            name: studentName || student?.user?.name || 'Student',
+            classRoll: classRoll || student?.classRoll || '',
+            universityRoll: universityRoll || student?.universityRoll || '',
+            regNumber: registrationNumber || student?.regNumber || '',
+          },
+          status: status === 'Full' ? 'Full' : 'Half',
+          date: targetDate,
+          time: kolkata.formattedTime,
+        });
+      }
+
       return res.json({
         success: true,
         message: `Attendance mark '${status === 'Full' ? 'P' : 'H'}' recorded for ${studentName}.`,
         sheetSynced: sheetSyncSuccess,
         sheetMessage,
         date: targetDate,
+        time: kolkata.formattedTime,
+        attendance: dbRecord,
       });
     } catch (error: any) {
       return res.status(500).json({ error: error.message });

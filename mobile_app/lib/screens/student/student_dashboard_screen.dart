@@ -219,6 +219,11 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     final student = auth.currentUser?.student;
     final stats = attendance.dashboardStats;
 
+    // Trigger popup check on every state update
+    if (attendance.activeStudentSessions.isNotEmpty) {
+      _checkAndPromptLiveSession(attendance.activeStudentSessions);
+    }
+
     final currentSemCurriculum = mcaCurriculum[_selectedSemester] ?? [];
 
     return Scaffold(

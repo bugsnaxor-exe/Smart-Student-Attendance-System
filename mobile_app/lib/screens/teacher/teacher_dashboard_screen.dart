@@ -25,6 +25,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   String? _activeSessionId;
   int _countdownSeconds = 900; // 15 mins
   Timer? _sessionTimer;
+  Timer? _syncTimer;
 
   // Session limits (Max 3 per day)
   final Map<String, int> _sessionCountsByCourse = {};
@@ -96,11 +97,16 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
       _loadStudentsForSemester(_selectedSemester);
       _fetchTodayCheckIns();
     });
+
+    _syncTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (mounted) _fetchTodayCheckIns();
+    });
   }
 
   @override
   void dispose() {
     _sessionTimer?.cancel();
+    _syncTimer?.cancel();
     _sheetIdController.dispose();
     super.dispose();
   }
@@ -184,7 +190,9 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
 
     if (success && mounted) {
       _sessionTimer?.cancel();
+      final sessionId = attendance.currentActiveSessionId;
       setState(() {
+        _activeSessionId = sessionId;
         _isSessionActive = true;
         _countdownSeconds = 900;
         _sessionCountsByCourse[_selectedCourseCode!] = count + 1;
@@ -216,6 +224,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     }
     setState(() {
       _isSessionActive = false;
+      _activeSessionId = null;
       _countdownSeconds = 0;
     });
     ScaffoldMessenger.of(context).showSnackBar(
@@ -653,6 +662,16 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
     final attendance = Provider.of<AttendanceProvider>(context);
+
+    // Sync live check-ins into local status map
+    for (final rec in attendance.liveTeacherCheckIns) {
+      if (rec.universityRoll.isNotEmpty) {
+        _attendanceStatusByUniRoll[rec.universityRoll] = (rec.status == 'Half') ? 'H' : 'P';
+      }
+      if (rec.classRoll.isNotEmpty) {
+        _attendanceStatusByUniRoll[rec.classRoll] = (rec.status == 'Half') ? 'H' : 'P';
+      }
+    }
 
     final courses = _curriculum[_selectedSemester] ?? [];
     final currentCount = _sessionCountsByCourse[_selectedCourseCode ?? ''] ?? 0;

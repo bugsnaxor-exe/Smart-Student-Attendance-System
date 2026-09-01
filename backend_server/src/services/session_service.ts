@@ -1,4 +1,5 @@
 import { prisma } from '../config/database';
+import { getKolkataTime } from './geofence_service';
 
 export class SessionService {
   /**
@@ -13,9 +14,10 @@ export class SessionService {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + durationMinutes * 60 * 1000);
 
-    // 0. Check daily session limit (Maximum 3 sessions per subject per day)
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+    // 0. Check daily session limit (Maximum 3 sessions per subject per day in Kolkata IST)
+    const kolkata = getKolkataTime(now);
+    const startOfDay = new Date(`${kolkata.dateString}T00:00:00+05:30`);
+    const endOfDay = new Date(`${kolkata.dateString}T23:59:59+05:30`);
 
     const todaySessionsCount = await prisma.activeSession.count({
       where: {

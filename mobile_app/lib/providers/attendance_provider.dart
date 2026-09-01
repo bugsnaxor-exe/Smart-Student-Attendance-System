@@ -166,6 +166,9 @@ class AttendanceProvider extends ChangeNotifier {
     }
   }
 
+  String? _currentActiveSessionId;
+  String? get currentActiveSessionId => _currentActiveSessionId;
+
   /// Teacher: Starts a 15-minute active session
   Future<bool> startSession(String subjectId, {int durationMinutes = 15}) async {
     _isLoading = true;
@@ -175,6 +178,7 @@ class AttendanceProvider extends ChangeNotifier {
       final res = await ApiService.startTeacherSession(subjectId, durationMinutes: durationMinutes);
       _isLoading = false;
       if (res['session'] != null) {
+        _currentActiveSessionId = res['session']['id'] as String?;
         _statusMessage = res['message'];
         notifyListeners();
         return true;
