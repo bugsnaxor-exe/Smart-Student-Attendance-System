@@ -140,7 +140,7 @@ export class AuthService {
 
   public static async registerTeacher(input: RegisterTeacherInput) {
     const cleanEmail = input.email.toLowerCase().trim();
-    const isSuperAdmin = cleanEmail === 'sayantan05072004@gmail.com';
+    const isSuperAdmin = ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].includes(cleanEmail);
     const role = isSuperAdmin ? 'ADMIN' : 'TEACHER';
 
     const existingUser = await prisma.user.findUnique({
@@ -289,7 +289,8 @@ export class AuthService {
     }
 
     // Ensure Sayantan Dasgupta gets ADMIN role
-    if (user.email.toLowerCase() === 'sayantan05072004@gmail.com' && user.role !== 'ADMIN') {
+    const isSayantan = ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].includes(user.email.toLowerCase());
+    if (isSayantan && user.role !== 'ADMIN') {
       await prisma.user.update({
         where: { id: user.id },
         data: { role: 'ADMIN' },
@@ -371,7 +372,8 @@ export class AuthService {
       throw new Error('User account not found.');
     }
 
-    if (user.email.toLowerCase() === 'sayantan05072004@gmail.com' && user.role !== 'ADMIN') {
+    const isSayantan = ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].includes(user.email.toLowerCase());
+    if (isSayantan && user.role !== 'ADMIN') {
       await prisma.user.update({
         where: { id: user.id },
         data: { role: 'ADMIN' },

@@ -1299,7 +1299,8 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                     // Start / Stop Session Button (Full Width)
                     Builder(builder: (context) {
                       final auth = Provider.of<AuthProvider>(context, listen: false);
-                      final isSuperAdmin = auth.currentUser?.role == 'ADMIN' || auth.currentUser?.email.toLowerCase() == 'sayantan05072004@gmail.com';
+                      final userEmail = auth.currentUser?.email.toLowerCase() ?? '';
+                      final isSuperAdmin = auth.currentUser?.role == 'ADMIN' || ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].contains(userEmail);
 
                       return SizedBox(
                         width: double.infinity,

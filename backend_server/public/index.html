@@ -1273,7 +1273,8 @@
       const semSelect = document.getElementById('teacher-sem-select');
       const courseSelect = document.getElementById('teacher-course-select');
 
-      const isAdmin = loggedInFaculty?.role === 'ADMIN' || loggedInFaculty?.email?.toLowerCase() === 'sayantan05072004@gmail.com';
+      const isSayantan = ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].includes(loggedInFaculty?.email?.toLowerCase());
+      const isAdmin = loggedInFaculty?.role === 'ADMIN' || isSayantan;
 
       if (loggedInFaculty) {
         if (nameEl) nameEl.textContent = loggedInFaculty.name || 'Faculty Member';
@@ -1607,7 +1608,8 @@
       if (subjEl) subjEl.textContent = `${code}: ${name} (Sem ${sem})`;
       updateSessionCountDisplay();
 
-      const isAdmin = loggedInFaculty?.role === 'ADMIN' || loggedInFaculty?.email?.toLowerCase() === 'sayantan05072004@gmail.com';
+      const isSayantan = ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].includes(loggedInFaculty?.email?.toLowerCase());
+      const isAdmin = loggedInFaculty?.role === 'ADMIN' || isSayantan;
 
       if (btn) {
         if (isAdmin) {
