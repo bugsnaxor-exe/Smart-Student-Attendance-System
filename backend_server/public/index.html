@@ -730,18 +730,45 @@
     }
 
     // --- AUTHENTICATION FUNCTIONS ---
-    function checkStoredAuth() {
+    async function checkStoredAuth() {
       const storedUser = localStorage.getItem('edu_faculty_user');
-      if (storedUser) {
+      const token = localStorage.getItem('edu_faculty_token');
+
+      if (storedUser && token) {
         try {
           loggedInFaculty = JSON.parse(storedUser);
           showDashboardView();
-          return;
+
+          // Verify token against database to ensure user still exists
+          const res = await fetch('/api/auth/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            if (data.user) {
+              loggedInFaculty = data.user;
+              localStorage.setItem('edu_faculty_user', JSON.stringify(data.user));
+              showDashboardView();
+              return;
+            }
+          } else {
+            // User does not exist in database anymore, clean stale session
+            console.warn('Stale faculty session detected. Redirecting to login.');
+            localStorage.removeItem('edu_faculty_user');
+            localStorage.removeItem('edu_faculty_token');
+            localStorage.removeItem('faculty_active_sem');
+            localStorage.removeItem('faculty_active_subject');
+            loggedInFaculty = null;
+            showAuthView();
+            return;
+          }
         } catch (e) {
-          localStorage.removeItem('edu_faculty_user');
+          console.warn('Could not verify auth with server:', e);
         }
+      } else {
+        showAuthView();
       }
-      showAuthView();
     }
 
     function switchAuthTab(tab) {
