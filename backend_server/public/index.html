@@ -668,7 +668,7 @@
     };
 
     // Live Enrolled Student Roster (Populated from database)
-    const enrolledStudents = {
+    let enrolledStudents = {
       1: [],
       2: [],
       3: [],
@@ -681,8 +681,8 @@
     let activeSession = null;
     let sessionTimer = 0;
     let timerInterval = null;
-    const sessionCountsByCourse = {};
-    const attendanceStatusByStudent = {}; // Key: uniRoll -> 'P' | 'H' | null
+    let sessionCountsByCourse = {};
+    let attendanceStatusByStudent = {}; // Key: uniRoll -> 'P' | 'H' | null
 
     // Get current Kolkata / IST date in YYYY-MM-DD format
     function getTodayDateStr() {
@@ -1378,6 +1378,7 @@
 
       if (banner) banner.classList.remove('hidden');
       if (subjEl) subjEl.textContent = `${code}: ${name} (Sem ${sem})`;
+      updateSessionCountDisplay();
 
       if (btn) {
         btn.disabled = false;
@@ -1492,13 +1493,19 @@
 
         const data = await res.json();
         if (data.session) {
-          sessionCountsByCourse[courseCode] = currentCount + 1;
+          const code = data.session.subjectCode || data.session.subjectId || courseCode;
+          if (data.sessionsConductedToday !== undefined) {
+            sessionCountsByCourse[code] = data.sessionsConductedToday;
+          } else {
+            sessionCountsByCourse[code] = currentCount + 1;
+          }
           // Clear previous check-ins for the fresh new session
           attendanceStatusByStudent = {};
           renderAbsentStudents(currentTeacherSem);
           renderMatrixGoogleSheet(currentTeacherSem);
           updateSessionCountDisplay();
           applyActiveSessionState(data.session, data.session.remainingSeconds || 900);
+          fetchSessionCountsToday();
         } else {
           alert('⚠️ ' + (data.error || 'Could not start attendance session.'));
         }

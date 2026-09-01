@@ -152,8 +152,13 @@ export class SessionController {
         });
       }
 
+      const sessionsConductedToday = await SessionService.getTodaySessionsCount(subject.id);
+
       return res.status(201).json({
         message: `Attendance session started for ${subject.name} (${subject.code}). Auto-expires in ${durationMinutes} minutes.`,
+        sessionsConductedToday,
+        remainingDailySessions: Math.max(0, 3 - sessionsConductedToday),
+        maxDailySessions: 3,
         session: {
           ...session,
           remainingSeconds: durationMinutes * 60,
