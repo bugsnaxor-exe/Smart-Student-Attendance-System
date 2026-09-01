@@ -192,11 +192,20 @@ export class GoogleSheetsService {
   public static async recordStudentAttendanceInMatrix(
     spreadsheetId: string,
     rowData: AttendanceSheetRow,
-    tabName: string = 'Attendance'
+    tabName: string = 'Attendance',
+    isMirror: boolean = false
   ): Promise<{ success: boolean; message: string }> {
     const targetSheetId = (spreadsheetId && spreadsheetId.trim().length > 0)
       ? spreadsheetId.trim()
       : (process.env.MASTER_GOOGLE_SHEET_ID || process.env.GOOGLE_SPREADSHEET_ID || '1KN_lGqkfzE7CBdiceE8VEneQ-37vsuGFz2jTvRhsPFk');
+
+    // Dual Mirroring: If writing to a faculty's sheet, automatically mirror into Master Admin Sheet in parallel
+    const masterSheetId = (process.env.MASTER_GOOGLE_SHEET_ID || '1KN_lGqkfzE7CBdiceE8VEneQ-37vsuGFz2jTvRhsPFk').trim();
+    if (!isMirror && masterSheetId && targetSheetId !== masterSheetId) {
+      this.recordStudentAttendanceInMatrix(masterSheetId, rowData, tabName, true).catch((err) => {
+        console.warn('⚠️ Master Google Sheet Mirror sync warning:', err.message);
+      });
+    }
 
     const sheets = this.getClient();
     const mark = rowData.status === 'Full' ? 'P' : 'H';
