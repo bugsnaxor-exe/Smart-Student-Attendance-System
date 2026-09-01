@@ -207,6 +207,27 @@ class ApiService {
   }
 
   // --- GOOGLE SHEETS MANAGEMENT ---
+  static Future<Map<String, dynamic>> getActiveSheet() async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/sheets/active-sheet'),
+      headers: await _getHeaders(),
+    );
+    return jsonDecode(res.body);
+  }
+
+  static Future<Map<String, dynamic>> linkGlobalSheet(String spreadsheetId, {String? tabName}) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/sheets/link-sheet'),
+      headers: await _getHeaders(),
+      body: jsonEncode({
+        'googleSheetId': spreadsheetId,
+        'spreadsheetId': spreadsheetId,
+        'sheetTabName': tabName ?? 'Attendance',
+      }),
+    );
+    return jsonDecode(res.body);
+  }
+
   static Future<Map<String, dynamic>> getServiceAccountInfo() async {
     final res = await http.get(
       Uri.parse('$baseUrl/sheets/service-account'),
@@ -233,6 +254,7 @@ class ApiService {
       headers: await _getHeaders(),
       body: jsonEncode({
         'spreadsheetId': spreadsheetId,
+        'save': true,
       }),
     );
     return jsonDecode(res.body);

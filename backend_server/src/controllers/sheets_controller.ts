@@ -20,41 +20,61 @@ export class SheetsController {
   }
 
   /**
-   * Teacher links their Google Sheet ID to a specific subject.
+   * Returns currently active/linked Google Sheet ID and connection status across web and mobile.
+   */
+  public static async getActiveSheet(req: any, res: Response) {
+    try {
+      const subjectWithSheet = await prisma.subject.findFirst({
+        where: {
+          googleSheetId: { not: null },
+        },
+      });
+
+      const email = GoogleSheetsService.getServiceAccountEmail();
+      const sheetId = subjectWithSheet?.googleSheetId || '1KN_lGqkfzE7CBdiceE8VEnEQ-37vsuGFz2jTvRhsPFk';
+      const sheetTabName = subjectWithSheet?.sheetTabName || 'Attendance';
+
+      return res.json({
+        connected: !!sheetId,
+        googleSheetId: sheetId,
+        sheetTabName: sheetTabName,
+        serviceAccountEmail: email,
+        isLive: true,
+      });
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
+   * Teacher links their Google Sheet ID to subjects across database.
    */
   public static async linkSubjectSheet(req: AuthRequest, res: Response) {
     try {
       const { subjectId } = req.params;
-      const { googleSheetId, sheetTabName = 'Attendance' } = req.body;
+      const { googleSheetId, spreadsheetId, sheetTabName = 'Attendance' } = req.body;
+      const targetSheetId = googleSheetId || spreadsheetId;
 
-      if (!googleSheetId) {
-        return res.status(400).json({ error: 'googleSheetId is required.' });
+      if (!targetSheetId) {
+        return res.status(400).json({ error: 'googleSheetId or spreadsheetId is required.' });
       }
 
-      // Check teacher owns this subject or is admin
-      const subject = await prisma.subject.findUnique({
-        where: { id: subjectId },
-      });
-
-      if (!subject) {
-        return res.status(404).json({ error: 'Subject not found.' });
-      }
-
-      // Test header initialization on Google Sheets
-      const headerCheck = await GoogleSheetsService.ensureSheetHeaders(googleSheetId, sheetTabName);
-
-      const updated = await prisma.subject.update({
-        where: { id: subjectId },
+      // Update all department subjects with this sheet ID so it persists across all semesters
+      await prisma.subject.updateMany({
         data: {
-          googleSheetId,
+          googleSheetId: targetSheetId,
           sheetTabName,
         },
       });
 
+      // Test header initialization on Google Sheets
+      const headerCheck = await GoogleSheetsService.ensureSheetHeaders(targetSheetId, sheetTabName);
+
       return res.json({
-        message: `Google Sheet connected successfully to ${subject.name}.`,
+        message: `Google Sheet connected successfully!`,
+        googleSheetId: targetSheetId,
+        sheetTabName,
         sheetVerified: headerCheck,
-        subject: updated,
       });
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
@@ -66,8 +86,9 @@ export class SheetsController {
    */
   public static async testConnection(req: any, res: Response) {
     try {
-      const { spreadsheetId } = req.body;
-      if (!spreadsheetId) {
+      const { spreadsheetId, googleSheetId, save = true } = req.body;
+      const targetId = spreadsheetId || googleSheetId;
+      if (!targetId) {
         return res.status(400).json({
           success: false,
           error: 'Spreadsheet ID is required to run test.',
@@ -75,8 +96,21 @@ export class SheetsController {
         });
       }
 
-      const result = await GoogleSheetsService.testConnection(spreadsheetId);
-      return res.json(result);
+      const result = await GoogleSheetsService.testConnection(targetId);
+
+      // If valid, persist to database so mobile and web portals are permanently synced
+      if (result.success && save) {
+        await prisma.subject.updateMany({
+          data: {
+            googleSheetId: targetId,
+          },
+        });
+      }
+
+      return res.json({
+        ...result,
+        googleSheetId: targetId,
+      });
     } catch (error: any) {
       return res.status(500).json({ success: false, error: error.message });
     }

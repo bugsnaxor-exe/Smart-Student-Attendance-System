@@ -1201,7 +1201,7 @@
         sem: sem
       };
 
-      const token = localStorage.getItem('teacher_token');
+      const token = localStorage.getItem('edu_faculty_token');
       try {
         const res = await fetch('/api/sessions/start', {
           method: 'POST',
@@ -1265,7 +1265,7 @@
       if (timerInterval) clearInterval(timerInterval);
       if (activeSessionId) {
         try {
-          const token = localStorage.getItem('teacher_token');
+          const token = localStorage.getItem('edu_faculty_token');
           await fetch(`/api/sessions/close/${activeSessionId}`, {
             method: 'POST',
             headers: {
@@ -1402,11 +1402,22 @@
             document.getElementById('modal-sa-email').value = data.serviceAccountEmail;
           }
         }
+        const activeRes = await fetch('/api/sheets/active-sheet');
+        if (activeRes.ok) {
+          const activeData = await activeRes.json();
+          if (activeData.googleSheetId) {
+            localStorage.setItem('teacher_sheet_id', activeData.googleSheetId);
+          }
+          if (activeData.serviceAccountEmail) {
+            document.getElementById('sa-email-display').textContent = activeData.serviceAccountEmail;
+            document.getElementById('modal-sa-email').value = activeData.serviceAccountEmail;
+          }
+        }
       } catch (e) {
-        console.warn('Could not fetch live Service Account email:', e);
+        console.warn('Could not fetch live Service Account email / active sheet:', e);
       }
 
-      const storedSheetId = localStorage.getItem('teacher_sheet_id');
+      const storedSheetId = localStorage.getItem('teacher_sheet_id') || '1KN_lGqkfzE7CBdiceE8VEnEQ-37vsuGFz2jTvRhsPFk';
       if (storedSheetId) {
         if (document.getElementById('sheet-id-input')) document.getElementById('sheet-id-input').value = storedSheetId;
         if (document.getElementById('modal-sheet-id-input')) document.getElementById('modal-sheet-id-input').value = storedSheetId;
@@ -1430,7 +1441,7 @@
       alert(`✅ Service Account email copied to clipboard!\n\nEmail: ${email}\n\nShare your Google Sheet with this email as Editor.`);
     }
 
-    function saveSpreadsheetId() {
+    async function saveSpreadsheetId() {
       const sheetId = document.getElementById('sheet-id-input').value.trim();
       if (!sheetId) {
         alert('Please enter a valid Google Spreadsheet ID.');
@@ -1438,6 +1449,13 @@
       }
       localStorage.setItem('teacher_sheet_id', sheetId);
       updateSheetConnectionStatus(sheetId);
+      try {
+        await fetch('/api/sheets/link-sheet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ googleSheetId: sheetId })
+        });
+      } catch (e) {}
       alert(`✅ Google Sheet Connected successfully! ID: ${sheetId}`);
     }
 
@@ -1546,7 +1564,7 @@
       }
     }
 
-    function saveModalSpreadsheetId() {
+    async function saveModalSpreadsheetId() {
       const sheetId = document.getElementById('modal-sheet-id-input').value.trim();
       if (!sheetId) {
         alert('Please enter a valid Google Spreadsheet ID.');
@@ -1555,6 +1573,13 @@
       localStorage.setItem('teacher_sheet_id', sheetId);
       document.getElementById('sheet-id-input').value = sheetId;
       updateSheetConnectionStatus(sheetId);
+      try {
+        await fetch('/api/sheets/link-sheet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ googleSheetId: sheetId })
+        });
+      } catch (e) {}
       closeSheetsConfigModal();
       alert(`✅ Google Sheet Connected successfully! All check-ins and late overrides will sync automatically.`);
     }

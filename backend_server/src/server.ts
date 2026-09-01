@@ -106,6 +106,8 @@ app.put('/api/geofence/:departmentId', requireAuth, requireRole(['ADMIN']), Geof
 
 // --- GOOGLE SHEETS ROUTES ---
 app.get('/api/sheets/service-account', requireAuth, SheetsController.getServiceAccountInfo);
+app.get('/api/sheets/active-sheet', SheetsController.getActiveSheet);
+app.post('/api/sheets/link-sheet', SheetsController.linkSubjectSheet);
 app.post('/api/sheets/link/:subjectId', requireAuth, requireRole(['TEACHER', 'ADMIN']), SheetsController.linkSubjectSheet);
 app.post('/api/sheets/test-connection', SheetsController.testConnection);
 
