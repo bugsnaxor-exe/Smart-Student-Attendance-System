@@ -16,10 +16,10 @@ class _StudentRegisterScreenState extends State<StudentRegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _classRollController = TextEditingController();
-  final _uniRollController = TextEditingController();
   final _regNumberController = TextEditingController();
-  final _deptCodeController = TextEditingController(text: 'CSE');
-  int _selectedSemester = 5;
+  final _regYearController = TextEditingController(text: '2025-2026');
+  final _deptCodeController = TextEditingController(text: 'MCA');
+  int _selectedSemester = 3;
 
   void _handleRegister() async {
     if (_nameController.text.isEmpty ||
@@ -180,24 +180,42 @@ class _StudentRegisterScreenState extends State<StudentRegisterScreen> {
               ),
               const SizedBox(height: 14),
 
-              // Semester Dropdown
-              DropdownButtonFormField<int>(
-                value: _selectedSemester,
-                style: const TextStyle(color: AppTheme.charcoal, fontSize: 14),
-                dropdownColor: AppTheme.creamCard,
-                decoration: const InputDecoration(
-                  labelText: 'Current Semester',
-                  prefixIcon: Icon(Icons.layers_outlined, color: AppTheme.charcoalMuted, size: 20),
-                ),
-                items: List.generate(8, (i) => i + 1)
-                    .map((sem) => DropdownMenuItem(
-                          value: sem,
-                          child: Text('Semester $sem'),
-                        ))
-                    .toList(),
-                onChanged: (val) {
-                  if (val != null) setState(() => _selectedSemester = val);
-                },
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _regYearController,
+                      keyboardType: TextInputType.text,
+                      style: const TextStyle(color: AppTheme.charcoal, fontSize: 14),
+                      decoration: const InputDecoration(
+                        labelText: 'Reg. Year',
+                        hintText: 'e.g. 2025-2026',
+                        prefixIcon: Icon(Icons.calendar_today_outlined, color: AppTheme.charcoalMuted, size: 18),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: DropdownButtonFormField<int>(
+                      value: _selectedSemester,
+                      style: const TextStyle(color: AppTheme.charcoal, fontSize: 14, fontWeight: FontWeight.w700),
+                      dropdownColor: AppTheme.creamCard,
+                      decoration: const InputDecoration(
+                        labelText: 'Semester',
+                        prefixIcon: Icon(Icons.layers_outlined, color: AppTheme.charcoalMuted, size: 18),
+                      ),
+                      items: [1, 2, 3, 4]
+                          .map((sem) => DropdownMenuItem(
+                                value: sem,
+                                child: Text('Semester $sem'),
+                              ))
+                          .toList(),
+                      onChanged: (val) {
+                        if (val != null) setState(() => _selectedSemester = val);
+                      },
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 14),
 

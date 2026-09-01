@@ -235,6 +235,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     final attendance = Provider.of<AttendanceProvider>(context, listen: false);
     if (_selectedCourseCode != null) {
       await attendance.grantHalfAttendance(_selectedCourseCode!, studentId);
+      await _fetchTodayCheckIns();
     }
 
     if (mounted) {
@@ -256,7 +257,9 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     );
   }
 
-  void _openExportAuditReportModal() {
+  Future<void> _openExportAuditReportModal() async {
+    await _fetchTodayCheckIns();
+    if (!mounted) return;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -422,9 +425,19 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
 
   Widget _buildAuditReportSheet() {
     final auth = Provider.of<AuthProvider>(context, listen: false);
-    final presentCount = _rosterStudents.where((s) => _attendanceStatusByUniRoll[s['universityRoll']] != null).length;
+    int fullCount = 0;
+    int halfCount = 0;
+    for (final s in _rosterStudents) {
+      final status = _attendanceStatusByUniRoll[s['universityRoll']];
+      if (status == 'P') {
+        fullCount++;
+      } else if (status == 'H') {
+        halfCount++;
+      }
+    }
     final totalCount = _rosterStudents.length;
-    final pct = totalCount > 0 ? ((presentCount / totalCount) * 100).toStringAsFixed(1) : '100.0';
+    final totalWeighted = (fullCount * 1.0) + (halfCount * 0.5);
+    final pct = totalCount > 0 ? ((totalWeighted / totalCount) * 100).toStringAsFixed(1) : '100.0';
 
     final todayStr = '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}';
 
@@ -516,7 +529,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Class Attendance Rate: $pct%', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppTheme.seaGreenDark)),
-                    Text('Students Checked In: $presentCount / $totalCount • Session Active', style: const TextStyle(fontSize: 10, color: AppTheme.seaGreenDark)),
+                    Text('Enrolled: $totalCount • Present: $fullCount • Half Override: $halfCount', style: const TextStyle(fontSize: 10, color: AppTheme.seaGreenDark)),
                   ],
                 ),
                 Container(

@@ -45,8 +45,13 @@ export class AttendanceController {
       }
 
       // 2. Fetch Subject & Teacher Details
-      const subject = await prisma.subject.findUnique({
-        where: { id: subjectId },
+      const subject = await prisma.subject.findFirst({
+        where: {
+          OR: [
+            { id: subjectId },
+            { code: { equals: subjectId, mode: 'insensitive' } },
+          ],
+        },
         include: {
           teacher: {
             include: {
@@ -61,7 +66,7 @@ export class AttendanceController {
       }
 
       // 3. Verify Active 15-Minute Session
-      const activeSession = await SessionService.getActiveSession(subjectId);
+      const activeSession = await SessionService.getActiveSession(subject.id);
       if (!activeSession) {
         return res.status(403).json({
           error: 'No active attendance session for this subject. Please wait for the teacher to start the session.',
@@ -323,9 +328,20 @@ export class AttendanceController {
 
       const targetDate = (date as string) || new Date().toISOString().split('T')[0];
 
+      const subject = await prisma.subject.findFirst({
+        where: {
+          OR: [
+            { id: subjectId },
+            { code: { equals: subjectId, mode: 'insensitive' } },
+          ],
+        },
+      });
+
+      const targetSubjectId = subject ? subject.id : subjectId;
+
       const records = await prisma.attendanceRecord.findMany({
         where: {
-          subjectId,
+          subjectId: targetSubjectId,
           date: targetDate,
         },
         include: {

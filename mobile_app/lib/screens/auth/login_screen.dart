@@ -28,8 +28,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _studentClassRollController = TextEditingController();
   final _studentUniRollController = TextEditingController();
   final _studentRegNoController = TextEditingController();
+  final _studentRegYearController = TextEditingController(text: '2025-2026');
   int _studentSemester = 3;
-  String _studentBatchYear = '2024 - 2026';
 
   // Faculty Controllers
   final _facultyEmailController = TextEditingController();
@@ -47,6 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
     _studentClassRollController.dispose();
     _studentUniRollController.dispose();
     _studentRegNoController.dispose();
+    _studentRegYearController.dispose();
     _facultyEmailController.dispose();
     _facultyPasswordController.dispose();
     _facultyNameController.dispose();
@@ -519,19 +520,33 @@ class _LoginScreenState extends State<LoginScreen> {
         Row(
           children: [
             Expanded(
-              child: DropdownButtonFormField<String>(
-                value: _studentBatchYear,
-                decoration: const InputDecoration(labelText: 'Batch (20__ to __)'),
-                items: ['2023 - 2025', '2024 - 2026', '2025 - 2027', '2026 - 2028', '2027 - 2029'].map((y) => DropdownMenuItem(value: y, child: Text(y, style: const TextStyle(fontSize: 11)))).toList(),
-                onChanged: (val) => setState(() => _studentBatchYear = val ?? '2024 - 2026'),
+              child: TextField(
+                controller: _studentRegYearController,
+                keyboardType: TextInputType.text,
+                style: const TextStyle(fontSize: 13),
+                decoration: const InputDecoration(
+                  labelText: 'Reg. Year',
+                  hintText: 'e.g. 2025-2026',
+                  prefixIcon: Icon(Icons.calendar_today_outlined, size: 16),
+                ),
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: DropdownButtonFormField<int>(
                 value: _studentSemester,
-                decoration: const InputDecoration(labelText: 'Semester'),
-                items: [1, 2, 3, 4].map((s) => DropdownMenuItem(value: s, child: Text('Sem $s', style: const TextStyle(fontSize: 12)))).toList(),
+                dropdownColor: Colors.white,
+                style: const TextStyle(fontSize: 13, color: AppTheme.charcoal, fontWeight: FontWeight.w700),
+                decoration: const InputDecoration(
+                  labelText: 'Semester',
+                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                ),
+                items: [1, 2, 3, 4]
+                    .map((s) => DropdownMenuItem(
+                          value: s,
+                          child: Text('Sem $s', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                        ))
+                    .toList(),
                 onChanged: (val) => setState(() => _studentSemester = val ?? 3),
               ),
             ),

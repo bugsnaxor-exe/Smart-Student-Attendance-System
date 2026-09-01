@@ -16,8 +16,13 @@ export class OverrideController {
 
       const targetDate = (date as string) || new Date().toISOString().split('T')[0];
 
-      const subject = await prisma.subject.findUnique({
-        where: { id: subjectId },
+      const subject = await prisma.subject.findFirst({
+        where: {
+          OR: [
+            { id: subjectId },
+            { code: { equals: subjectId, mode: 'insensitive' } },
+          ],
+        },
       });
 
       if (!subject) {
@@ -27,7 +32,6 @@ export class OverrideController {
       // 1. Get all students enrolled in this department & semester
       const allStudents = await prisma.studentProfile.findMany({
         where: {
-          departmentId: subject.departmentId,
           semester: subject.semester,
         },
         include: {
@@ -41,7 +45,7 @@ export class OverrideController {
       // 2. Get students who already marked attendance today
       const markedAttendances = await prisma.attendanceRecord.findMany({
         where: {
-          subjectId,
+          subjectId: subject.id,
           date: targetDate,
         },
       });
@@ -87,16 +91,27 @@ export class OverrideController {
         return res.status(400).json({ error: 'subjectId and studentId are required.' });
       }
 
-      const subject = await prisma.subject.findUnique({
-        where: { id: subjectId },
+      const subject = await prisma.subject.findFirst({
+        where: {
+          OR: [
+            { id: subjectId },
+            { code: { equals: subjectId, mode: 'insensitive' } },
+          ],
+        },
       });
 
       if (!subject) {
         return res.status(404).json({ error: 'Subject not found.' });
       }
 
-      const student = await prisma.studentProfile.findUnique({
-        where: { id: studentId },
+      const student = await prisma.studentProfile.findFirst({
+        where: {
+          OR: [
+            { id: studentId },
+            { classRoll: studentId },
+            { universityRoll: studentId },
+          ],
+        },
         include: {
           user: true,
         },
