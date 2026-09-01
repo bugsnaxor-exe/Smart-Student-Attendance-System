@@ -157,7 +157,7 @@
             Geofence: 50m
           </span>
           <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-cream-100 text-charcoal-800 border border-cream-200">
-            ⏱️ 15-Min Cutoff
+            <svg class="w-3.5 h-3.5 text-charcoal-700 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>15-Min Cutoff
           </span>
         </div>
 
@@ -259,7 +259,7 @@
         <!-- 2FA 6-Digit OTP Verification Form (Hidden by default) -->
         <form id="form-otp" onsubmit="handleVerifyOtp(event)" class="space-y-4 hidden">
           <div class="p-3.5 bg-seagreen-50/70 border border-seagreen-600/30 rounded-2xl text-center">
-            <span class="text-xs font-bold text-seagreen-900 block">🔐 2-Factor Authentication</span>
+            <span class="text-xs font-bold text-seagreen-900 block"><svg class="w-4 h-4 text-seagreen-800 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>2-Factor Authentication</span>
             <p class="text-[11px] text-seagreen-800 mt-0.5">A 6-digit security OTP was sent to:</p>
             <p id="otp-target-email" class="font-mono text-xs font-bold text-charcoal-900 break-all mt-1 bg-white p-1.5 rounded-lg border border-seagreen-200"></p>
           </div>
@@ -270,7 +270,7 @@
           </div>
 
           <div class="flex items-center justify-between text-xs px-1">
-            <span id="otp-timer-display" class="font-mono text-charcoal-700 font-bold">⏱️ Expires in 05:00</span>
+            <span id="otp-timer-display" class="font-mono text-charcoal-700 font-bold">Expires in 05:00</span>
             <button type="button" id="btn-resend-otp" onclick="resendOtpCode()" class="font-bold text-seagreen-700 hover:underline">Resend Code</button>
           </div>
 
@@ -324,7 +324,7 @@
         
         <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 pb-3 border-b border-cream-100 gap-2">
           <div>
-            <h3 class="text-sm font-bold text-charcoal-900">⚡ Attendance Session Launcher</h3>
+            <h3 class="text-sm font-bold text-charcoal-900"><svg class="w-4 h-4 text-seagreen-700 inline-block mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>Attendance Session Launcher</h3>
             <p class="text-xs text-charcoal-700">Select semester & subject to broadcast real-time 15-minute GPS attendance window to student mobile apps.</p>
           </div>
           <div class="flex items-center space-x-2">
@@ -389,7 +389,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 pb-3 border-b border-cream-100 gap-2">
           <div>
             <div class="flex items-center space-x-2">
-              <h3 class="text-sm font-bold text-charcoal-900">📊 Live Matrix Google Sheet Mirror</h3>
+              <h3 class="text-sm font-bold text-charcoal-900"><svg class="w-4 h-4 text-seagreen-700 inline-block mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Live Matrix Google Sheet Mirror</h3>
               <span class="text-[10px] px-2.5 py-0.5 rounded-full bg-seagreen-50 text-seagreen-800 border border-seagreen-600/20 font-bold">P = Present • H = Half • Blank = Absent</span>
             </div>
           </div>
@@ -439,7 +439,7 @@
             View Audit Report
           </button>
           <button onclick="openSheetsConfigModal()" class="px-3.5 py-2 bg-charcoal-900 hover:bg-charcoal-800 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center space-x-1">
-            <span>⚙️ Change Sheet</span>
+            <span><svg class="w-3.5 h-3.5 text-charcoal-700 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Change Sheet</span>
           </button>
         </div>
       </div>
@@ -450,7 +450,7 @@
         <!-- Left: Dedicated Late Comers Manual Override Section -->
         <div id="override-section-container" class="lg:col-span-7 bg-white rounded-3xl p-6 border border-cream-200 device-shadow transition-all duration-300">
           <div class="flex items-center space-x-2 mb-2">
-            <span class="text-amber-600 text-base">⏱️</span>
+            <span class="text-amber-600"><svg class="w-3.5 h-3.5 text-charcoal-700 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>
             <h4 class="text-xs font-bold uppercase tracking-wider text-charcoal-900">Late Comers Manual Override (Half Attendance)</h4>
           </div>
           <p class="text-xs text-charcoal-700 mb-4">Students who entered late and missed the 15-minute geofence cutoff. Tap <strong class="text-charcoal-900">"Grant Half (+1)"</strong> to log <strong class="text-amber-700">"H" (1 Attendance Count)</strong> into their Google Sheet cell.</p>
@@ -464,16 +464,16 @@
         <div id="sheet-setup-card" class="lg:col-span-5 bg-white rounded-3xl p-6 border border-cream-200 device-shadow space-y-4">
           <div class="flex items-center justify-between flex-wrap gap-2">
             <div class="flex items-center space-x-2">
-              <span class="text-seagreen-600 text-base">📑</span>
+              <span class="text-seagreen-600"><svg class="w-4 h-4 text-seagreen-700 inline-block mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></span>
               <h4 class="text-xs font-bold uppercase tracking-wider text-charcoal-900">Google Sheet Connection</h4>
             </div>
-            <span id="sheet-status-badge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300 font-bold">⚠️ Not Connected</span>
+            <span id="sheet-status-badge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300 font-bold"><svg class="w-3.5 h-3.5 text-amber-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>Not Connected</span>
           </div>
 
           <div class="p-3.5 bg-[#FAF7F0] rounded-2xl border border-cream-200 space-y-2 text-xs">
             <div class="flex items-center justify-between">
               <span class="text-charcoal-700 font-medium">Service Account Email:</span>
-              <button onclick="copyServiceEmail()" class="text-[10px] font-bold text-seagreen-700 hover:underline">Copy Email 📋</button>
+              <button onclick="copyServiceEmail()" class="text-[10px] font-bold text-seagreen-700 hover:underline">Copy Email <svg class="w-3 h-3 inline-block ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg></button>
             </div>
             <p id="sa-email-display" class="font-mono text-[11px] text-charcoal-900 break-all bg-white p-2 rounded-lg border border-cream-200">
               attendance-sync-sa@smart-attendance-system.iam.gserviceaccount.com
@@ -486,11 +486,11 @@
               <input type="text" id="sheet-id-input" placeholder="Paste 44-character Sheet ID here" class="flex-1 px-3 py-1.5 bg-white border border-cream-200 rounded-lg text-xs font-mono text-charcoal-900 focus:outline-none focus:border-seagreen-600">
               <button onclick="saveSpreadsheetId()" class="px-3 py-1.5 bg-charcoal-900 hover:bg-charcoal-800 text-white text-xs font-bold rounded-lg transition">Save</button>
               <button onclick="testSheetConnection()" id="btn-test-sheet" class="px-3 py-1.5 bg-seagreen-600 hover:bg-seagreen-700 text-white text-xs font-bold rounded-lg transition flex items-center space-x-1">
-                <span>🔍 Test</span>
+                <span><svg class="w-3.5 h-3.5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>Test</span>
               </button>
             </div>
             <div id="sheet-connected-msg" class="hidden p-2.5 rounded-xl bg-emerald-50 border border-emerald-300 text-[11px] font-bold text-emerald-800 flex items-center space-x-1.5 mt-1.5">
-              <span>✅ Google Sheet Connected</span>
+              <span><svg class="w-3.5 h-3.5 text-seagreen-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Google Sheet Connected</span>
             </div>
             <div id="sheet-test-result" class="hidden p-3 rounded-xl text-xs space-y-1 mt-2"></div>
           </div>
@@ -518,7 +518,7 @@
     <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-cream-200 device-shadow space-y-4">
       
       <div class="flex items-center justify-between border-b border-cream-200 pb-3">
-        <h3 class="text-base font-bold text-charcoal-900">📊 Connect Teacher Google Sheet</h3>
+        <h3 class="text-base font-bold text-charcoal-900"><svg class="w-4 h-4 text-seagreen-700 inline-block mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Connect Teacher Google Sheet</h3>
         <button onclick="closeSheetsConfigModal()" class="text-charcoal-700 hover:text-charcoal-900 font-bold text-lg">✕</button>
       </div>
 
@@ -544,7 +544,7 @@
 
       <div class="flex items-center justify-between pt-3 border-t border-cream-200">
         <button onclick="testModalSheetConnection()" class="px-3 py-2 bg-charcoal-900 text-white text-xs font-bold rounded-xl hover:bg-charcoal-800 transition flex items-center space-x-1">
-          <span>🔍 Test & Verify</span>
+          <span><svg class="w-3.5 h-3.5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>Test & Verify</span>
         </button>
         <div class="flex items-center space-x-2">
           <button onclick="closeSheetsConfigModal()" class="px-4 py-2 bg-cream-100 text-charcoal-700 text-xs font-bold rounded-xl hover:bg-cream-200">Cancel</button>
@@ -596,13 +596,13 @@
           <span id="report-stats-text" class="text-[11px] text-seagreen-800">Classes Conducted: 0 • Status: Term Starting Soon</span>
         </div>
         <span class="px-2.5 py-1 bg-seagreen-600 text-white rounded-lg font-bold text-xs shadow-sm">
-          Verified ✅
+          Verified <svg class="w-3.5 h-3.5 text-seagreen-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
         </span>
       </div>
 
       <!-- Detailed Class-by-Class Table -->
       <div class="mb-4 flex-1">
-        <h4 class="text-xs font-bold uppercase tracking-wider text-charcoal-700 mb-2">📜 Detailed Attendance Timeline & Proof Audit</h4>
+        <h4 class="text-xs font-bold uppercase tracking-wider text-charcoal-700 mb-2"><svg class="w-4 h-4 text-seagreen-700 inline-block mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Detailed Attendance Timeline & Proof Audit</h4>
         <div class="border border-cream-200 rounded-xl overflow-x-auto max-h-[260px] overflow-y-auto">
           <table class="w-full text-left text-xs min-w-[650px]">
             <thead class="bg-[#FAF7F0] border-b border-cream-200 font-bold text-charcoal-700 font-mono sticky top-0">
@@ -870,9 +870,9 @@
         } else {
           let errorMsg = data.error || 'Invalid credentials.';
           if (errorMsg.includes('roll number') || errorMsg.includes('No registered account') || errorMsg.includes('Invalid email') || errorMsg.includes('not found')) {
-            errorMsg = '⚠️ Faculty account not found for this email address.\n\nPlease check your email or click "Register Account" to create your faculty profile.';
+            errorMsg = '[!] Faculty account not found for this email address.\n\nPlease check your email or click "Register Account" to create your faculty profile.';
           } else if (errorMsg.toLowerCase().includes('password')) {
-            errorMsg = '⚠️ Incorrect password.\n\nPlease verify your faculty password and try again.';
+            errorMsg = '[!] Incorrect password.\n\nPlease verify your faculty password and try again.';
           }
           alert(errorMsg);
         }
@@ -929,7 +929,7 @@
         updateOtpTimerDisplay();
         if (otpCountdown <= 0) {
           clearInterval(otpTimerInterval);
-          document.getElementById('otp-timer-display').textContent = '⚠️ Code Expired';
+          document.getElementById('otp-timer-display').textContent = '[!] Code Expired';
         }
       }, 1000);
     }
@@ -937,7 +937,7 @@
     function updateOtpTimerDisplay() {
       const minutes = Math.floor(otpCountdown / 60);
       const seconds = otpCountdown % 60;
-      const display = `⏱️ Expires in ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      const display = `Expires in ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
       document.getElementById('otp-timer-display').textContent = display;
     }
 
@@ -993,7 +993,7 @@
         });
         const data = await res.json();
         if (res.ok) {
-          alert(`✅ Fresh 6-digit OTP dispatched to ${pendingOtpEmail}`);
+          alert(`[Success] Fresh 6-digit OTP dispatched to ${pendingOtpEmail}`);
           startOtpTimer();
         } else {
           alert(data.error || 'Could not resend OTP.');
@@ -1088,9 +1088,17 @@
         facultyNavUser.style.display = 'none';
         facultyNavUser.classList.add('hidden');
       }
-      document.getElementById('nav-auth-controls').innerHTML = `
-        <span class="text-xs font-bold text-charcoal-700">Not Logged In</span>
-      `;
+      const navControls = document.getElementById('nav-auth-controls');
+      if (navControls) {
+        navControls.innerHTML = `
+          <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-cream-100 text-charcoal-700 border border-cream-200 text-xs font-semibold">
+            <svg class="w-3.5 h-3.5 text-charcoal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+            <span>Not Logged In</span>
+          </div>
+        `;
+      }
       switchAuthTab('login');
     }
 
@@ -1103,7 +1111,7 @@
       if (lat && lng) {
         return `
           <div class="space-y-1">
-            <p class="text-charcoal-900 font-bold">🎯 Coords: <span class="text-seagreen-700">${parseFloat(lat).toFixed(5)}°, ${parseFloat(lng).toFixed(5)}°</span></p>
+            <p class="text-charcoal-900 font-bold"><svg class="w-3.5 h-3.5 text-seagreen-700 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Coords: <span class="text-seagreen-700">${parseFloat(lat).toFixed(5)}°, ${parseFloat(lng).toFixed(5)}°</span></p>
             <p class="text-[10px] text-charcoal-500">Accuracy: ±${acc ? parseFloat(acc).toFixed(1) : '5.0'}m • Radius: 50m</p>
             ${time ? `<p class="text-[9px] text-charcoal-400">Captured at ${time}</p>` : ''}
           </div>
@@ -1111,7 +1119,7 @@
       }
       return `
         <div class="space-y-1">
-          <p class="text-charcoal-700 font-medium">🏫 Using Department Central Anchor</p>
+          <p class="text-charcoal-700 font-medium"><svg class="w-3.5 h-3.5 text-charcoal-700 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>Using Department Central Anchor</p>
           <p class="text-[10px] text-charcoal-500">Radius: 50.0 meters from Department center</p>
         </div>
       `;
@@ -1149,12 +1157,12 @@
       const btn = document.getElementById('btn-detect-location');
 
       if (!navigator.geolocation) {
-        alert('⚠️ Geolocation is not supported by your browser.');
+        alert('[!] Geolocation is not supported by your browser.');
         return;
       }
 
       if (btnText) btnText.textContent = 'Acquiring GPS...';
-      if (btnIcon) btnIcon.textContent = '⏳';
+      if (btnIcon) btnIcon.innerHTML = '<svg class="w-3.5 h-3.5 text-charcoal-600 animate-spin inline-block mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>';
       if (btn) btn.disabled = true;
 
       navigator.geolocation.getCurrentPosition(
@@ -1170,7 +1178,7 @@
           localStorage.setItem('faculty_detected_time', nowStr);
 
           if (btnText) btnText.textContent = 'Location Updated!';
-          if (btnIcon) btnIcon.textContent = '✅';
+          if (btnIcon) btnIcon.innerHTML = '<svg class="w-3.5 h-3.5 text-seagreen-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
           if (btn) btn.disabled = false;
 
           // Update Dropdown display
@@ -1179,7 +1187,7 @@
           const modeBadge = document.getElementById('location-mode-badge');
           if (modeBadge) {
             modeBadge.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-seagreen-100 text-seagreen-800 border border-seagreen-300';
-            modeBadge.textContent = '🛰️ Custom GPS';
+            modeBadge.innerHTML = '<svg class="w-3.5 h-3.5 text-indigo-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>Custom GPS';
           }
           const ind = document.getElementById('teacher-loc-indicator');
           if (ind) {
@@ -1206,7 +1214,7 @@
                   radiusMeters: 50.0
                 })
               });
-              console.log('✅ Active session location updated on server.');
+              console.log('[Active Location] Active session location updated on server.');
             } catch (err) {
               console.warn('Could not update active session location on server:', err);
             }
@@ -1214,20 +1222,20 @@
 
           setTimeout(() => {
             if (btnText) btnText.textContent = 'Detect Current Location';
-            if (btnIcon) btnIcon.textContent = '🛰️';
+            if (btnIcon) btnIcon.innerHTML = '<svg class="w-3.5 h-3.5 text-indigo-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>';
           }, 2500);
         },
         (error) => {
           console.error('Geolocation error:', error);
           if (btnText) btnText.textContent = 'Detect Current Location';
-          if (btnIcon) btnIcon.textContent = '🛰️';
+          if (btnIcon) btnIcon.innerHTML = '<svg class="w-3.5 h-3.5 text-indigo-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>';
           if (btn) btn.disabled = false;
 
           let msg = 'Could not access device location.';
           if (error.code === 1) msg = 'Location permission was denied. Please allow location access in your browser settings.';
           else if (error.code === 2) msg = 'Location is unavailable. Please check your GPS / network connection.';
           else if (error.code === 3) msg = 'Location request timed out. Please try again.';
-          alert('⚠️ ' + msg);
+          alert('[!] ' + msg);
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
@@ -1245,7 +1253,7 @@
       const modeBadge = document.getElementById('location-mode-badge');
       if (modeBadge) {
         modeBadge.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-charcoal-100 text-charcoal-700 border border-charcoal-200';
-        modeBadge.textContent = '🏫 Campus Default';
+        modeBadge.innerHTML = '<svg class="w-3.5 h-3.5 text-charcoal-700 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>Campus Default';
       }
       const ind = document.getElementById('teacher-loc-indicator');
       if (ind) {
@@ -1291,7 +1299,7 @@
         const deptBadge = document.getElementById('faculty-dept-badge');
         if (deptBadge) {
           deptBadge.innerHTML = isAdmin
-            ? '<span class="text-amber-400 font-bold">⭐ Super Faculty & Administrator</span>'
+            ? '<span class="text-amber-400 font-bold"><svg class="w-3.5 h-3.5 text-amber-400 inline-block mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><span class="text-amber-400 font-bold">Super Faculty & Administrator</span></span>'
             : 'Master of Computer Applications';
         }
       }
@@ -1337,6 +1345,27 @@
       }
 
       if (badgeCourse) badgeCourse.textContent = initialSubj;
+
+      const navControls = document.getElementById('nav-auth-controls');
+      if (navControls && loggedInFaculty) {
+        navControls.innerHTML = `
+          <div class="flex items-center space-x-2">
+            <div class="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-seagreen-50 border border-seagreen-200">
+              <span class="w-2 h-2 rounded-full bg-seagreen-600 animate-pulse"></span>
+              <span class="text-xs font-bold text-charcoal-900">${loggedInFaculty.name ? loggedInFaculty.name.split(' ')[0] : 'Faculty'}</span>
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold uppercase ${isAdmin ? 'bg-amber-100 text-amber-800' : 'bg-charcoal-100 text-charcoal-700'}">
+                ${isAdmin ? 'Admin' : 'Faculty'}
+              </span>
+            </div>
+            <button type="button" onclick="logoutFaculty()" class="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition cursor-pointer">
+              <svg class="w-3.5 h-3.5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+              </svg>
+              <span>Logout</span>
+            </button>
+          </div>
+        `;
+      }
 
       connectTeacherWebSocket();
       fetchAndRenderStudents(currentTeacherSem);
@@ -1418,7 +1447,7 @@
         teacherSocket = new WebSocket(wsUrl);
 
         teacherSocket.onopen = () => {
-          console.log('📡 Connected to real-time attendance WebSocket');
+          console.log('[WebSocket] Connected to real-time attendance WebSocket');
         };
 
         teacherSocket.onmessage = (event) => {
@@ -1543,7 +1572,7 @@
       if (roster.length === 0) {
         container.innerHTML = `
           <div class="p-6 bg-[#FAF7F0] border border-cream-200 rounded-2xl text-center">
-            <p class="text-xs text-charcoal-700 font-bold">🌱 No students registered yet for Semester ${sem}.</p>
+            <p class="text-xs text-charcoal-700 font-bold">No students registered yet for Semester ${sem}.</p>
             <p class="text-[11px] text-charcoal-500 font-medium mt-1">Students will appear here automatically in real-time as they register their profiles in the mobile app.</p>
           </div>
         `;
@@ -1561,7 +1590,7 @@
         container.innerHTML = `
           <div class="p-5 bg-seagreen-50 border border-seagreen-200 rounded-2xl flex items-center justify-between">
             <div class="flex items-center space-x-3">
-              <span class="text-xl">🎉</span>
+              <svg class="w-8 h-8 text-seagreen-600 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
               <div>
                 <p class="text-xs font-bold text-seagreen-900">100% Attendance Completed!</p>
                 <p class="text-[11px] text-seagreen-700 font-medium">All students registered in Semester ${sem} have marked attendance or were granted overrides.</p>
@@ -1592,7 +1621,7 @@
               <button 
                 onclick="grantHalfOverride('${s.id || ''}', '${s.classRoll || ''}', '${uni}', '${reg}', '${(s.name || '').replace(/'/g, "\\'")}')" 
                 class="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-[10px] rounded-lg shadow transition flex items-center space-x-1 shrink-0 ml-2">
-                <span>⏱️</span>
+                <span><svg class="w-3.5 h-3.5 text-charcoal-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>
                 <span>Grant Half</span>
               </button>
             </div>
@@ -1737,8 +1766,8 @@
       const initialSecs = (sessionTimer % 60).toString().padStart(2, '0');
       if (btnText) {
         btnText.textContent = isAdmin
-          ? `🛑 Stop Session (${initialMins}:${initialSecs}) [Admin]`
-          : `🟢 Live Session (${initialMins}:${initialSecs})`;
+          ? `<svg class="w-3.5 h-3.5 text-white inline-block mr-1" fill="currentColor" viewBox="0 0 20 20"><rect x="4" y="4" width="12" height="12" rx="2"/></svg> Stop Session (${initialMins}:${initialSecs}) [Admin]`
+          : `<svg class="w-3.5 h-3.5 text-white inline-block mr-1 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="10" r="6"/></svg> Live Session (${initialMins}:${initialSecs})`;
       }
       const countdownEl = document.getElementById('teacher-timer-countdown');
       if (countdownEl) countdownEl.textContent = `${initialMins}:${initialSecs} Remaining (Auto-Ends in 15m)`;
@@ -1753,8 +1782,8 @@
           if (cEl) cEl.textContent = `${mins}:${secs} Remaining (Auto-Ends in 15m)`;
           if (btnText) {
             btnText.textContent = isAdmin
-              ? `🛑 Stop Session (${mins}:${secs}) [Admin]`
-              : `🟢 Live Session (${mins}:${secs})`;
+              ? `<svg class="w-3.5 h-3.5 text-white inline-block mr-1" fill="currentColor" viewBox="0 0 20 20"><rect x="4" y="4" width="12" height="12" rx="2"/></svg> Stop Session (${mins}:${secs}) [Admin]`
+              : `<svg class="w-3.5 h-3.5 text-white inline-block mr-1 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="10" r="6"/></svg> Live Session (${mins}:${secs})`;
           }
         } else {
           applyInactiveSessionState();
@@ -1819,7 +1848,7 @@
       // Max 3 session enforcement
       const currentCount = sessionCountsByCourse[courseCode] || 0;
       if (currentCount >= 3) {
-        alert(`⚠️ Maximum session limit reached (3 / 3 sessions conducted today for ${courseCode}). No further sessions can be started today.`);
+        alert(`[!] Maximum session limit reached (3 / 3 sessions conducted today for ${courseCode}). No further sessions can be started today.`);
         updateSessionCountDisplay();
         return;
       }
@@ -1843,7 +1872,7 @@
           localStorage.setItem('faculty_detected_lat', detectedLat);
           localStorage.setItem('faculty_detected_lng', detectedLng);
           localStorage.setItem('faculty_detected_acc', pos.coords.accuracy.toString());
-          console.log(`📍 Auto-acquired faculty GPS for session: ${detectedLat}, ${detectedLng} (±${pos.coords.accuracy}m)`);
+          console.log(`[Location] Auto-acquired faculty GPS for session: ${detectedLat}, ${detectedLng} (±${pos.coords.accuracy}m)`);
         } catch (geoErr) {
           console.warn('Could not auto-acquire GPS on session start:', geoErr);
         }
@@ -1881,11 +1910,11 @@
           applyActiveSessionState(data.session, data.session.remainingSeconds || 900);
           fetchSessionCountsToday();
         } else {
-          alert('⚠️ ' + (data.error || 'Could not start attendance session.'));
+          alert('[!] ' + (data.error || 'Could not start attendance session.'));
         }
       } catch (err) {
         console.error('Error starting backend session:', err);
-        alert('⚠️ Network error starting session: ' + err.message);
+        alert('[!] Network error starting session: ' + err.message);
       }
     }
 
@@ -1952,9 +1981,9 @@
 
         const data = await res.json();
         if (res.ok) {
-          console.log(`✅ Half attendance recorded in DB for ${name} (${classRoll}):`, data);
+          console.log(`[Attendance] Half attendance recorded in DB for ${name} (${classRoll}):`, data);
           if (data.sheetSynced) {
-            console.log(`✅ Google Sheet synced successfully for ${name}.`);
+            console.log(`[Google Sheet] Google Sheet synced successfully for ${name}.`);
           }
 
           // Optional custom sheet sync if configured in local storage
@@ -1978,7 +2007,7 @@
           }
         } else {
           console.error('Error granting half attendance:', data.error);
-          alert('⚠️ Failed to grant half attendance: ' + (data.error || 'Server error'));
+          alert('[!] Failed to grant half attendance: ' + (data.error || 'Server error'));
         }
       } catch (err) {
         console.error('Error calling /api/override/grant-half:', err);
@@ -1996,11 +2025,11 @@
       if (sheetId && sheetId.trim().length > 5) {
         if (badge) {
           badge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold';
-          badge.textContent = '✅ Google Sheet Connected';
+          badge.innerHTML = '<svg class="w-3.5 h-3.5 text-seagreen-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Google Sheet Connected';
         }
         if (msg) {
           msg.classList.remove('hidden');
-          msg.innerHTML = `<span>✅ Google Sheet Connected: <code class="font-mono">${sheetId.substring(0, 12)}...</code></span>`;
+          msg.innerHTML = `<span>${svgCheckSm} Google Sheet Connected: <code class="font-mono">${sheetId.substring(0, 12)}...</code></span>`;
         }
         if (banner) {
           banner.classList.remove('hidden');
@@ -2015,7 +2044,7 @@
       } else {
         if (badge) {
           badge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300 font-bold';
-          badge.textContent = '⚠️ Not Connected';
+          badge.innerHTML = '<svg class="w-3.5 h-3.5 text-amber-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> Not Connected';
         }
         if (msg) {
           msg.classList.add('hidden');
@@ -2083,7 +2112,7 @@
     function copyServiceEmail() {
       const email = document.getElementById('sa-email-display')?.textContent.trim() || 'attendance-sync-sa@smart-attendance-system.iam.gserviceaccount.com';
       navigator.clipboard.writeText(email);
-      alert(`✅ Service Account email copied to clipboard!\n\nEmail: ${email}\n\nShare your Google Sheet with this email as Editor.`);
+      alert(`[Success] Service Account email copied to clipboard!\n\nEmail: ${email}\n\nShare your Google Sheet with this email as Editor.`);
     }
 
     async function saveSpreadsheetId() {
@@ -2101,7 +2130,7 @@
           body: JSON.stringify({ googleSheetId: sheetId })
         });
       } catch (e) {}
-      alert(`✅ Google Sheet Connected successfully! ID: ${sheetId}`);
+      alert(`[Success] Google Sheet Connected successfully! ID: ${sheetId}`);
     }
 
     async function testSheetConnection() {
@@ -2114,11 +2143,11 @@
         return;
       }
 
-      if (testBtn) testBtn.innerHTML = '<span>⏳ Testing...</span>';
+      if (testBtn) testBtn.innerHTML = '<span>${svgSpin} Testing...</span>';
       if (resultBox) {
         resultBox.classList.remove('hidden');
         resultBox.className = 'p-3 rounded-xl text-xs space-y-1 bg-amber-50 border border-amber-200 text-amber-900 mt-2';
-        resultBox.innerHTML = '<p>🔄 Testing connection to Google Sheets API...</p>';
+        resultBox.innerHTML = '<p class="flex items-center">${svgSpin} Testing connection to Google Sheets API...</p>';
       }
 
       try {
@@ -2129,13 +2158,13 @@
         });
         const data = await res.json();
 
-        if (testBtn) testBtn.innerHTML = '<span>🔍 Test</span>';
+        if (testBtn) testBtn.innerHTML = '<span>${svgSearch} Test</span>';
 
         if (data.success) {
           resultBox.className = 'p-3 rounded-xl text-xs space-y-1 bg-emerald-50 border border-emerald-300 text-emerald-900 mt-2';
           resultBox.innerHTML = `
             <div class="font-bold flex items-center space-x-1">
-              <span>✅ Google Sheet Verified & Connected!</span>
+              <span><svg class="w-3.5 h-3.5 text-seagreen-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Google Sheet Verified & Connected!</span>
             </div>
             <p><strong>Document:</strong> ${data.sheetTitle}</p>
             <p><strong>Tabs Found:</strong> ${data.tabs.join(', ')}</p>
@@ -2146,17 +2175,17 @@
           resultBox.className = 'p-3 rounded-xl text-xs space-y-1.5 bg-rose-50 border border-rose-300 text-rose-900 mt-2';
           resultBox.innerHTML = `
             <div class="font-bold flex items-center space-x-1 text-rose-700">
-              <span>❌ Google Sheet Connection Issue</span>
+              <span><svg class="w-3.5 h-3.5 text-rose-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg> Google Sheet Connection Issue</span>
             </div>
             <p class="text-[11px] font-mono bg-white p-2 rounded border border-rose-200 break-words">${data.error}</p>
-            <p class="text-[11px] font-bold text-charcoal-900">👉 Recommended Fix:</p>
+            <p class="text-[11px] font-bold text-charcoal-900">Recommended Fix:</p>
             <p class="text-[11px] text-charcoal-700">${data.fixSuggestion}</p>
           `;
         }
       } catch (err) {
-        if (testBtn) testBtn.innerHTML = '<span>🔍 Test</span>';
+        if (testBtn) testBtn.innerHTML = '<span><svg class="w-3.5 h-3.5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg> Test</span>';
         resultBox.className = 'p-3 rounded-xl text-xs space-y-1 bg-rose-50 border border-rose-300 text-rose-900 mt-2';
-        resultBox.innerHTML = `<p class="font-bold text-rose-700">❌ Network or server error while testing connection.</p>`;
+        resultBox.innerHTML = `<p class="font-bold text-rose-700 flex items-center"><svg class="w-3.5 h-3.5 text-rose-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg> Network or server error while testing connection.</p>`;
       }
     }
 
@@ -2172,7 +2201,7 @@
       if (resultBox) {
         resultBox.classList.remove('hidden');
         resultBox.className = 'p-3 rounded-xl text-xs space-y-1 bg-amber-50 border border-amber-200 text-amber-900';
-        resultBox.innerHTML = '<p>🔄 Testing connection to Google Sheets API...</p>';
+        resultBox.innerHTML = '<p class="flex items-center"><svg class="w-3.5 h-3.5 text-charcoal-600 animate-spin inline-block mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Testing connection to Google Sheets API...</p>';
       }
 
       try {
@@ -2187,7 +2216,7 @@
           resultBox.className = 'p-3 rounded-xl text-xs space-y-1 bg-emerald-50 border border-emerald-300 text-emerald-900';
           resultBox.innerHTML = `
             <div class="font-bold flex items-center space-x-1 text-emerald-800">
-              <span>✅ Google Sheet Verified!</span>
+              <span><svg class="w-3.5 h-3.5 text-seagreen-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Google Sheet Verified!</span>
             </div>
             <p><strong>Document:</strong> ${data.sheetTitle}</p>
             <p><strong>Tabs:</strong> ${data.tabs.join(', ')}</p>
@@ -2197,15 +2226,15 @@
           resultBox.className = 'p-3 rounded-xl text-xs space-y-1.5 bg-rose-50 border border-rose-300 text-rose-900';
           resultBox.innerHTML = `
             <div class="font-bold flex items-center space-x-1 text-rose-700">
-              <span>❌ Connection Failed</span>
+              <span><svg class="w-3.5 h-3.5 text-rose-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg> Connection Failed</span>
             </div>
             <p class="text-[11px] font-mono bg-white p-2 rounded border border-rose-200 break-words">${data.error}</p>
-            <p class="text-[11px] text-charcoal-800"><strong>👉 Fix:</strong> ${data.fixSuggestion}</p>
+            <p class="text-[11px] text-charcoal-800"><strong>Fix:</strong> ${data.fixSuggestion}</p>
           `;
         }
       } catch (err) {
         resultBox.className = 'p-3 rounded-xl text-xs space-y-1 bg-rose-50 border border-rose-300 text-rose-900';
-        resultBox.innerHTML = `<p class="font-bold text-rose-700">❌ Network or server error.</p>`;
+        resultBox.innerHTML = `<p class="font-bold text-rose-700 flex items-center"><svg class="w-3.5 h-3.5 text-rose-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg> Network or server error.</p>`;
       }
     }
 
@@ -2226,7 +2255,7 @@
         });
       } catch (e) {}
       closeSheetsConfigModal();
-      alert(`✅ Google Sheet Connected successfully! All check-ins and late overrides will sync automatically.`);
+      alert(`[Success] Google Sheet Connected successfully! All check-ins and late overrides will sync automatically.`);
     }
 
     // --- EXPORT AUDIT REPORT MODAL ---
@@ -2279,7 +2308,7 @@
           tbody.innerHTML = `
             <tr>
               <td colspan="6" class="py-8 px-4 text-center text-charcoal-700 italic">
-                🌱 No registered students found for Semester ${currentTeacherSem}.<br/>
+                <svg class="w-4 h-4 text-seagreen-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>No registered students found for Semester ${currentTeacherSem}.<br/>
                 <span class="text-[11px] text-charcoal-500 font-normal">Students will appear automatically as they register in the mobile app.</span>
               </td>
             </tr>
@@ -2325,7 +2354,7 @@
               <td class="py-2.5 px-3">${statusBadge}</td>
               <td class="py-2.5 px-3 text-charcoal-800 font-semibold">${proofStr}</td>
               <td class="py-2.5 px-3 font-mono text-[10px] text-charcoal-600">SHA256-${s.classRoll || 'STU'}-VALID</td>
-              <td class="py-2.5 px-3 font-semibold text-seagreen-700">Synced ✅</td>
+              <td class="py-2.5 px-3 font-semibold text-seagreen-700">Synced <svg class="w-3.5 h-3.5 text-seagreen-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></td>
             </tr>
           `;
         });
@@ -2343,7 +2372,7 @@
         tbody.innerHTML = `
           <tr>
             <td colspan="6" class="py-6 px-4 text-center text-rose-600 font-semibold text-xs">
-              ❌ Failed to load live attendance records. Error: ${err.message}
+              [!] Failed to load live attendance records. Error: ${err.message}
             </td>
           </tr>
         `;
