@@ -191,11 +191,11 @@
         </div>
 
         <!-- Auth Tabs -->
-        <div class="flex p-1 bg-[#FAF7F0] rounded-xl border border-cream-200 mb-5">
-          <button id="tab-btn-login" onclick="switchAuthTab('login')" class="flex-1 py-2 text-xs font-bold rounded-lg transition bg-charcoal-900 text-white shadow-sm">
+        <div class="flex p-1 bg-[#FAF7F0] rounded-xl border border-cream-200 mb-5 relative z-10 select-none">
+          <button type="button" id="tab-btn-login" onclick="switchAuthTab('login')" class="flex-1 py-2 text-xs font-bold rounded-lg transition bg-charcoal-900 text-white shadow-sm cursor-pointer">
             Faculty Login
           </button>
-          <button id="tab-btn-register" onclick="switchAuthTab('register')" class="flex-1 py-2 text-xs font-bold rounded-lg transition text-charcoal-700 hover:text-charcoal-900">
+          <button type="button" id="tab-btn-register" onclick="switchAuthTab('register')" class="flex-1 py-2 text-xs font-bold rounded-lg transition text-charcoal-700 hover:text-charcoal-900 cursor-pointer">
             Register Account
           </button>
         </div>
@@ -713,13 +713,18 @@
 
     // Initialize on page load
     window.addEventListener('DOMContentLoaded', () => {
-      onLoginSemesterChange();
       onRegSemesterChange();
       checkStoredAuth();
       loadServiceAccountInfo();
       connectTeacherWebSocket();
+
+      const tabLogin = document.getElementById('tab-btn-login');
+      const tabReg = document.getElementById('tab-btn-register');
+      if (tabLogin) tabLogin.onclick = (e) => { e.preventDefault(); switchAuthTab('login'); };
+      if (tabReg) tabReg.onclick = (e) => { e.preventDefault(); switchAuthTab('register'); };
+
       setInterval(() => {
-        if (currentTeacherSem) {
+        if (loggedInFaculty && currentTeacherSem) {
           const courseCode = document.getElementById('teacher-course-select')?.value;
           if (courseCode) checkAndSyncActiveSession(courseCode);
           fetchAndRenderStudents(currentTeacherSem);
