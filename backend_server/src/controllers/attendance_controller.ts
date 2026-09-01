@@ -99,9 +99,24 @@ export class AttendanceController {
         });
       }
 
-      // 6. Check Duplicate Attendance for Today
+      // 6. Check Duplicate Attendance for This Active Session
+      const existingSessionRecord = await prisma.attendanceRecord.findFirst({
+        where: {
+          studentId: student.id,
+          sessionId: activeSession.id,
+        },
+      });
+
+      if (existingSessionRecord) {
+        return res.status(409).json({
+          error: `You have already marked attendance for this live session (${subject.name}).`,
+          attendance: existingSessionRecord,
+        });
+      }
+
+      // 7. Save Attendance Record with Status "Full"
       const todayDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
-      const existingRecord = await prisma.attendanceRecord.findUnique({
+      const record = await prisma.attendanceRecord.upsert({
         where: {
           studentId_subjectId_date: {
             studentId: student.id,
@@ -109,22 +124,21 @@ export class AttendanceController {
             date: todayDate,
           },
         },
-      });
-
-      if (existingRecord) {
-        return res.status(409).json({
-          error: `Attendance for ${subject.name} has already been marked today as '${existingRecord.status}'.`,
-          attendance: existingRecord,
-        });
-      }
-
-      // 7. Save Attendance Record with Status "Full"
-      const record = await prisma.attendanceRecord.create({
-        data: {
+        create: {
           sessionId: activeSession.id,
           studentId: student.id,
           subjectId: subject.id,
           date: todayDate,
+          time: timeValidation.formattedTime,
+          status: 'Full',
+          latitude: parseFloat(latitude),
+          longitude: parseFloat(longitude),
+          distanceMeters: locationValidation.distanceMeters,
+          isMockLocation: false,
+          syncedToSheet: false,
+        },
+        update: {
+          sessionId: activeSession.id,
           time: timeValidation.formattedTime,
           status: 'Full',
           latitude: parseFloat(latitude),

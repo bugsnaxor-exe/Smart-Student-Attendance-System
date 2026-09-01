@@ -99,6 +99,7 @@ app.get('/api/override/absent/:subjectId', requireAuth, requireRole(['TEACHER', 
 app.post('/api/override/grant-half', requireAuth, requireRole(['TEACHER', 'ADMIN']), OverrideController.grantHalfAttendance);
 app.post('/api/override/grant-half-matrix', OverrideController.grantHalfAttendanceMatrix);
 app.get('/api/students/semester/:semester', OverrideController.getStudentsBySemester);
+app.get('/api/override/students/semester/:semester', OverrideController.getStudentsBySemester);
 
 // --- GEOFENCE CONFIG ROUTES ---
 app.get('/api/geofence/:departmentId', requireAuth, GeofenceController.getDepartmentGeofence);

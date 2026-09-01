@@ -145,22 +145,21 @@ export class SessionController {
         student.departmentId
       );
 
-      // Check if student has already marked attendance for each session today
-      const todayDate = new Date().toISOString().split('T')[0];
-      const studentAttendancesToday = await prisma.attendanceRecord.findMany({
+      // Check if student has already marked attendance for each session
+      const studentSessionAttendances = await prisma.attendanceRecord.findMany({
         where: {
           studentId: student.id,
-          date: todayDate,
+          sessionId: { in: activeSessions.map((s) => s.id) },
         },
       });
 
-      const markedSubjectIds = new Set(studentAttendancesToday.map((a) => a.subjectId));
+      const markedSessionIds = new Set(studentSessionAttendances.map((a) => a.sessionId));
 
       const sessionsWithMarkedStatus = activeSessions.map((sess) => {
         const remainingSeconds = Math.max(0, Math.floor((sess.expiresAt.getTime() - new Date().getTime()) / 1000));
         return {
           ...sess,
-          isAlreadyMarked: markedSubjectIds.has(sess.subjectId),
+          isAlreadyMarked: markedSessionIds.has(sess.id),
           remainingSeconds,
         };
       });

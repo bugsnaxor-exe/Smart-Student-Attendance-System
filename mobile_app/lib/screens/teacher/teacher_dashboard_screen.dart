@@ -258,6 +258,9 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   }
 
   Future<void> _openExportAuditReportModal() async {
+    if (_rosterStudents.isEmpty) {
+      await _loadStudentsForSemester(_selectedSemester);
+    }
     await _fetchTodayCheckIns();
     if (!mounted) return;
     showModalBottomSheet(
@@ -905,24 +908,27 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                     ),
                     const SizedBox(height: 14),
 
-                    // Start / Stop Session Button
-                    ElevatedButton.icon(
-                      onPressed: _isSessionActive
-                          ? _handleStopSession
-                          : (attendance.isLoading || currentCount >= 3 ? null : _handleStartSession),
-                      icon: Icon(_isSessionActive ? Icons.stop_circle_outlined : Icons.play_arrow_outlined, size: 18),
-                      label: Text(
-                        _isSessionActive
-                            ? 'Stop Session ($timerString)'
-                            : (currentCount >= 3 ? 'Max Daily Limit (3/3 Done)' : 'Start 15-Min Session'),
-                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _isSessionActive
-                            ? const Color(0xFFDC2626)
-                            : (currentCount >= 3 ? const Color(0xFF9CA3AF) : AppTheme.seaGreen),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    // Start / Stop Session Button (Full Width)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _isSessionActive
+                            ? _handleStopSession
+                            : (attendance.isLoading || currentCount >= 3 ? null : _handleStartSession),
+                        icon: Icon(_isSessionActive ? Icons.stop_circle_outlined : Icons.play_arrow_outlined, size: 18),
+                        label: Text(
+                          _isSessionActive
+                              ? 'Stop Session ($timerString)'
+                              : (currentCount >= 3 ? 'Max Daily Limit (3/3 Done)' : 'Start 15-Min Session'),
+                          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _isSessionActive
+                              ? const Color(0xFFDC2626)
+                              : (currentCount >= 3 ? const Color(0xFF9CA3AF) : AppTheme.seaGreen),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
                       ),
                     ),
 
@@ -1004,25 +1010,6 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Roster Table Headers
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFAF7F0),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppTheme.creamBorder),
-                      ),
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 40, child: Text('Roll', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: AppTheme.charcoalMuted))),
-                          const Expanded(child: Text('Student Name', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: AppTheme.charcoalMuted))),
-                          SizedBox(width: 75, child: Text('$todayStr\n(Today)', textAlign: TextAlign.center, style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: AppTheme.charcoalMuted))),
-                          const SizedBox(width: 65, child: Text('Attendance\nCount', textAlign: TextAlign.right, style: TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: AppTheme.charcoalMuted))),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-
                     if (_isLoadingRoster)
                       const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
                     else if (_rosterStudents.isEmpty)
@@ -1041,81 +1028,90 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                         ),
                       )
                     else
-                      ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _rosterStudents.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1, color: AppTheme.creamBorder),
-                        itemBuilder: (context, index) {
-                          final s = _rosterStudents[index];
-                          final uniRoll = s['universityRoll'] ?? '';
-                          final classRoll = s['classRoll'] ?? '';
-                          final name = s['name'] ?? 'Student';
-                          final status = _attendanceStatusByUniRoll[uniRoll];
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: AppTheme.creamBorder),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: DataTable(
+                            headingRowColor: MaterialStateProperty.all(const Color(0xFFFAF7F0)),
+                            headingTextStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.charcoalMuted),
+                            dataTextStyle: const TextStyle(fontSize: 11, color: AppTheme.charcoal, fontWeight: FontWeight.w700),
+                            columnSpacing: 16,
+                            horizontalMargin: 12,
+                            columns: [
+                              const DataColumn(label: Text('Class Roll')),
+                              const DataColumn(label: Text('University Roll')),
+                              const DataColumn(label: Text('Registration No')),
+                              const DataColumn(label: Text('Student Name')),
+                              DataColumn(label: Text('$todayStr (Today)')),
+                              const DataColumn(label: Text('Attendance Count', textAlign: TextAlign.right)),
+                            ],
+                            rows: _rosterStudents.map((s) {
+                              final uniRoll = s['universityRoll'] ?? '';
+                              final classRoll = s['classRoll'] ?? '';
+                              final regNo = s['regNo'] ?? s['regNumber'] ?? '—';
+                              final name = s['name'] ?? 'Student';
+                              final status = _attendanceStatusByUniRoll[uniRoll];
 
-                          Color statusBg = const Color(0xFFF3F4F6);
-                          Color statusText = const Color(0xFF9CA3AF);
-                          String statusLabel = '—';
-                          String countLabel = '0';
+                              Color statusBg = const Color(0xFFF3F4F6);
+                              Color statusText = const Color(0xFF9CA3AF);
+                              String statusLabel = '—';
+                              String countLabel = '0';
 
-                          if (status == 'P') {
-                            statusBg = AppTheme.seaGreenTint;
-                            statusText = AppTheme.seaGreenDark;
-                            statusLabel = 'P';
-                            countLabel = '1 (Full)';
-                          } else if (status == 'H') {
-                            statusBg = const Color(0xFFFEF3C7);
-                            statusText = const Color(0xFFB45309);
-                            statusLabel = 'H';
-                            countLabel = '1 (Half)';
-                          }
+                              if (status == 'P') {
+                                statusBg = AppTheme.seaGreenTint;
+                                statusText = AppTheme.seaGreenDark;
+                                statusLabel = 'P';
+                                countLabel = '1 (Full)';
+                              } else if (status == 'H') {
+                                statusBg = const Color(0xFFFEF3C7);
+                                statusText = const Color(0xFFB45309);
+                                statusLabel = 'H';
+                                countLabel = '1 (Half)';
+                              }
 
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                            child: Row(
-                              children: [
-                                SizedBox(
-                                  width: 40,
-                                  child: Text(
-                                    classRoll,
-                                    style: const TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.w800, fontSize: 10, color: AppTheme.charcoal),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Text(name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: AppTheme.charcoal)),
-                                ),
-                                SizedBox(
-                                  width: 75,
-                                  child: Center(
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: statusBg,
-                                        borderRadius: BorderRadius.circular(6),
+                              return DataRow(
+                                cells: [
+                                  DataCell(Text(classRoll, style: const TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.w800))),
+                                  DataCell(Text(uniRoll, style: const TextStyle(fontFamily: 'monospace'))),
+                                  DataCell(Text(regNo, style: const TextStyle(fontFamily: 'monospace', fontSize: 10))),
+                                  DataCell(Text(name, style: const TextStyle(fontWeight: FontWeight.w800))),
+                                  DataCell(
+                                    Center(
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: statusBg,
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          statusLabel,
+                                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: statusText),
+                                        ),
                                       ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Align(
+                                      alignment: Alignment.centerRight,
                                       child: Text(
-                                        statusLabel,
-                                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: statusText),
+                                        countLabel,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 11,
+                                          color: status == 'P' ? AppTheme.seaGreenDark : status == 'H' ? const Color(0xFFB45309) : const Color(0xFF9CA3AF),
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                                SizedBox(
-                                  width: 65,
-                                  child: Text(
-                                    countLabel,
-                                    textAlign: TextAlign.right,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 10,
-                                      color: status == 'P' ? AppTheme.seaGreenDark : status == 'H' ? const Color(0xFFB45309) : const Color(0xFF9CA3AF),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
+                                ],
+                              );
+                            }).toList(),
+                          ),
+                        ),
                       ),
                   ],
                 ),
