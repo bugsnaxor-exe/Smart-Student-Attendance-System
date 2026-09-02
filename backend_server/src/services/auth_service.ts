@@ -195,20 +195,50 @@ export class AuthService {
       },
     });
 
-    // Link assigned subject to this teacher profile if provided
+    // Link or create assigned subject to this teacher profile
     if (input.subjectCode && user.teacher) {
       const cleanSubjectCode = input.subjectCode.trim();
-      const sem = input.semester ? Number(input.semester) : undefined;
-      await prisma.subject.updateMany({
+      const sem = input.semester ? Number(input.semester) : 3;
+
+      let existingSubject = await prisma.subject.findFirst({
         where: {
           code: { equals: cleanSubjectCode, mode: 'insensitive' },
-          ...(sem ? { semester: sem } : {}),
-        },
-        data: {
-          teacherId: user.teacher.id,
         },
       });
+
+      if (existingSubject) {
+        await prisma.subject.update({
+          where: { id: existingSubject.id },
+          data: {
+            teacherId: user.teacher.id,
+            semester: sem,
+          },
+        });
+      } else {
+        await prisma.subject.create({
+          data: {
+            code: cleanSubjectCode,
+            name: `${cleanSubjectCode} Course`,
+            semester: sem,
+            credits: 4,
+            departmentId: department.id,
+            teacherId: user.teacher.id,
+          },
+        });
+      }
     }
+
+    const updatedUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      include: {
+        teacher: {
+          include: {
+            department: true,
+            subjects: true,
+          },
+        },
+      },
+    });
 
     const token = isApproved
       ? this.generateToken({
@@ -220,12 +250,10 @@ export class AuthService {
       : null;
 
     return {
-      user,
+      user: updatedUser || user,
       token,
       isApproved,
-      message: isApproved
-        ? 'Registration successful.'
-        : 'Faculty registration submitted successfully. Your account is pending verification and approval by the Administrator.',
+      message: 'Faculty registration submitted successfully. Your account is pending verification and approval by the Administrator.',
     };
   }
 
