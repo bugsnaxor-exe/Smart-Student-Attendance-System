@@ -306,7 +306,7 @@
             <div class="flex items-center space-x-2 mb-1.5 flex-nowrap overflow-hidden max-w-full">
               <span class="px-2.5 py-0.5 rounded-full bg-seagreen-600 text-white text-[11px] font-bold uppercase tracking-wider shrink-0">Faculty Console</span>
               <span id="faculty-dept-badge" class="text-xs text-gray-300 font-medium shrink-0">Master of Computer Applications</span>
-              <span id="faculty-course-badge" class="px-2.5 py-0.5 rounded-full bg-white/10 text-seagreen-300 text-[11px] font-mono border border-white/20 max-w-[260px] sm:max-w-[340px] lg:max-w-[450px] truncate shrink inline-block" title="MCA-301">MCA-301</span>
+              <span id="faculty-course-badge" class="px-2.5 py-0.5 rounded-full bg-white/10 text-seagreen-300 text-[11px] font-mono border border-white/20 font-bold shrink-0" title="MCA-301">MCA-301</span>
             </div>
             <h2 id="faculty-welcome-name" class="text-2xl sm:text-3xl font-extrabold tracking-tight truncate">Faculty Member</h2>
             <p id="faculty-email-display" class="text-xs text-gray-400 font-mono mt-0.5 truncate">faculty@college.edu</p>
@@ -1537,9 +1537,8 @@
 
       const badge = document.getElementById('faculty-course-badge');
       if (badge && courses.length > 0) {
-        const fullTitle = `${courses[0].code}: ${courses[0].name}`;
-        badge.textContent = fullTitle;
-        badge.title = fullTitle;
+        badge.textContent = courses[0].code;
+        badge.title = `${courses[0].code}: ${courses[0].name}`;
       }
     }
 
@@ -1564,9 +1563,8 @@
       const courseName = selectedOption?.getAttribute('data-name') || '';
       const badge = document.getElementById('faculty-course-badge');
       if (badge) {
-        const fullTitle = `${courseSelect.value}: ${courseName}`;
-        badge.textContent = fullTitle;
-        badge.title = fullTitle;
+        badge.textContent = courseSelect.value;
+        badge.title = `${courseSelect.value}: ${courseName}`;
       }
       checkAndSyncActiveSession(courseSelect.value);
       fetchAndRenderStudents(currentTeacherSem);
