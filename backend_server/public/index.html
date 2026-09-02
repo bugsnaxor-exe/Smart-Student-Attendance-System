@@ -466,7 +466,7 @@
           <p class="font-bold text-charcoal-900">Step 1: Grant Editor Access to Service Account</p>
           <p class="text-[11px]">In your Google Sheet, click <strong class="text-charcoal-900">Share</strong> and add this email as an <strong class="text-seagreen-700">Editor</strong>:</p>
           <div class="flex items-center space-x-2">
-            <input type="text" readonly id="modal-sa-email" value="attendance-sync-sa@smart-attendance-system.iam.gserviceaccount.com" class="flex-1 px-2.5 py-1.5 bg-white border border-cream-200 rounded text-[11px] font-mono">
+            <input type="text" readonly id="modal-sa-email" value="attendance-sync@total-byte-507113-g0.iam.gserviceaccount.com" class="flex-1 px-2.5 py-1.5 bg-white border border-cream-200 rounded text-[11px] font-mono">
             <button onclick="copyServiceEmail()" class="px-2.5 py-1.5 bg-seagreen-600 text-white rounded font-bold text-[11px]">Copy</button>
           </div>
         </div>
@@ -2117,7 +2117,7 @@
     }
 
     function copyServiceEmail() {
-      const email = document.getElementById('sa-email-display')?.textContent.trim() || 'attendance-sync-sa@smart-attendance-system.iam.gserviceaccount.com';
+      const email = document.getElementById('modal-sa-email')?.value.trim() || document.getElementById('sa-email-display')?.textContent.trim() || 'attendance-sync@total-byte-507113-g0.iam.gserviceaccount.com';
       navigator.clipboard.writeText(email);
       alert(`[Success] Service Account email copied to clipboard!\n\nEmail: ${email}\n\nShare your Google Sheet with this email as Editor.`);
     }

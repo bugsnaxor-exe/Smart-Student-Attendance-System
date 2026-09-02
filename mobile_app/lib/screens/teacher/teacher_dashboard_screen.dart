@@ -49,7 +49,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   String _linkedSheetId = '1KN_lGqkfzE7CBdiceE8VEnEQ-37vsuGFz2jTvRhsPFk';
   String? _sheetTestResult;
   bool _isTestingSheet = false;
-  static const String _serviceAccountEmail = 'attendance-sync-sa@smart-attendance-system.iam.gserviceaccount.com';
+  static const String _serviceAccountEmail = 'attendance-sync@total-byte-507113-g0.iam.gserviceaccount.com';
 
   // Complete MCA Curriculum Directory (31 Courses across all 4 Semesters)
   static const Map<int, List<Map<String, String>>> _curriculum = {

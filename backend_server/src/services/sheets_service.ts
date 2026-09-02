@@ -121,7 +121,7 @@ export class GoogleSheetsService {
     return (
       process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ||
       this.serviceAccountEmail ||
-      'attendance-sync-sa@smart-attendance-system.iam.gserviceaccount.com'
+      'attendance-sync@total-byte-507113-g0.iam.gserviceaccount.com'
     );
   }
 
