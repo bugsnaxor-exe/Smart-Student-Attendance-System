@@ -1485,6 +1485,7 @@
       }
       loadSyllabusBatches();
 
+      const badgeCourse = document.getElementById('faculty-course-badge');
       if (badgeCourse) badgeCourse.textContent = courseSelect?.value || initialSubj;
 
       const navControls = document.getElementById('nav-auth-controls');
