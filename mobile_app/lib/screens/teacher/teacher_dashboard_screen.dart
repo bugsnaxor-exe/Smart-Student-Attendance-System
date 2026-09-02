@@ -1550,7 +1550,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Live Matrix Google Sheet Mirror',
+                      'Live Matrix Google Sheet',
                       style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: AppTheme.charcoal),
                     ),
                     const SizedBox(height: 8),
