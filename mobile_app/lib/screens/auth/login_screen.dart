@@ -147,15 +147,15 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // 1. Validate Registration Number: Exactly 7 digits
-    if (!RegExp(r'^\d{7}$').hasMatch(regNumber)) {
-      _showSnackBar('Registration Number must be exactly 7 digits (e.g. 2080033).', isError: true);
+    // 1. Validate Registration Number: 7 to 11 digits
+    if (!RegExp(r'^\d{7,11}$').hasMatch(regNumber)) {
+      _showSnackBar('Registration Number must be 7 to 11 digits (e.g. 2080033).', isError: true);
       return;
     }
 
-    // 2. Validate University Roll: 2 digits / unrestricted course / 6 digits
-    if (!RegExp(r'^\d{2}/[A-Za-z0-9_.\-\s]+/\d{6}$', caseSensitive: false).hasMatch(uniRoll)) {
-      _showSnackBar("University Roll Number must match format '2 digits/course/6 digits' (e.g. 90/MCA/250028).", isError: true);
+    // 2. Validate University Roll: 11 digits OR 2 digits/course/6 digits
+    if (!RegExp(r'^(\d{11}|\d{2}/[A-Za-z0-9_.\-\s]+/\d{6})$', caseSensitive: false).hasMatch(uniRoll)) {
+      _showSnackBar("University Roll Number must be an 11-digit number (e.g. 12000126042) or format '2 digits/course/6 digits' (e.g. 90/MCA/250028).", isError: true);
       return;
     }
 
@@ -621,16 +621,29 @@ class _LoginScreenState extends State<LoginScreen> {
             Expanded(
               child: TextField(
                 controller: _studentUniRollController,
+                maxLength: 15,
+                inputFormatters: [LengthLimitingTextInputFormatter(15)],
+                textCapitalization: TextCapitalization.characters,
                 style: const TextStyle(fontSize: 13),
-                decoration: const InputDecoration(labelText: 'University Roll', hintText: '90/MCA/250028'),
+                decoration: const InputDecoration(
+                  labelText: 'University Roll',
+                  hintText: '12000126042',
+                  counterText: '',
+                ),
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: TextField(
                 controller: _studentClassRollController,
+                maxLength: 8,
+                inputFormatters: [LengthLimitingTextInputFormatter(8)],
                 style: const TextStyle(fontSize: 13),
-                decoration: const InputDecoration(labelText: 'Class Roll', hintText: 'e.g. 42'),
+                decoration: const InputDecoration(
+                  labelText: 'Class Roll',
+                  hintText: 'e.g. 42',
+                  counterText: '',
+                ),
               ),
             ),
           ],
@@ -642,12 +655,15 @@ class _LoginScreenState extends State<LoginScreen> {
             Expanded(
               child: TextField(
                 controller: _studentRegYearController,
+                maxLength: 9,
+                inputFormatters: [LengthLimitingTextInputFormatter(9)],
                 keyboardType: TextInputType.text,
                 style: const TextStyle(fontSize: 13),
                 decoration: const InputDecoration(
                   labelText: 'Reg. Year',
                   hintText: 'e.g. 2025-2026',
                   prefixIcon: Icon(Icons.calendar_today_outlined, size: 16),
+                  counterText: '',
                 ),
               ),
             ),
@@ -676,8 +692,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
         TextField(
           controller: _studentRegNoController,
+          maxLength: 11,
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(11),
+          ],
           style: const TextStyle(fontSize: 13),
-          decoration: const InputDecoration(labelText: 'Reg Number', hintText: '2080033'),
+          decoration: const InputDecoration(
+            labelText: 'Reg Number (7-11 digits)',
+            hintText: '2080033',
+            counterText: '',
+          ),
         ),
         const SizedBox(height: 10),
 
