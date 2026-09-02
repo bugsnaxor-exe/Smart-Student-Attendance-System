@@ -63,12 +63,14 @@ class TeacherDetails {
   final String id;
   final String departmentId;
   final String? departmentName;
+  final bool isApproved;
   final List<dynamic>? subjects;
 
   TeacherDetails({
     required this.id,
     required this.departmentId,
     this.departmentName,
+    this.isApproved = false,
     this.subjects,
   });
 
@@ -77,6 +79,7 @@ class TeacherDetails {
       id: json['id'] ?? '',
       departmentId: json['departmentId'] ?? '',
       departmentName: json['department'] != null ? json['department']['name'] : null,
+      isApproved: json['isApproved'] == true,
       subjects: json['subjects'],
     );
   }
