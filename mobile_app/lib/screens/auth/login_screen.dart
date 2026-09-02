@@ -42,6 +42,10 @@ class _LoginScreenState extends State<LoginScreen> {
   String _facultySubjectCode = 'MCA-301';
   String _facultyDepartment = 'MCA';
 
+  // Faculty status alert banner (Zero emojis)
+  String? _facultyStatusMessage;
+  String _facultyStatusType = 'pending'; // 'approved', 'rejected', 'pending'
+
   final List<Map<String, String>> _universityDepartments = [
     {'code': 'MCA', 'name': 'Master of Computer Applications (MCA)'},
     {'code': 'MCS', 'name': 'Master of Computer Science (MCS)'},
@@ -194,22 +198,39 @@ class _LoginScreenState extends State<LoginScreen> {
     final result = await auth.login(email, password);
 
     if (result.requiresOtp && mounted) {
+      setState(() {
+        _facultyStatusMessage = null;
+      });
       _showFacultyOtpBottomSheet(result.email ?? email);
     } else if (result.success && mounted) {
+      setState(() {
+        _facultyStatusType = 'approved';
+        _facultyStatusMessage = 'Account Approved: Your faculty profile has been approved by the administrator. Now you can sign in.';
+      });
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const TeacherDashboardScreen()),
       );
     } else if (mounted) {
-      String msg = result.error ?? 'Faculty login failed. Check email/password.';
-      if (msg.toLowerCase().contains('pending approval') || msg.toLowerCase().contains('pending verification')) {
-        msg = 'Your faculty registration is pending verification and approval by the Administrator.';
-      } else if (msg.contains('roll number') || msg.contains('No registered account') || msg.contains('Invalid email') || msg.contains('not found')) {
-        msg = 'Faculty account not found for this email. Please check your email or register.';
-      } else if (msg.toLowerCase().contains('password')) {
-        msg = 'Incorrect password for faculty account. Please try again.';
-      }
-      _showSnackBar(msg, isError: true);
+      final err = (result.error ?? '').toLowerCase();
+      setState(() {
+        if (err.contains('pending') || err.contains('approval') || err.contains('verification')) {
+          _facultyStatusType = 'pending';
+          _facultyStatusMessage = 'Faculty Registration Pending: Your account has been submitted and is currently awaiting verification and approval by the administrator.';
+        } else if (err.contains('rejected') || err.contains('declined')) {
+          _facultyStatusType = 'rejected';
+          _facultyStatusMessage = 'Account Rejected: Your faculty registration request has been declined by the administrator. Please contact administration for further assistance.';
+        } else if (err.contains('not found') || err.contains('no registered')) {
+          _facultyStatusType = 'rejected';
+          _facultyStatusMessage = 'Faculty account not found for this email address. Please check your email or register your account.';
+        } else if (err.contains('password')) {
+          _facultyStatusType = 'rejected';
+          _facultyStatusMessage = 'Incorrect password for faculty account. Please verify your password and try again.';
+        } else {
+          _facultyStatusType = 'rejected';
+          _facultyStatusMessage = result.error ?? 'Authentication failed. Please try again.';
+        }
+      });
     }
   }
 
@@ -235,17 +256,26 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (success && mounted) {
       if (auth.token != null && auth.currentUser?.teacher?.isApproved == true) {
-        _showSnackBar('Faculty registered successfully! Accessing console...', isError: false);
+        setState(() {
+          _facultyStatusType = 'approved';
+          _facultyStatusMessage = 'Account Approved: Your faculty profile has been approved by the administrator. Now you can sign in.';
+        });
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const TeacherDashboardScreen()),
         );
       } else {
-        _showSnackBar('Faculty registration submitted! Awaiting Administrator approval before login.', isError: false);
-        setState(() => _selectedMode = AuthMode.login);
+        setState(() {
+          _facultyStatusType = 'pending';
+          _facultyStatusMessage = 'Faculty Registration Pending: Your account has been submitted and is currently awaiting verification and approval by the administrator.';
+          _selectedMode = AuthMode.login;
+        });
       }
     } else if (mounted) {
-      _showSnackBar(auth.errorMessage ?? 'Faculty registration failed.', isError: true);
+      setState(() {
+        _facultyStatusType = 'rejected';
+        _facultyStatusMessage = auth.errorMessage ?? 'Faculty registration failed. Please try again.';
+      });
     }
   }
 
@@ -752,7 +782,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: AppTheme.seaGreen.withOpacity(0.3)),
               ),
-              child: const Text('🔐 2FA Email Protected', style: TextStyle(color: AppTheme.seaGreenDark, fontSize: 10, fontWeight: FontWeight.w700)),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.verified_user_outlined, size: 11, color: AppTheme.seaGreenDark),
+                  SizedBox(width: 4),
+                  Text('2FA Email Protected', style: TextStyle(color: AppTheme.seaGreenDark, fontSize: 10, fontWeight: FontWeight.w700)),
+                ],
+              ),
             ),
           ],
         ),
@@ -761,7 +798,52 @@ class _LoginScreenState extends State<LoginScreen> {
           'Single-use 6-digit OTP will be dispatched to your email.',
           style: TextStyle(fontSize: 11, color: AppTheme.charcoalMuted),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
+
+        if (_facultyStatusMessage != null)
+          Container(
+            margin: const EdgeInsets.only(bottom: 14),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: _facultyStatusType == 'approved'
+                  ? const Color(0xFFECFDF5)
+                  : (_facultyStatusType == 'rejected' ? const Color(0xFFFEF2F2) : const Color(0xFFFFFBEB)),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: _facultyStatusType == 'approved'
+                    ? const Color(0xFFA7F3D0)
+                    : (_facultyStatusType == 'rejected' ? const Color(0xFFFECACA) : const Color(0xFFFDE68A)),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  _facultyStatusType == 'approved'
+                      ? Icons.check_circle_outline_rounded
+                      : (_facultyStatusType == 'rejected' ? Icons.cancel_outlined : Icons.schedule_rounded),
+                  size: 18,
+                  color: _facultyStatusType == 'approved'
+                      ? const Color(0xFF047857)
+                      : (_facultyStatusType == 'rejected' ? const Color(0xFFB91C1C) : const Color(0xFFB45309)),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _facultyStatusMessage!,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: _facultyStatusType == 'approved'
+                          ? const Color(0xFF065F46)
+                          : (_facultyStatusType == 'rejected' ? const Color(0xFF991B1B) : const Color(0xFF92400E)),
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
 
         TextField(
           controller: _facultyEmailController,

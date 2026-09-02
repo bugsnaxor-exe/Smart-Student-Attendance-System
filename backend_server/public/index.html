@@ -201,6 +201,9 @@
           </button>
         </div>
 
+        <!-- Auth Status Banner (Pure SVG - Zero Emojis) -->
+        <div id="auth-status-banner" class="hidden mb-4 p-3.5 rounded-2xl border flex items-start space-x-2.5 shadow-sm transition-all duration-300"></div>
+
         <!-- Login Form -->
         <form id="form-login" onsubmit="handleFacultyLogin(event)" class="space-y-4">
           <div>
@@ -951,6 +954,52 @@
     }
     window.switchAuthTab = switchAuthTab;
 
+    function showAuthStatusBanner(type, message) {
+      const banner = document.getElementById('auth-status-banner');
+      if (!banner) return;
+
+      if (!message) {
+        banner.style.display = 'none';
+        banner.classList.add('hidden');
+        banner.innerHTML = '';
+        return;
+      }
+
+      banner.style.display = 'flex';
+      banner.classList.remove('hidden');
+
+      let iconSvg = '';
+      let borderClass = '';
+      let bgClass = '';
+      let textClass = '';
+
+      if (type === 'approved') {
+        bgClass = 'bg-emerald-50';
+        borderClass = 'border-emerald-200';
+        textClass = 'text-emerald-900';
+        iconSvg = `<svg class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+      } else if (type === 'rejected') {
+        bgClass = 'bg-rose-50';
+        borderClass = 'border-rose-200';
+        textClass = 'text-rose-900';
+        iconSvg = `<svg class="w-5 h-5 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+      } else {
+        // pending
+        bgClass = 'bg-amber-50';
+        borderClass = 'border-amber-200';
+        textClass = 'text-amber-900';
+        iconSvg = `<svg class="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+      }
+
+      banner.className = `mb-4 p-3.5 rounded-2xl border ${bgClass} ${borderClass} flex items-start space-x-2.5 shadow-sm transition-all duration-300`;
+      banner.innerHTML = `
+        ${iconSvg}
+        <div class="flex-1 text-left">
+          <p class="text-xs font-bold ${textClass} leading-relaxed">${message}</p>
+        </div>
+      `;
+    }
+
     let pendingOtpEmail = '';
     let otpCountdown = 300;
     let otpTimerInterval = null;
@@ -974,9 +1023,11 @@
 
         if (res.ok) {
           if (data.requiresOtp) {
+            showAuthStatusBanner(null);
             pendingOtpEmail = data.email || email;
             showOtpScreen(pendingOtpEmail);
           } else if (data.token) {
+            showAuthStatusBanner('approved', 'Account Approved: Your faculty profile has been approved by the administrator. Now you can sign in.');
             loggedInFaculty = data.user;
             localStorage.setItem('edu_faculty_token', data.token);
             localStorage.setItem('edu_faculty_user', JSON.stringify(data.user));
@@ -984,17 +1035,20 @@
           }
         } else {
           let errorMsg = data.error || 'Invalid credentials.';
-          if (errorMsg.toLowerCase().includes('pending approval') || errorMsg.toLowerCase().includes('pending verification')) {
-            errorMsg = '[!] Faculty Registration Pending Approval\n\nYour account has been submitted and is currently awaiting verification and approval by the Administrator / Head of Department before you can sign in.';
+          if (errorMsg.toLowerCase().includes('pending') || errorMsg.toLowerCase().includes('approval') || errorMsg.toLowerCase().includes('verification')) {
+            showAuthStatusBanner('pending', 'Faculty Registration Pending: Your account has been submitted and is currently awaiting verification and approval by the administrator.');
+          } else if (errorMsg.toLowerCase().includes('rejected') || errorMsg.toLowerCase().includes('declined')) {
+            showAuthStatusBanner('rejected', 'Account Rejected: Your faculty registration request has been declined by the administrator. Please contact administration for further assistance.');
           } else if (errorMsg.includes('roll number') || errorMsg.includes('No registered account') || errorMsg.includes('Invalid email') || errorMsg.includes('not found')) {
-            errorMsg = '[!] Faculty account not found for this email address.\n\nPlease check your email or click "Register Account" to create your faculty profile.';
+            showAuthStatusBanner('rejected', 'Faculty account not found for this email address. Please check your email or register your account.');
           } else if (errorMsg.toLowerCase().includes('password')) {
-            errorMsg = '[!] Incorrect password.\n\nPlease verify your faculty password and try again.';
+            showAuthStatusBanner('rejected', 'Incorrect password. Please verify your faculty password and try again.');
+          } else {
+            showAuthStatusBanner('rejected', errorMsg);
           }
-          alert(errorMsg);
         }
       } catch (err) {
-        alert('Server connection error. Please make sure backend is online.');
+        showAuthStatusBanner('rejected', 'Server connection error. Please make sure backend is online.');
       } finally {
         btn.disabled = false;
         btn.innerHTML = `<span>Sign In to Faculty Portal (2FA)</span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>`;
@@ -1166,14 +1220,14 @@
             localStorage.removeItem('edu_faculty_token');
             localStorage.removeItem('edu_faculty_user');
             loggedInFaculty = null;
-            alert(data.message || 'Faculty registration submitted successfully! Your account is pending verification and approval by the Administrator / Head of Department before you can sign in.');
             switchAuthTab('login');
+            showAuthStatusBanner('pending', 'Faculty Registration Pending: Your account has been submitted and is currently awaiting verification and approval by the administrator.');
           }
         } else {
-          alert(data.error || 'Registration failed. Please try again.');
+          showAuthStatusBanner('rejected', data.error || 'Registration failed. Please try again.');
         }
       } catch (err) {
-        alert('Server connection error during registration.');
+        showAuthStatusBanner('rejected', 'Server connection error during registration.');
       } finally {
         if (btn) {
           btn.disabled = false;

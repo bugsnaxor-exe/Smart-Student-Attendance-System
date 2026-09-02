@@ -331,8 +331,8 @@ export class AuthService {
     if (user.role === 'TEACHER' || user.role === 'ADMIN') {
       // Check if Teacher account is approved
       if (user.role === 'TEACHER' && !isSayantan) {
-        if (user.teacher && !user.teacher.isApproved) {
-          throw new Error('Your faculty registration is pending approval by the Administrator / HOD. You will be able to log in once verified.');
+        if (!user.teacher || !user.teacher.isApproved) {
+          throw new Error('Faculty Registration Pending: Your account has been submitted and is currently awaiting verification and approval by the administrator.');
         }
       }
 
@@ -418,8 +418,8 @@ export class AuthService {
     }
 
     if (user.role === 'TEACHER' && !isSayantan) {
-      if (user.teacher && !user.teacher.isApproved) {
-        throw new Error('Your faculty account is pending verification and approval by the Administrator.');
+      if (!user.teacher || !user.teacher.isApproved) {
+        throw new Error('Faculty Registration Pending: Your account has been submitted and is currently awaiting verification and approval by the administrator.');
       }
     }
 
