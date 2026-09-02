@@ -306,6 +306,7 @@
             <div class="flex items-center space-x-2 mb-1 flex-wrap gap-y-1">
               <span class="px-2.5 py-0.5 rounded-full bg-seagreen-600 text-white text-[11px] font-bold uppercase tracking-wider">Faculty Console</span>
               <span id="faculty-dept-badge" class="text-xs text-gray-300 font-medium">Master of Computer Applications</span>
+              <span id="faculty-course-badge" class="px-2.5 py-0.5 rounded-full bg-white/10 text-seagreen-300 text-[11px] font-mono border border-white/20">MCA-301</span>
             </div>
             <h2 id="faculty-welcome-name" class="text-2xl sm:text-3xl font-extrabold tracking-tight">Faculty Member</h2>
             <p id="faculty-email-display" class="text-xs text-gray-400 font-mono mt-1">faculty@college.edu</p>
@@ -1533,6 +1534,11 @@
       courseSelect.innerHTML = courses.map(c => `
         <option value="${c.code}" data-name="${c.name}" data-type="${c.type || 'Theory'}" data-credits="${c.credits || 4}">${c.code}: ${c.name} (${c.type || 'Theory'})</option>
       `).join('');
+
+      const badge = document.getElementById('faculty-course-badge');
+      if (badge && courses.length > 0) {
+        badge.textContent = `${courses[0].code}: ${courses[0].name}`;
+      }
     }
 
     function onTeacherSemesterChange() {
@@ -1552,6 +1558,12 @@
     function onTeacherCourseChange() {
       const courseSelect = document.getElementById('teacher-course-select');
       if (!courseSelect) return;
+      const selectedOption = courseSelect.options[courseSelect.selectedIndex];
+      const courseName = selectedOption?.getAttribute('data-name') || '';
+      const badge = document.getElementById('faculty-course-badge');
+      if (badge) {
+        badge.textContent = `${courseSelect.value}: ${courseName}`;
+      }
       checkAndSyncActiveSession(courseSelect.value);
       fetchAndRenderStudents(currentTeacherSem);
       updateSessionCountDisplay();
