@@ -450,22 +450,22 @@
 
       </div>
 
-      <!-- Dedicated Admin Manual Override Section (Full Attendance - Super Admin Only) -->
+      <!-- Dedicated Manual Override Section (Full Attendance - Faculty & Super Admin) -->
       <div id="override-section-container" class="w-full bg-white rounded-3xl p-6 border border-cream-200 device-shadow transition-all duration-300">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 border-b border-cream-200 pb-3">
           <div class="flex items-center space-x-2">
             <span class="text-amber-500">
               <svg class="w-4 h-4 fill-current text-amber-500 inline-block" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
             </span>
-            <h4 class="text-xs font-bold uppercase tracking-wider text-charcoal-900">Administrative Manual Override (Grant Full Attendance)</h4>
-            <span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-extrabold rounded-md">Admin Exclusive</span>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-charcoal-900">Manual Attendance Override (Grant Full Attendance)</h4>
+            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold rounded-md">Faculty & Admin Control</span>
           </div>
           <button type="button" onclick="openExportReportModal()" class="px-4 py-2 bg-cream-100 hover:bg-cream-200 text-charcoal-900 text-xs font-bold rounded-xl border border-cream-200 transition flex items-center justify-center space-x-1.5 cursor-pointer">
             <svg class="w-4 h-4 text-seagreen-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             <span>View Full Academic Audit Report</span>
           </button>
         </div>
-        <p class="text-xs text-charcoal-700 mb-4">Super Admin manual attendance override. Tap <strong class="text-charcoal-900">"Grant Full Attendance"</strong> to manually mark <strong class="text-seagreen-700">"P" (Full Attendance - 2 Counts)</strong> in the database and synchronize directly to both Google Sheets.</p>
+        <p class="text-xs text-charcoal-700 mb-4">Manual attendance control. Tap <strong class="text-charcoal-900">"Grant Full Attendance"</strong> to log <strong class="text-seagreen-700">"P" (Full Attendance - 2 Counts)</strong> for a student who arrived late for genuine work, synchronizing immediately to Google Sheets.</p>
 
         <div id="absent-students-list" class="space-y-2.5">
           <!-- Populated dynamically based on semester -->
@@ -1493,11 +1493,7 @@
         }
       }
       if (overrideContainer) {
-        if (isAdmin) {
-          overrideContainer.classList.remove('hidden');
-        } else {
-          overrideContainer.classList.add('hidden');
-        }
+        overrideContainer.classList.remove('hidden');
       }
       loadSyllabusBatches();
 
@@ -1867,9 +1863,6 @@
         return;
       }
 
-      const isSayantan = ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].includes(loggedInFaculty?.email?.toLowerCase());
-      const isAdmin = loggedInFaculty?.role === 'ADMIN' || isSayantan;
-
       container.innerHTML = `
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           ${unmarked.map(s => {
@@ -1886,18 +1879,12 @@
                   <p class="text-[10px] text-charcoal-500 font-mono">Roll: ${s.classRoll || '—'} • Uni: ${uni || '—'}</p>
                 </div>
               </div>
-              ${isAdmin ? `
               <button 
                 onclick="grantFullOverride('${s.id || ''}', '${s.classRoll || ''}', '${uni}', '${reg}', '${(s.name || '').replace(/'/g, "\\'")}')" 
                 class="px-2.5 py-1.5 bg-seagreen-700 hover:bg-seagreen-800 text-white font-bold text-[10px] rounded-lg shadow transition flex items-center space-x-1 shrink-0 ml-2 cursor-pointer">
                 <span>⭐</span>
                 <span>Grant Full</span>
               </button>
-              ` : `
-              <span class="px-2 py-1 bg-cream-200 text-charcoal-600 font-bold text-[10px] rounded-md shrink-0 ml-2">
-                Awaiting Scan
-              </span>
-              `}
             </div>
           `;}).join('')}
         </div>
@@ -2227,16 +2214,8 @@
       }
     }
 
-    // --- ADMIN MANUAL FULL ATTENDANCE OVERRIDE ('P') & DUAL GOOGLE SHEET SYNC ---
+    // --- MANUAL FULL ATTENDANCE OVERRIDE ('P') & DUAL GOOGLE SHEET SYNC ---
     async function grantFullOverride(studentId, classRoll, uniRoll, regNo, name) {
-      const isSayantan = ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].includes(loggedInFaculty?.email?.toLowerCase());
-      const isAdmin = loggedInFaculty?.role === 'ADMIN' || isSayantan;
-
-      if (!isAdmin) {
-        alert('Access Denied: Manual attendance override is restricted to Super Admin only.');
-        return;
-      }
-
       const courseSelect = document.getElementById('teacher-course-select');
       const courseCode = courseSelect?.value || 'MCA-301';
       const todayDateStr = getTodayDateStr();

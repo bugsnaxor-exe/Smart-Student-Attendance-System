@@ -201,9 +201,9 @@ class ApiService {
     return jsonDecode(res.body);
   }
 
-  static Future<Map<String, dynamic>> grantHalfAttendance(String subjectId, String studentId, {String? date, String? sessionId}) async {
+  static Future<Map<String, dynamic>> grantFullAttendance(String subjectId, String studentId, {String? date, String? sessionId}) async {
     final res = await http.post(
-      Uri.parse('$baseUrl/override/grant-half'),
+      Uri.parse('$baseUrl/override/grant-full'),
       headers: await _getHeaders(),
       body: jsonEncode({
         'subjectId': subjectId,
@@ -214,6 +214,9 @@ class ApiService {
     );
     return jsonDecode(res.body);
   }
+
+  static Future<Map<String, dynamic>> grantHalfAttendance(String subjectId, String studentId, {String? date, String? sessionId}) =>
+      grantFullAttendance(subjectId, studentId, date: date, sessionId: sessionId);
 
   static Future<Map<String, dynamic>> getTodaySessionCounts() async {
     final res = await http.get(

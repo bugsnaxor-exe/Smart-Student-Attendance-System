@@ -293,12 +293,12 @@ class AttendanceProvider extends ChangeNotifier {
     }
   }
 
-  /// Teacher: Manually grants Half attendance to a late student
-  Future<bool> grantHalfAttendance(String subjectId, String studentId, {String? date, String? sessionId}) async {
+  /// Teacher/Admin: Manually grants Full attendance ('P') to a late student
+  Future<bool> grantFullAttendance(String subjectId, String studentId, {String? date, String? sessionId}) async {
     try {
       final targetSessionId = sessionId ?? (_teacherActiveSession?['id'] as String?) ?? _currentActiveSessionId;
-      final res = await ApiService.grantHalfAttendance(subjectId, studentId, date: date, sessionId: targetSessionId);
-      if (res['status'] == 'Half') {
+      final res = await ApiService.grantFullAttendance(subjectId, studentId, date: date, sessionId: targetSessionId);
+      if (res['record'] != null || res['status'] == 'Full' || res['status'] == 'Half' || res['sheetSynced'] == true) {
         // Remove from absent list
         _absentStudents.removeWhere((s) => s['id'] == studentId);
         // Refresh live records
@@ -311,6 +311,9 @@ class AttendanceProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<bool> grantHalfAttendance(String subjectId, String studentId, {String? date, String? sessionId}) =>
+      grantFullAttendance(subjectId, studentId, date: date, sessionId: sessionId);
 
   /// Student: Fetches real database attendance history & records for a single subject
   Future<Map<String, dynamic>?> fetchSubjectHistory(String subjectId) async {

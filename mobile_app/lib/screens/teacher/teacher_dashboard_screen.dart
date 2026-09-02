@@ -359,30 +359,32 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     }
   }
 
-  Future<void> _handleGrantHalf(Map<String, dynamic> student) async {
+  Future<void> _handleGrantFull(Map<String, dynamic> student) async {
     final uniRoll = student['universityRoll'] ?? '';
     final studentId = student['id'] ?? '';
     final studentName = student['name'] ?? 'Student';
 
     setState(() {
-      _attendanceStatusByUniRoll[uniRoll] = 'H';
+      _attendanceStatusByUniRoll[uniRoll] = 'P';
     });
 
     final attendance = Provider.of<AttendanceProvider>(context, listen: false);
     if (_selectedCourseCode != null) {
-      await attendance.grantHalfAttendance(_selectedCourseCode!, studentId, sessionId: _activeSessionId);
+      await attendance.grantFullAttendance(_selectedCourseCode!, studentId, sessionId: _activeSessionId);
       await _fetchTodayCheckIns();
     }
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('⏱️ Half attendance (+1 count) granted for $studentName ($uniRoll).'),
-          backgroundColor: const Color(0xFFD97706),
+          content: Text('⭐ Full attendance (P) granted for $studentName ($uniRoll). Synced with Google Sheets.'),
+          backgroundColor: AppTheme.seaGreenDark,
         ),
       );
     }
   }
+
+  Future<void> _handleGrantHalf(Map<String, dynamic> student) => _handleGrantFull(student);
 
   Future<void> _detectLocation() async {
     try {
@@ -1675,20 +1677,16 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                                     ],
                                   ),
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF3F4F6),
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: const Color(0xFFE5E7EB)),
-                                  ),
-                                  child: const Text(
-                                    'Awaiting Scan',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF6B7280),
-                                    ),
+                                ElevatedButton.icon(
+                                  onPressed: () => _handleGrantFull(s),
+                                  icon: const Icon(Icons.star_rounded, size: 14, color: Colors.amber),
+                                  label: const Text('Grant Full', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.charcoal,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                    minimumSize: Size.zero,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                   ),
                                 ),
                               ],
