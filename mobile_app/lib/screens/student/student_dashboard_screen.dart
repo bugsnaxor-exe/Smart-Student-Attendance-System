@@ -348,7 +348,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  'Enrolled Sem ${student?.semester ?? 3}',
+                                  'Semester $_selectedSemester',
                                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 11),
                                 ),
                               ),
