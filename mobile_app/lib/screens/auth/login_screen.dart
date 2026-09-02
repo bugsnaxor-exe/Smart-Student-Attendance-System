@@ -496,8 +496,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   // --- 1. STUDENT LOGIN FORM ---
