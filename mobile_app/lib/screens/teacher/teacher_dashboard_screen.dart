@@ -1618,14 +1618,14 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                         Text('⏱️', style: TextStyle(fontSize: 16)),
                         SizedBox(width: 6),
                         Text(
-                          'LATE COMERS MANUAL OVERRIDE (HALF ATTENDANCE)',
+                          'UNMARKED / ABSENT STUDENTS ROSTER',
                           style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: AppTheme.charcoal),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      'Students who entered late and missed the 15-minute geofence cutoff. Tap "Grant Half (+1)" to log "H" (1 Attendance Count) into their Google Sheet cell.',
+                      'Students who have not yet marked attendance for today\'s active session.',
                       style: TextStyle(color: AppTheme.charcoalMuted, fontSize: 10),
                     ),
                     const SizedBox(height: 12),
@@ -1640,7 +1640,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                         ),
                         child: Center(
                           child: Text(
-                            '🎉 All students for Semester $_selectedSemester have recorded attendance or been processed.',
+                            '🎉 All students for Semester $_selectedSemester have recorded attendance.',
                             style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppTheme.seaGreenDark),
                           ),
                         ),
@@ -1675,15 +1675,20 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                                     ],
                                   ),
                                 ),
-                                ElevatedButton.icon(
-                                  onPressed: () => _handleGrantHalf(s),
-                                  icon: const Icon(Icons.timer_outlined, size: 14),
-                                  label: const Text('Grant Half (+1)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppTheme.charcoal,
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                    minimumSize: Size.zero,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF3F4F6),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                                  ),
+                                  child: const Text(
+                                    'Awaiting Scan',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF6B7280),
+                                    ),
                                   ),
                                 ),
                               ],

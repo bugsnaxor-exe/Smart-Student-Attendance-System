@@ -450,19 +450,22 @@
 
       </div>
 
-      <!-- Dedicated Late Comers Manual Override Section (Full Width) -->
+      <!-- Dedicated Admin Manual Override Section (Full Attendance - Super Admin Only) -->
       <div id="override-section-container" class="w-full bg-white rounded-3xl p-6 border border-cream-200 device-shadow transition-all duration-300">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 border-b border-cream-200 pb-3">
           <div class="flex items-center space-x-2">
-            <span class="text-amber-600"><svg class="w-4 h-4 text-amber-600 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>
-            <h4 class="text-xs font-bold uppercase tracking-wider text-charcoal-900">Late Comers Manual Override (Half Attendance)</h4>
+            <span class="text-amber-500">
+              <svg class="w-4 h-4 fill-current text-amber-500 inline-block" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+            </span>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-charcoal-900">Administrative Manual Override (Grant Full Attendance)</h4>
+            <span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-extrabold rounded-md">Admin Exclusive</span>
           </div>
           <button type="button" onclick="openExportReportModal()" class="px-4 py-2 bg-cream-100 hover:bg-cream-200 text-charcoal-900 text-xs font-bold rounded-xl border border-cream-200 transition flex items-center justify-center space-x-1.5 cursor-pointer">
             <svg class="w-4 h-4 text-seagreen-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             <span>View Full Academic Audit Report</span>
           </button>
         </div>
-        <p class="text-xs text-charcoal-700 mb-4">Students who entered late and missed the 15-minute geofence cutoff. Tap <strong class="text-charcoal-900">"Grant Half (+1)"</strong> to log <strong class="text-amber-700">"H" (1 Attendance Count)</strong> into their attendance record.</p>
+        <p class="text-xs text-charcoal-700 mb-4">Super Admin manual attendance override. Tap <strong class="text-charcoal-900">"Grant Full Attendance"</strong> to manually mark <strong class="text-seagreen-700">"P" (Full Attendance - 2 Counts)</strong> in the database and synchronize directly to both Google Sheets.</p>
 
         <div id="absent-students-list" class="space-y-2.5">
           <!-- Populated dynamically based on semester -->
@@ -1472,6 +1475,8 @@
 
       const btnSyllabus = document.getElementById('btn-admin-syllabus');
       const btnApprovals = document.getElementById('btn-admin-approvals');
+      const overrideContainer = document.getElementById('override-section-container');
+
       if (btnSyllabus) {
         if (isAdmin) {
           btnSyllabus.classList.remove('hidden');
@@ -1485,6 +1490,13 @@
           loadPendingFaculty();
         } else {
           btnApprovals.classList.add('hidden');
+        }
+      }
+      if (overrideContainer) {
+        if (isAdmin) {
+          overrideContainer.classList.remove('hidden');
+        } else {
+          overrideContainer.classList.add('hidden');
         }
       }
       loadSyllabusBatches();
@@ -1855,6 +1867,9 @@
         return;
       }
 
+      const isSayantan = ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].includes(loggedInFaculty?.email?.toLowerCase());
+      const isAdmin = loggedInFaculty?.role === 'ADMIN' || isSayantan;
+
       container.innerHTML = `
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           ${unmarked.map(s => {
@@ -1871,12 +1886,18 @@
                   <p class="text-[10px] text-charcoal-500 font-mono">Roll: ${s.classRoll || '—'} • Uni: ${uni || '—'}</p>
                 </div>
               </div>
+              ${isAdmin ? `
               <button 
-                onclick="grantHalfOverride('${s.id || ''}', '${s.classRoll || ''}', '${uni}', '${reg}', '${(s.name || '').replace(/'/g, "\\'")}')" 
-                class="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-[10px] rounded-lg shadow transition flex items-center space-x-1 shrink-0 ml-2">
-                <span><svg class="w-3.5 h-3.5 text-charcoal-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>
-                <span>Grant Half</span>
+                onclick="grantFullOverride('${s.id || ''}', '${s.classRoll || ''}', '${uni}', '${reg}', '${(s.name || '').replace(/'/g, "\\'")}')" 
+                class="px-2.5 py-1.5 bg-seagreen-700 hover:bg-seagreen-800 text-white font-bold text-[10px] rounded-lg shadow transition flex items-center space-x-1 shrink-0 ml-2 cursor-pointer">
+                <span>⭐</span>
+                <span>Grant Full</span>
               </button>
+              ` : `
+              <span class="px-2 py-1 bg-cream-200 text-charcoal-600 font-bold text-[10px] rounded-md shrink-0 ml-2">
+                Awaiting Scan
+              </span>
+              `}
             </div>
           `;}).join('')}
         </div>
@@ -2206,22 +2227,30 @@
       }
     }
 
-    // --- LATE COMER HALF ATTENDANCE OVERRIDE (1 COUNT) & REAL GOOGLE SHEET SYNC ---
-    async function grantHalfOverride(studentId, classRoll, uniRoll, regNo, name) {
+    // --- ADMIN MANUAL FULL ATTENDANCE OVERRIDE ('P') & DUAL GOOGLE SHEET SYNC ---
+    async function grantFullOverride(studentId, classRoll, uniRoll, regNo, name) {
+      const isSayantan = ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].includes(loggedInFaculty?.email?.toLowerCase());
+      const isAdmin = loggedInFaculty?.role === 'ADMIN' || isSayantan;
+
+      if (!isAdmin) {
+        alert('Access Denied: Manual attendance override is restricted to Super Admin only.');
+        return;
+      }
+
       const courseSelect = document.getElementById('teacher-course-select');
       const courseCode = courseSelect?.value || 'MCA-301';
       const todayDateStr = getTodayDateStr();
 
-      // Optimistically update local UI immediately
-      if (uniRoll) attendanceStatusByStudent[uniRoll] = 'H';
-      if (classRoll) attendanceStatusByStudent[classRoll] = 'H';
-      if (studentId) attendanceStatusByStudent[studentId] = 'H';
+      // Optimistically update local UI immediately to 'P'
+      if (uniRoll) attendanceStatusByStudent[uniRoll] = 'P';
+      if (classRoll) attendanceStatusByStudent[classRoll] = 'P';
+      if (studentId) attendanceStatusByStudent[studentId] = 'P';
       renderMatrixGoogleSheet(currentTeacherSem);
       renderAbsentStudents(currentTeacherSem);
 
       const token = localStorage.getItem('edu_faculty_token');
       try {
-        const res = await fetch('/api/override/grant-half', {
+        const res = await fetch('/api/override/grant-full', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -2240,37 +2269,19 @@
 
         const data = await res.json();
         if (res.ok) {
-          console.log(`[Attendance] Half attendance recorded in DB for ${name} (${classRoll}):`, data);
-          if (data.sheetSynced) {
-            console.log(`[Google Sheet] Google Sheet synced successfully for ${name}.`);
-          }
-
-          // Optional custom sheet sync if configured in local storage
-          const customSheetId = localStorage.getItem('teacher_sheet_id');
-          if (customSheetId) {
-            fetch('/api/override/grant-half-matrix', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                spreadsheetId: customSheetId,
-                classRoll,
-                universityRoll: uniRoll,
-                registrationNumber: regNo,
-                studentName: name,
-                status: 'Half',
-                date: todayDateStr,
-                subjectCode: courseCode,
-                sessionId: activeSessionId
-              })
-            }).catch(e => console.warn('Custom sheet sync background error:', e));
-          }
+          console.log(`[Admin Override] Full attendance granted for ${name} (${classRoll}):`, data);
         } else {
-          console.error('Error granting half attendance:', data.error);
-          alert('[!] Failed to grant half attendance: ' + (data.error || 'Server error'));
+          console.error('Error granting full attendance:', data.error);
+          alert('[!] Failed to grant full attendance: ' + (data.error || 'Server error'));
         }
       } catch (err) {
-        console.error('Error calling /api/override/grant-half:', err);
+        console.error('Error calling /api/override/grant-full:', err);
       }
+    }
+
+    // Compatibility alias
+    function grantHalfOverride(studentId, classRoll, uniRoll, regNo, name) {
+      return grantFullOverride(studentId, classRoll, uniRoll, regNo, name);
     }
 
     function updateSheetConnectionStatus(sheetId) {

@@ -109,8 +109,9 @@ app.get('/api/attendance/student/dashboard', requireAuth, AttendanceController.g
 app.get('/api/attendance/student/subject-history/:subjectId', requireAuth, AttendanceController.getStudentSubjectAttendanceHistory);
 app.get('/api/attendance/teacher/:subjectId', optionalAuth, AttendanceController.getTeacherSubjectAttendance);
 
-// --- TEACHER OVERRIDE ROUTES (Full / Half Attendance) ---
+// --- ADMIN MANUAL OVERRIDE ROUTES (Full Attendance) ---
 app.get('/api/override/absent/:subjectId', optionalAuth, OverrideController.getAbsentStudentsForSubject);
+app.post('/api/override/grant-full', optionalAuth, OverrideController.grantFullAttendance);
 app.post('/api/override/grant-half', optionalAuth, OverrideController.grantHalfAttendance);
 app.post('/api/override/grant-half-matrix', OverrideController.grantHalfAttendanceMatrix);
 app.get('/api/students/semester/:semester', OverrideController.getStudentsBySemester);

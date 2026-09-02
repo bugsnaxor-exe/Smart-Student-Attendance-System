@@ -88,11 +88,10 @@ export class OverrideController {
   }
 
   /**
-   * Teacher grants "Half Attendance" to a student for a subject.
-   * Works whether a session is active or not started yet.
-   * Updates database and appends to Google Sheet with status: "Half".
+   * Super Admin grants "Full Attendance" to a student for a subject.
+   * Updates database and appends to Google Sheets matrix with status: "Full" ('P').
    */
-  public static async grantHalfAttendance(req: AuthRequest, res: Response) {
+  public static async grantFullAttendance(req: AuthRequest, res: Response) {
     try {
       const { subjectId, studentId, classRoll, universityRoll, registrationNumber, date, sessionId } = req.body;
 
@@ -155,7 +154,7 @@ export class OverrideController {
         targetSession = await SessionService.getActiveSession(subject.id);
       }
 
-      // Create or update attendance record as "Half" for this subject and date
+      // Create or update attendance record as "Full" for this subject and date
       const existing = await prisma.attendanceRecord.findFirst({
         where: {
           studentId: student.id,
@@ -169,7 +168,7 @@ export class OverrideController {
         record = await prisma.attendanceRecord.update({
           where: { id: existing.id },
           data: {
-            status: 'Half',
+            status: 'Full',
             time: kolkata.formattedTime,
             ...(targetSession ? { sessionId: targetSession.id } : {}),
           },
@@ -182,7 +181,7 @@ export class OverrideController {
             subjectId: subject.id,
             date: targetDate,
             time: kolkata.formattedTime,
-            status: 'Half',
+            status: 'Full',
             syncedToSheet: false,
           },
         });
@@ -205,10 +204,10 @@ export class OverrideController {
           universityRoll: student.universityRoll,
           registrationNumber: student.regNumber,
           studentName: student.user.name,
-          status: 'Half',
+          status: 'Full',
           subjectCode: subject.code,
           subjectName: subject.name,
-          semester: subject.semester,
+          semester: student.semester,
         },
         subject.sheetTabName || 'Attendance'
       );
@@ -235,23 +234,28 @@ export class OverrideController {
             universityRoll: student.universityRoll,
             regNumber: student.regNumber,
           },
-          status: 'Half',
-          date: targetDate,
+          status: 'Full',
           time: kolkata.formattedTime,
+          date: targetDate,
+          sheetSynced: sheetSyncSuccess,
         });
       }
 
       return res.json({
-        message: `Half attendance granted for ${student.user.name} (${student.classRoll}).`,
-        status: 'Half',
-        date: targetDate,
-        time: kolkata.formattedTime,
+        message: `Admin Override: Full attendance granted successfully for ${student.user.name} (${student.classRoll}).`,
+        record,
         sheetSynced: sheetSyncSuccess,
-        attendance: record,
       });
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
     }
+  }
+
+  /**
+   * Compatibility alias for backward compatibility
+   */
+  public static async grantHalfAttendance(req: AuthRequest, res: Response) {
+    return OverrideController.grantFullAttendance(req, res);
   }
 
   /**
