@@ -1163,6 +1163,9 @@
             localStorage.setItem('faculty_assigned_subject', selectedCourse);
             showDashboardView();
           } else {
+            localStorage.removeItem('edu_faculty_token');
+            localStorage.removeItem('edu_faculty_user');
+            loggedInFaculty = null;
             alert(data.message || 'Faculty registration submitted successfully! Your account is pending verification and approval by the Administrator / Head of Department before you can sign in.');
             switchAuthTab('login');
           }

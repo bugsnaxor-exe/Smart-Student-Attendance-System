@@ -234,7 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (success && mounted) {
-      if (auth.token != null) {
+      if (auth.token != null && auth.currentUser?.teacher?.isApproved == true) {
         _showSnackBar('Faculty registered successfully! Accessing console...', isError: false);
         Navigator.pushReplacement(
           context,

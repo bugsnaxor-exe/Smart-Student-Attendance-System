@@ -28,7 +28,7 @@ class AuthProvider extends ChangeNotifier {
   String? get token => _token;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  bool get isAuthenticated => _currentUser != null;
+  bool get isAuthenticated => _currentUser != null && _token != null && (_currentUser?.role != 'TEACHER' || _currentUser?.teacher?.isApproved == true || _currentUser?.role == 'ADMIN');
   bool get isStudent => _currentUser?.role == 'STUDENT';
   bool get isTeacher => _currentUser?.role == 'TEACHER' || _currentUser?.role == 'ADMIN';
 
@@ -40,9 +40,17 @@ class AuthProvider extends ChangeNotifier {
 
       if (userJson != null && token != null && token.isNotEmpty) {
         final Map<String, dynamic> decoded = jsonDecode(userJson);
-        _currentUser = UserModel.fromJson(decoded);
-        _token = token;
-        notifyListeners();
+        final user = UserModel.fromJson(decoded);
+        if (user.role == 'ADMIN' || user.role == 'STUDENT' || user.teacher?.isApproved == true) {
+          _currentUser = user;
+          _token = token;
+          notifyListeners();
+        } else {
+          await prefs.remove('auth_token');
+          await prefs.remove('user_data');
+          _currentUser = null;
+          _token = null;
+        }
       }
     } catch (e) {
       debugPrint('Session restore note: $e');
@@ -68,10 +76,28 @@ class AuthProvider extends ChangeNotifier {
       }
 
       if (res['user'] != null) {
-        _currentUser = UserModel.fromJson(res['user']);
-        _token = res['token'];
-        notifyListeners();
-        return LoginResult(success: true);
+        final user = UserModel.fromJson(res['user']);
+        final isApproved = user.role == 'ADMIN' || user.role == 'STUDENT' || user.teacher?.isApproved == true;
+        final token = res['token'] as String?;
+
+        if (isApproved && token != null) {
+          _currentUser = user;
+          _token = token;
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('auth_token', token);
+          await prefs.setString('user_data', jsonEncode(res['user']));
+          notifyListeners();
+          return LoginResult(success: true);
+        } else {
+          _currentUser = null;
+          _token = null;
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('auth_token');
+          await prefs.remove('user_data');
+          _errorMessage = 'Your faculty registration is pending verification and approval by the Administrator.';
+          notifyListeners();
+          return LoginResult(success: false, error: _errorMessage);
+        }
       } else {
         _errorMessage = res['error'] ?? 'Login failed.';
         notifyListeners();
@@ -95,10 +121,28 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = false;
 
       if (res['user'] != null) {
-        _currentUser = UserModel.fromJson(res['user']);
-        _token = res['token'];
-        notifyListeners();
-        return true;
+        final user = UserModel.fromJson(res['user']);
+        final isApproved = user.role == 'ADMIN' || user.teacher?.isApproved == true;
+        final token = res['token'] as String?;
+
+        if (isApproved && token != null) {
+          _currentUser = user;
+          _token = token;
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('auth_token', token);
+          await prefs.setString('user_data', jsonEncode(res['user']));
+          notifyListeners();
+          return true;
+        } else {
+          _currentUser = null;
+          _token = null;
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('auth_token');
+          await prefs.remove('user_data');
+          _errorMessage = 'Your faculty registration is pending verification and approval by the Administrator.';
+          notifyListeners();
+          return false;
+        }
       } else {
         _errorMessage = res['error'] ?? 'Invalid or expired OTP.';
         notifyListeners();
@@ -188,15 +232,27 @@ class AuthProvider extends ChangeNotifier {
 
       _isLoading = false;
       if (res['user'] != null) {
-        _currentUser = UserModel.fromJson(res['user']);
-        if (res['token'] != null) {
-          _token = res['token'];
+        final isApproved = res['isApproved'] == true;
+        final token = res['token'] as String?;
+
+        if (isApproved && token != null) {
+          _currentUser = UserModel.fromJson(res['user']);
+          _token = token;
           final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('auth_token', res['token']);
+          await prefs.setString('auth_token', token);
           await prefs.setString('user_data', jsonEncode(res['user']));
+          notifyListeners();
+          return true;
+        } else {
+          _currentUser = null;
+          _token = null;
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('auth_token');
+          await prefs.remove('user_data');
+          _errorMessage = res['message'] ?? 'Faculty registration submitted! Awaiting Administrator approval before login.';
+          notifyListeners();
+          return true;
         }
-        notifyListeners();
-        return true;
       } else {
         _errorMessage = res['error'] ?? 'Faculty registration failed.';
         notifyListeners();
