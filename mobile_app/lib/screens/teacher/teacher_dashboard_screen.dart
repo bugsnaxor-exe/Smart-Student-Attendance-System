@@ -377,7 +377,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('⭐ Full attendance (P) granted for $studentName ($uniRoll). Synced with Google Sheets.'),
+          content: Text('Full attendance (P) granted for $studentName ($uniRoll). Synced with Google Sheets.'),
           backgroundColor: AppTheme.seaGreenDark,
         ),
       );
