@@ -33,6 +33,7 @@ const wss = new WebSocketServer({ server, path: '/ws' });
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
+app.get('/favicon.ico', (_req, res) => res.status(204).end());
 
 // Real-Time WebSocket Connections Pool
 const connectedClients = new Set<WebSocket>();
