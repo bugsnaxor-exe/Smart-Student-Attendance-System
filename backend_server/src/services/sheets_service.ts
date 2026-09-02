@@ -180,6 +180,69 @@ export class GoogleSheetsService {
   }
 
   /**
+   * Dispatches student attendance record to all target spreadsheets simultaneously:
+   * 1. The Faculty Member's linked Google Sheet (if configured)
+   * 2. The Super Admin Master Proof Google Sheet (from MASTER_GOOGLE_SHEET_ID)
+   */
+  public static async syncAttendanceToAllTargets(
+    targetSheetIds: (string | null | undefined)[],
+    rowData: AttendanceSheetRow,
+    tabName: string = 'Attendance'
+  ): Promise<{ success: boolean; message: string; results: { sheetId: string; success: boolean; message?: string }[] }> {
+    const masterSheetId = (
+      process.env.MASTER_GOOGLE_SHEET_ID ||
+      process.env.GOOGLE_SPREADSHEET_ID ||
+      '1KN_lGqkfzE7CBdiceE8VEneQ-37vsuGFz2jTvRhsPFk'
+    ).trim();
+
+    // Deduplicate all distinct non-empty spreadsheet IDs
+    const uniqueIds = Array.from(
+      new Set(
+        [...targetSheetIds, masterSheetId]
+          .map((id) => id?.trim())
+          .filter((id): id is string => Boolean(id && id.length > 0))
+      )
+    );
+
+    if (uniqueIds.length === 0) {
+      console.warn('⚠️ [Dual-Mirror Sync] No valid Google Spreadsheet ID found to sync attendance.');
+      return { success: false, message: 'No Google Spreadsheet IDs configured.', results: [] };
+    }
+
+    console.log(`📡 [Google Sheets Dual-Mirror] Syncing attendance for '${rowData.studentName}' (${rowData.universityRoll}) to ${uniqueIds.length} spreadsheet(s): [${uniqueIds.join(', ')}]`);
+
+    const syncPromises = uniqueIds.map(async (sheetId) => {
+      try {
+        const isMaster = sheetId === masterSheetId;
+        const label = isMaster ? 'Admin Master Sheet' : 'Faculty Custom Sheet';
+        const res = await this.recordStudentAttendanceInMatrix(sheetId, rowData, tabName);
+        console.log(`✅ [Google Sheets Sync] Successfully recorded in ${label} [${sheetId}] for ${rowData.studentName}`);
+        return { sheetId, success: res.success, message: res.message };
+      } catch (err: any) {
+        console.warn(`⚠️ [Google Sheets Sync] Failed recording in Sheet [${sheetId}]:`, err.message || err);
+        return { sheetId, success: false, message: err.message };
+      }
+    });
+
+    const settled = await Promise.allSettled(syncPromises);
+    const results = settled.map((s, idx) => {
+      if (s.status === 'fulfilled') return s.value;
+      return { sheetId: uniqueIds[idx], success: false, message: s.reason?.message || 'Sync failed' };
+    });
+
+    const atLeastOneSuccess = results.some((r) => r.success);
+    const summaryMsg = results
+      .map((r) => `${r.sheetId.slice(0, 8)}...: ${r.success ? 'OK' : 'Failed'}`)
+      .join(', ');
+
+    return {
+      success: atLeastOneSuccess,
+      message: `Dual-sync complete (${summaryMsg})`,
+      results,
+    };
+  }
+
+  /**
    * Appends or updates student attendance in the official Student Matrix Google Sheet.
    * Format:
    * Header (Row 1): [Class Roll | University Roll | Reg No | Student Name | YYYY-MM-DD | ...]
@@ -192,20 +255,11 @@ export class GoogleSheetsService {
   public static async recordStudentAttendanceInMatrix(
     spreadsheetId: string,
     rowData: AttendanceSheetRow,
-    tabName: string = 'Attendance',
-    isMirror: boolean = false
+    tabName: string = 'Attendance'
   ): Promise<{ success: boolean; message: string }> {
     const targetSheetId = (spreadsheetId && spreadsheetId.trim().length > 0)
       ? spreadsheetId.trim()
       : (process.env.MASTER_GOOGLE_SHEET_ID || process.env.GOOGLE_SPREADSHEET_ID || '1KN_lGqkfzE7CBdiceE8VEneQ-37vsuGFz2jTvRhsPFk');
-
-    // Dual Mirroring: If writing to a faculty's sheet, automatically mirror into Master Admin Sheet in parallel
-    const masterSheetId = (process.env.MASTER_GOOGLE_SHEET_ID || '1KN_lGqkfzE7CBdiceE8VEneQ-37vsuGFz2jTvRhsPFk').trim();
-    if (!isMirror && masterSheetId && targetSheetId !== masterSheetId) {
-      this.recordStudentAttendanceInMatrix(masterSheetId, rowData, tabName, true).catch((err) => {
-        console.warn('⚠️ Master Google Sheet Mirror sync warning:', err.message);
-      });
-    }
 
     const sheets = this.getClient();
     const mark = rowData.status === 'Full' ? 'P' : 'H';
@@ -365,27 +419,14 @@ export class GoogleSheetsService {
   }
 
   /**
-   * Compatibility alias for backward compatibility
+   * Compatibility alias for backward compatibility - executes full dual-sync
    */
   public static async appendAttendanceRow(
     spreadsheetId: string,
     rowData: AttendanceSheetRow,
     tabName: string = 'Attendance'
   ) {
-    const targetSheetId = (spreadsheetId && spreadsheetId.trim().length > 0)
-      ? spreadsheetId.trim()
-      : (process.env.MASTER_GOOGLE_SHEET_ID || process.env.GOOGLE_SPREADSHEET_ID || '1KN_lGqkfzE7CBdiceE8VEneQ-37vsuGFz2jTvRhsPFk');
-    const result = await this.recordStudentAttendanceInMatrix(targetSheetId, rowData, tabName);
-
-    // Mirror to Master Admin Sheet (Sayantan Dasgupta's Google Sheet) if configured
-    const masterSheetId = process.env.MASTER_GOOGLE_SHEET_ID?.trim();
-    if (masterSheetId && masterSheetId !== targetSheetId) {
-      this.recordStudentAttendanceInMatrix(masterSheetId, rowData, tabName).catch((err) => {
-        console.warn('⚠️ Master Google Sheet Mirror sync warning:', err.message);
-      });
-    }
-
-    return result;
+    return this.syncAttendanceToAllTargets([spreadsheetId], rowData, tabName);
   }
 
   /**

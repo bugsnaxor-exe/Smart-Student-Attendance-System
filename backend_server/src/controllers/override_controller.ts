@@ -188,41 +188,37 @@ export class OverrideController {
         });
       }
 
-      // Append row to Teacher's Google Sheet
+      // Dual-Mirror: Append row to Teacher's Google Sheet & Admin Master Google Sheet simultaneously
       let sheetSyncSuccess = false;
-      let sheetId = subject.googleSheetId || process.env.MASTER_GOOGLE_SHEET_ID || process.env.GOOGLE_SPREADSHEET_ID || '1KN_lGqkfzE7CBdiceE8VEneQ-37vsuGFz2jTvRhsPFk';
-      if (!sheetId) {
-        const anyConfig = await prisma.subject.findFirst({
-          where: { googleSheetId: { not: null } },
-          select: { googleSheetId: true }
+      const targetSheetCandidates = [
+        subject.googleSheetId,
+        process.env.MASTER_GOOGLE_SHEET_ID,
+        process.env.GOOGLE_SPREADSHEET_ID,
+        '1KN_lGqkfzE7CBdiceE8VEneQ-37vsuGFz2jTvRhsPFk',
+      ];
+
+      const sheetRes = await GoogleSheetsService.syncAttendanceToAllTargets(
+        targetSheetCandidates,
+        {
+          date: targetDate,
+          classRoll: student.classRoll,
+          universityRoll: student.universityRoll,
+          registrationNumber: student.regNumber,
+          studentName: student.user.name,
+          status: 'Half',
+          subjectCode: subject.code,
+          subjectName: subject.name,
+          semester: subject.semester,
+        },
+        subject.sheetTabName || 'Attendance'
+      );
+
+      if (sheetRes.success) {
+        sheetSyncSuccess = true;
+        await prisma.attendanceRecord.update({
+          where: { id: record.id },
+          data: { syncedToSheet: true },
         });
-        if (anyConfig?.googleSheetId) sheetId = anyConfig.googleSheetId;
-      }
-
-      if (sheetId) {
-        const sheetRes = await GoogleSheetsService.appendAttendanceRow(
-          sheetId,
-          {
-            date: targetDate,
-            classRoll: student.classRoll,
-            universityRoll: student.universityRoll,
-            registrationNumber: student.regNumber,
-            studentName: student.user.name,
-            status: 'Half',
-            subjectCode: subject.code,
-            subjectName: subject.name,
-            semester: subject.semester,
-          },
-          subject.sheetTabName || 'Attendance'
-        );
-
-        if (sheetRes.success) {
-          sheetSyncSuccess = true;
-          await prisma.attendanceRecord.update({
-            where: { id: record.id },
-            data: { syncedToSheet: true },
-          });
-        }
       }
 
       // Broadcast real-time event to Web App & Mobile App
@@ -370,28 +366,29 @@ export class OverrideController {
       let sheetSyncSuccess = false;
       let sheetMessage = '';
 
-      const targetSpreadsheetId = spreadsheetId || subject?.googleSheetId || process.env.MASTER_GOOGLE_SHEET_ID || '1KN_lGqkfzE7CBdiceE8VEneQ-37vsuGFz2jTvRhsPFk';
+      const targetCandidates = [
+        spreadsheetId,
+        subject?.googleSheetId,
+        process.env.MASTER_GOOGLE_SHEET_ID,
+        '1KN_lGqkfzE7CBdiceE8VEneQ-37vsuGFz2jTvRhsPFk',
+      ];
 
-      if (targetSpreadsheetId) {
-        const sheetRes = await GoogleSheetsService.recordStudentAttendanceInMatrix(
-          targetSpreadsheetId,
-          {
-            date: targetDate,
-            classRoll: classRoll || student?.classRoll || 'MCA-26-042',
-            universityRoll: universityRoll || student?.universityRoll || '12000126042',
-            registrationNumber: registrationNumber || student?.regNumber || 'REG-2026-9042',
-            studentName: studentName || student?.user?.name || 'Student',
-            status: status === 'Full' ? 'Full' : 'Half',
-            subjectCode: subject?.code || subjectCode,
-            subjectName: subject?.name,
-            semester: subject?.semester || student?.semester || semester || 3,
-          }
-        );
-        sheetSyncSuccess = sheetRes.success;
-        sheetMessage = sheetRes.message;
-      } else {
-        sheetMessage = 'No Google Spreadsheet ID provided.';
-      }
+      const sheetRes = await GoogleSheetsService.syncAttendanceToAllTargets(
+        targetCandidates,
+        {
+          date: targetDate,
+          classRoll: classRoll || student?.classRoll || 'MCA-26-042',
+          universityRoll: universityRoll || student?.universityRoll || '12000126042',
+          registrationNumber: registrationNumber || student?.regNumber || 'REG-2026-9042',
+          studentName: studentName || student?.user?.name || 'Student',
+          status: status === 'Full' ? 'Full' : 'Half',
+          subjectCode: subject?.code || subjectCode,
+          subjectName: subject?.name,
+          semester: subject?.semester || student?.semester || semester || 3,
+        }
+      );
+      sheetSyncSuccess = sheetRes.success;
+      sheetMessage = sheetRes.message;
 
       // Broadcast real-time check-in to Mobile App & Web App
       if (overrideBroadcastCallback && (student || classRoll)) {
