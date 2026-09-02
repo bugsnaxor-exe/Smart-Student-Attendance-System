@@ -52,14 +52,14 @@ export class AuthService {
     const cleanEmail = input.email.toLowerCase().trim();
 
     // 1. Strict Input Validation
-    // Registration Number: exactly 7 digits (e.g. 2080001)
+    // Registration Number: exactly 7 digits (e.g. 2080033)
     if (!/^\d{7}$/.test(cleanRegNo)) {
-      throw new Error('Registration Number must be exactly 7 digits (e.g. 2080001).');
+      throw new Error('Registration Number must be exactly 7 digits (e.g. 2080033).');
     }
 
-    // University Roll Number: 2 digits / course name / 6 digits (e.g. 90/MCA/250001)
-    if (!/^\d{2}\/[A-Za-z]+\/\d{6}$/.test(cleanUniRoll)) {
-      throw new Error("University Roll Number must match format '2 digits/course/6 digits' (e.g. 90/MCA/250001).");
+    // University Roll Number: 2 digits / unrestricted course name / 6 digits (e.g. 90/MCA/250028)
+    if (!/^\d{2}\/[A-Za-z0-9_.\-\s]+\/\d{6}$/i.test(cleanUniRoll)) {
+      throw new Error("University Roll Number must match format '2 digits/course/6 digits' (e.g. 90/MCA/250028).");
     }
 
     // 2. Check existing email / university roll / registration number

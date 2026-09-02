@@ -149,13 +149,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
     // 1. Validate Registration Number: Exactly 7 digits
     if (!RegExp(r'^\d{7}$').hasMatch(regNumber)) {
-      _showSnackBar('Registration Number must be exactly 7 digits (e.g. 2080001).', isError: true);
+      _showSnackBar('Registration Number must be exactly 7 digits (e.g. 2080033).', isError: true);
       return;
     }
 
-    // 2. Validate University Roll: 2 digits/course/6 digits
-    if (!RegExp(r'^\d{2}/[A-Za-z]+/\d{6}$').hasMatch(uniRoll)) {
-      _showSnackBar("University Roll Number must match format '2 digits/course/6 digits' (e.g. 90/MCA/250001).", isError: true);
+    // 2. Validate University Roll: 2 digits / unrestricted course / 6 digits
+    if (!RegExp(r'^\d{2}/[A-Za-z0-9_.\-\s]+/\d{6}$', caseSensitive: false).hasMatch(uniRoll)) {
+      _showSnackBar("University Roll Number must match format '2 digits/course/6 digits' (e.g. 90/MCA/250028).", isError: true);
       return;
     }
 
@@ -615,7 +615,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: TextField(
                 controller: _studentUniRollController,
                 style: const TextStyle(fontSize: 13),
-                decoration: const InputDecoration(labelText: 'University Roll', hintText: '90/MCA/250001'),
+                decoration: const InputDecoration(labelText: 'University Roll', hintText: '90/MCA/250028'),
               ),
             ),
             const SizedBox(width: 8),
@@ -670,7 +670,7 @@ class _LoginScreenState extends State<LoginScreen> {
         TextField(
           controller: _studentRegNoController,
           style: const TextStyle(fontSize: 13),
-          decoration: const InputDecoration(labelText: 'Reg Number', hintText: '2080001'),
+          decoration: const InputDecoration(labelText: 'Reg Number', hintText: '2080033'),
         ),
         const SizedBox(height: 10),
 
