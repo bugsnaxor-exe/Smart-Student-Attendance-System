@@ -82,7 +82,7 @@ export class SyllabusParserService {
 
       const prompt = `
 You are an expert University Curriculum Data Extractor.
-Below is the text extracted from an official College / University Syllabus document (e.g. MAKAUT / Autonomous MCA Curriculum).
+Below is an official College / University Syllabus document (e.g. MAKAUT / Autonomous MCA Curriculum).
 
 TASK:
 1. Identify all subjects / courses listed across all Semesters (e.g. Semester 1, Semester 2, Semester 3, Semester 4).
@@ -113,43 +113,56 @@ Return ONLY a valid JSON object matching this exact structure:
 }
 
 DO NOT include markdown backticks or commentary. Return ONLY the raw JSON object.
-
---- EXTRACTED SYLLABUS TEXT ---
-${textSample}
 `;
 
-      // 3. Call Gemini Model with fallback chain
-      const candidateModels = [
-        'gemini-3.6-flash',
-        'gemini-2.5-flash',
-        'gemini-2.0-flash',
-        'gemini-1.5-flash',
-        'gemini-1.5-pro'
-      ];
-
       let responseText = '';
-      let lastError: any = null;
 
-      for (const modelName of candidateModels) {
-        try {
-          console.log(`🤖 [Gemini AI] Attempting extraction with model: ${modelName}...`);
-          const response = await ai.models.generateContent({
-            model: modelName,
-            contents: prompt,
-          });
-          responseText = response.text || '';
-          if (responseText.trim()) {
-            console.log(`✅ [Gemini AI] Successfully extracted response using ${modelName}`);
-            break;
-          }
-        } catch (err: any) {
-          console.warn(`⚠️ [Gemini AI] Model ${modelName} returned notice:`, err.message || err);
-          lastError = err;
+      // Try text-based prompt first if text was extracted, else send raw PDF inline
+      try {
+        let contentsPayload: any;
+        if (fullText && fullText.trim().length > 50) {
+          const textSample = fullText.slice(0, 60000);
+          contentsPayload = prompt + '\n\n--- EXTRACTED SYLLABUS TEXT ---\n' + textSample;
+        } else {
+          contentsPayload = [
+            {
+              inlineData: {
+                mimeType: 'application/pdf',
+                data: pdfBuffer.toString('base64'),
+              },
+            },
+            { text: prompt },
+          ];
         }
-      }
 
-      if (!responseText.trim()) {
-        throw new Error(lastError?.message || 'Failed to generate extraction from Gemini AI models.');
+        console.log(`🤖 [Gemini AI] Attempting extraction with model: gemini-3.6-flash...`);
+        const response = await ai.models.generateContent({
+          model: 'gemini-3.6-flash',
+          contents: contentsPayload,
+        });
+        responseText = response.text || '';
+        console.log(`✅ [Gemini AI] Successfully extracted response using gemini-3.6-flash`);
+      } catch (err: any) {
+        console.warn(`⚠️ [Gemini AI] Primary extraction notice:`, err.message || err);
+        // Fallback with inline PDF
+        try {
+          console.log(`🤖 [Gemini AI] Retrying with inline PDF stream...`);
+          const fallbackRes = await ai.models.generateContent({
+            model: 'gemini-3.6-flash',
+            contents: [
+              {
+                inlineData: {
+                  mimeType: 'application/pdf',
+                  data: pdfBuffer.toString('base64'),
+                },
+              },
+              { text: prompt },
+            ],
+          });
+          responseText = fallbackRes.text || '';
+        } catch (fallbackErr: any) {
+          throw new Error(fallbackErr.message || err.message || 'Failed to extract syllabus from Gemini AI.');
+        }
       }
 
       // Clean possible markdown code fence ```json ... ```
