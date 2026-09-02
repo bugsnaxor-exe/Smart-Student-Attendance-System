@@ -57,6 +57,8 @@ model TeacherProfile {
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   departmentId   String
   department     Department   @relation(fields: [departmentId], references: [id])
+  isApproved     Boolean      @default(false)
+  approvedAt     DateTime?
   lastLatitude   Float?
   lastLongitude  Float?
   lastLocationAt DateTime?

@@ -177,6 +177,26 @@ export async function autoBootstrapDatabase() {
       }
     }
 
+    // 4. Ensure all Admin accounts and existing verified teachers are approved
+    const adminUsers = await prisma.user.findMany({
+      where: {
+        OR: [
+          { role: 'ADMIN' },
+          { email: { in: adminEmails } },
+        ],
+      },
+      select: { id: true },
+    });
+    const adminUserIds = adminUsers.map((u) => u.id);
+    if (adminUserIds.length > 0) {
+      await prisma.teacherProfile.updateMany({
+        where: {
+          userId: { in: adminUserIds },
+        },
+        data: { isApproved: true, approvedAt: new Date() },
+      });
+    }
+
     console.log('🚀 [Bootstrap] Database successfully verified and ready.');
   } catch (err: any) {
     console.error('⚠️ [Bootstrap Error] Could not auto-bootstrap database:', err.message);

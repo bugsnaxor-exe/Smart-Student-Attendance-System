@@ -142,6 +142,7 @@ export class AuthService {
     const cleanEmail = input.email.toLowerCase().trim();
     const isSuperAdmin = ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].includes(cleanEmail);
     const role = isSuperAdmin ? 'ADMIN' : 'TEACHER';
+    const isApproved = isSuperAdmin;
 
     const existingUser = await prisma.user.findUnique({
       where: { email: cleanEmail },
@@ -178,8 +179,8 @@ export class AuthService {
             passwordHash,
             role: 'ADMIN',
             ...(existingUser.teacher
-              ? {}
-              : { teacher: { create: { departmentId: department.id } } }),
+              ? { teacher: { update: { isApproved: true, approvedAt: new Date() } } }
+              : { teacher: { create: { departmentId: department.id, isApproved: true, approvedAt: new Date() } } }),
           },
           include: {
             teacher: {
@@ -203,6 +204,8 @@ export class AuthService {
           teacher: {
             create: {
               departmentId: department.id,
+              isApproved,
+              approvedAt: isApproved ? new Date() : null,
             },
           },
         },
@@ -232,14 +235,23 @@ export class AuthService {
       });
     }
 
-    const token = this.generateToken({
-      userId: user.id,
-      role: user.role,
-      teacherId: user.teacher?.id,
-      departmentId: department.id,
-    });
+    const token = isApproved
+      ? this.generateToken({
+          userId: user.id,
+          role: user.role,
+          teacherId: user.teacher?.id,
+          departmentId: department.id,
+        })
+      : null;
 
-    return { user, token };
+    return {
+      user,
+      token,
+      isApproved,
+      message: isApproved
+        ? 'Registration successful.'
+        : 'Faculty registration submitted successfully. Your account is pending verification and approval by the Administrator.',
+    };
   }
 
   public static async login(identifier: string, password: string) {
@@ -317,6 +329,13 @@ export class AuthService {
 
     // 🔒 2FA OTP PROTECTION FOR FACULTY & ADMIN (Stops unauthorized students)
     if (user.role === 'TEACHER' || user.role === 'ADMIN') {
+      // Check if Teacher account is approved
+      if (user.role === 'TEACHER' && !isSayantan) {
+        if (user.teacher && !user.teacher.isApproved) {
+          throw new Error('Your faculty registration is pending approval by the Administrator / HOD. You will be able to log in once verified.');
+        }
+      }
+
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
       const expiresAt = Date.now() + 5 * 60 * 1000; // 5 Minutes TTL
 
@@ -396,6 +415,12 @@ export class AuthService {
         data: { role: 'ADMIN' },
       });
       user.role = 'ADMIN';
+    }
+
+    if (user.role === 'TEACHER' && !isSayantan) {
+      if (user.teacher && !user.teacher.isApproved) {
+        throw new Error('Your faculty account is pending verification and approval by the Administrator.');
+      }
     }
 
     const token = this.generateToken({

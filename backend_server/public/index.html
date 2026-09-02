@@ -314,6 +314,13 @@
 
           <!-- Quick Action Buttons -->
           <div class="flex items-center space-x-3 flex-wrap gap-y-2">
+            <button id="btn-admin-approvals" onclick="openFacultyApprovalsModal()" class="hidden px-4 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold border border-amber-500/40 transition flex items-center space-x-1.5 backdrop-blur-sm shadow-sm">
+              <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
+              <span>Faculty Approvals</span>
+              <span id="faculty-pending-badge" class="hidden ml-1 px-2 py-0.5 text-[10px] font-extrabold bg-amber-500 text-charcoal-900 rounded-full">0</span>
+            </button>
             <button id="btn-admin-syllabus" onclick="openSyllabusModal()" class="hidden px-4 py-2.5 rounded-xl bg-gradient-to-r from-seagreen-600 to-seagreen-700 hover:from-seagreen-500 hover:to-seagreen-600 text-white text-xs font-bold transition flex items-center space-x-1.5 shadow-sm">
               <svg class="w-4 h-4 text-seagreen-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
               <span>Upload Syllabus (PDF)</span>
@@ -506,6 +513,47 @@
           <button onclick="closeSheetsConfigModal()" class="px-4 py-2 bg-cream-100 text-charcoal-700 text-xs font-bold rounded-xl hover:bg-cream-200">Cancel</button>
           <button onclick="saveModalSpreadsheetId()" class="px-5 py-2 bg-seagreen-600 text-white text-xs font-bold rounded-xl hover:bg-seagreen-700">Save & Link Sheet</button>
         </div>
+      </div>
+
+  <!-- Faculty Registrations Approval Modal (Admin Gate) -->
+  <div id="faculty-approvals-modal" class="fixed inset-0 bg-charcoal-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-3xl w-full border border-cream-200 device-shadow max-h-[92vh] flex flex-col">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3.5 border-b border-cream-200 shrink-0">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-500/30 flex items-center justify-center text-amber-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h3 class="text-base font-bold text-charcoal-900">Faculty Registration Approvals</h3>
+              <span id="modal-pending-count-badge" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">0 Pending</span>
+            </div>
+            <p class="text-xs text-charcoal-600">Review faculty registration requests before granting dashboard and session launch privileges.</p>
+          </div>
+        </div>
+        <button onclick="closeFacultyApprovalsModal()" class="w-8 h-8 rounded-full bg-cream-100 hover:bg-cream-200 text-charcoal-700 flex items-center justify-center text-sm font-bold transition">✕</button>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="space-y-4 py-4 overflow-y-auto flex-1 pr-1">
+        <div id="faculty-approvals-container" class="space-y-3">
+          <!-- Dynamically populated requests -->
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex items-center justify-between pt-3 border-t border-cream-200 shrink-0">
+        <button onclick="loadPendingFaculty()" class="px-3.5 py-2 bg-cream-100 hover:bg-cream-200 text-charcoal-700 text-xs font-bold rounded-xl transition flex items-center space-x-1.5 cursor-pointer">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          <span>Refresh Requests</span>
+        </button>
+        <button onclick="closeFacultyApprovalsModal()" class="px-5 py-2 bg-charcoal-900 hover:bg-charcoal-800 text-white text-xs font-bold rounded-xl transition cursor-pointer">Close</button>
       </div>
 
     </div>
@@ -929,7 +977,9 @@
           }
         } else {
           let errorMsg = data.error || 'Invalid credentials.';
-          if (errorMsg.includes('roll number') || errorMsg.includes('No registered account') || errorMsg.includes('Invalid email') || errorMsg.includes('not found')) {
+          if (errorMsg.toLowerCase().includes('pending approval') || errorMsg.toLowerCase().includes('pending verification')) {
+            errorMsg = '[!] Faculty Registration Pending Approval\n\nYour account has been submitted and is currently awaiting verification and approval by the Administrator / Head of Department before you can sign in.';
+          } else if (errorMsg.includes('roll number') || errorMsg.includes('No registered account') || errorMsg.includes('Invalid email') || errorMsg.includes('not found')) {
             errorMsg = '[!] Faculty account not found for this email address.\n\nPlease check your email or click "Register Account" to create your faculty profile.';
           } else if (errorMsg.toLowerCase().includes('password')) {
             errorMsg = '[!] Incorrect password.\n\nPlease verify your faculty password and try again.';
@@ -1095,15 +1145,20 @@
           })
         });
         const data = await res.json();
-        if (res.ok && data.token) {
-          loggedInFaculty = data.user;
-          localStorage.setItem('edu_faculty_token', data.token);
-          localStorage.setItem('edu_faculty_user', JSON.stringify(data.user));
-          localStorage.setItem('faculty_active_sem', selectedSem);
-          localStorage.setItem('faculty_active_subject', selectedCourse);
-          localStorage.setItem('faculty_assigned_sem', selectedSem);
-          localStorage.setItem('faculty_assigned_subject', selectedCourse);
-          showDashboardView();
+        if (res.ok) {
+          if (data.isApproved && data.token) {
+            loggedInFaculty = data.user;
+            localStorage.setItem('edu_faculty_token', data.token);
+            localStorage.setItem('edu_faculty_user', JSON.stringify(data.user));
+            localStorage.setItem('faculty_active_sem', selectedSem);
+            localStorage.setItem('faculty_active_subject', selectedCourse);
+            localStorage.setItem('faculty_assigned_sem', selectedSem);
+            localStorage.setItem('faculty_assigned_subject', selectedCourse);
+            showDashboardView();
+          } else {
+            alert(data.message || 'Faculty registration submitted successfully! Your account is pending verification and approval by the Administrator / Head of Department before you can sign in.');
+            switchAuthTab('login');
+          }
         } else {
           alert(data.error || 'Registration failed. Please try again.');
         }
@@ -1412,11 +1467,20 @@
       }
 
       const btnSyllabus = document.getElementById('btn-admin-syllabus');
+      const btnApprovals = document.getElementById('btn-admin-approvals');
       if (btnSyllabus) {
         if (isAdmin) {
           btnSyllabus.classList.remove('hidden');
         } else {
           btnSyllabus.classList.add('hidden');
+        }
+      }
+      if (btnApprovals) {
+        if (isAdmin) {
+          btnApprovals.classList.remove('hidden');
+          loadPendingFaculty();
+        } else {
+          btnApprovals.classList.add('hidden');
         }
       }
       loadSyllabusBatches();
@@ -2874,6 +2938,145 @@
       } finally {
         saveBtn.disabled = false;
         saveBtn.innerHTML = `<span>Confirm & Sync Curriculum to Database</span>`;
+      }
+    }
+
+    // --- FACULTY REGISTRATION ADMIN APPROVAL GATE ---
+    function openFacultyApprovalsModal() {
+      const modal = document.getElementById('faculty-approvals-modal');
+      if (modal) modal.classList.remove('hidden');
+      loadPendingFaculty();
+    }
+
+    function closeFacultyApprovalsModal() {
+      const modal = document.getElementById('faculty-approvals-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    async function loadPendingFaculty() {
+      const container = document.getElementById('faculty-approvals-container');
+      const topBadge = document.getElementById('faculty-pending-badge');
+      const modalBadge = document.getElementById('modal-pending-count-badge');
+      const token = localStorage.getItem('edu_faculty_token');
+
+      if (container) {
+        container.innerHTML = `
+          <div class="py-8 text-center text-xs text-charcoal-500">
+            <svg class="w-6 h-6 text-seagreen-600 animate-spin mx-auto mb-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+            <span>Loading pending faculty requests...</span>
+          </div>
+        `;
+      }
+
+      try {
+        const res = await fetch('/api/admin/faculty/pending', {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          const list = data.faculty || [];
+          const count = list.length;
+
+          if (topBadge) {
+            topBadge.textContent = count;
+            if (count > 0) {
+              topBadge.classList.remove('hidden');
+            } else {
+              topBadge.classList.add('hidden');
+            }
+          }
+          if (modalBadge) modalBadge.textContent = `${count} Pending`;
+
+          if (!container) return;
+
+          if (count === 0) {
+            container.innerHTML = `
+              <div class="py-12 text-center text-xs text-charcoal-500 bg-[#FAF7F0] rounded-2xl border border-dashed border-cream-300">
+                <div class="w-12 h-12 rounded-full bg-seagreen-50 border border-seagreen-200 flex items-center justify-center mx-auto mb-2 text-seagreen-700">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div class="font-bold text-charcoal-800 text-sm">All Clear! No Pending Approvals</div>
+                <p class="text-charcoal-500 mt-1">All registered faculty accounts have been verified and processed.</p>
+              </div>
+            `;
+            return;
+          }
+
+          container.innerHTML = list.map(f => {
+            const dateStr = new Date(f.registeredAt).toLocaleString('en-IN', {
+              month: 'short', day: 'numeric', year: 'numeric',
+              hour: '2-digit', minute: '2-digit'
+            });
+
+            return `
+              <div class="p-4 bg-[#FAF7F0] rounded-2xl border border-cream-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition hover:border-seagreen-300">
+                <div class="space-y-1 min-w-0">
+                  <div class="flex items-center space-x-2">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-seagreen-100 text-seagreen-800 border border-seagreen-200">${f.departmentCode || 'MCA'}</span>
+                    <span class="text-xs font-bold text-charcoal-900">${f.name}</span>
+                  </div>
+                  <p class="text-xs text-charcoal-600 font-mono">${f.email}</p>
+                  <p class="text-[11px] text-charcoal-500">Subject: <span class="font-bold text-charcoal-700">${f.assignedSubject || 'None'}</span> • Registered: ${dateStr}</p>
+                </div>
+                <div class="flex items-center space-x-2 shrink-0">
+                  <button onclick="approveFacultyMember('${f.teacherId}', '${f.name}')" class="px-3.5 py-1.5 rounded-xl bg-seagreen-600 hover:bg-seagreen-500 text-white text-xs font-bold transition flex items-center space-x-1 shadow-sm cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span>Approve</span>
+                  </button>
+                  <button onclick="rejectFacultyMember('${f.teacherId}', '${f.name}')" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 transition flex items-center space-x-1 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    <span>Reject</span>
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (err) {
+        console.error('Error loading pending faculty:', err);
+        if (container) {
+          container.innerHTML = `<div class="p-4 text-xs text-rose-600 bg-rose-50 rounded-xl">Could not load pending faculty requests.</div>`;
+        }
+      }
+    }
+
+    async function approveFacultyMember(teacherId, name) {
+      const token = localStorage.getItem('edu_faculty_token');
+      try {
+        const res = await fetch(`/api/admin/faculty/approve/${teacherId}`, {
+          method: 'POST',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert(`[Success] Faculty member "${name}" has been approved!`);
+          loadPendingFaculty();
+        } else {
+          alert(data.error || 'Failed to approve faculty account.');
+        }
+      } catch (err) {
+        alert('Network error approving faculty account.');
+      }
+    }
+
+    async function rejectFacultyMember(teacherId, name) {
+      if (!confirm(`Are you sure you want to reject and remove registration for "${name}"?`)) return;
+      const token = localStorage.getItem('edu_faculty_token');
+      try {
+        const res = await fetch(`/api/admin/faculty/reject/${teacherId}`, {
+          method: 'POST',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert(`[Success] Registration request for "${name}" was rejected and removed.`);
+          loadPendingFaculty();
+        } else {
+          alert(data.error || 'Failed to reject faculty account.');
+        }
+      } catch (err) {
+        alert('Network error rejecting faculty account.');
       }
     }
   </script>

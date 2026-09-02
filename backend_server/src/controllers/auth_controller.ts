@@ -59,7 +59,8 @@ export class AuthController {
       });
 
       return res.status(201).json({
-        message: 'Teacher registration successful.',
+        message: result.message || 'Teacher registration successful.',
+        isApproved: result.isApproved,
         token: result.token,
         user: {
           id: result.user.id,

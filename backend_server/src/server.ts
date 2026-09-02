@@ -12,6 +12,7 @@ import { OverrideController, registerOverrideBroadcaster } from './controllers/o
 import { GeofenceController } from './controllers/geofence_controller';
 import { SheetsController } from './controllers/sheets_controller';
 import { SyllabusController } from './controllers/syllabus_controller';
+import { AdminFacultyController } from './controllers/admin_faculty_controller';
 import { prisma } from './config/database';
 import multer from 'multer';
 
@@ -129,6 +130,11 @@ app.post('/api/sheets/test-connection', SheetsController.testConnection);
 app.post('/api/admin/syllabus/parse-pdf', upload.single('syllabusPdf'), SyllabusController.parsePdf);
 app.post('/api/admin/syllabus/apply', SyllabusController.applySyllabus);
 app.get('/api/admin/syllabus/batches', SyllabusController.getBatches);
+
+// --- FACULTY ADMIN APPROVAL ROUTES ---
+app.get('/api/admin/faculty/pending', optionalAuth, AdminFacultyController.getPendingFaculty);
+app.post('/api/admin/faculty/approve/:teacherId', optionalAuth, AdminFacultyController.approveFaculty);
+app.post('/api/admin/faculty/reject/:teacherId', optionalAuth, AdminFacultyController.rejectFaculty);
 
 // --- DYNAMIC SUBJECTS QUERY ROUTE ---
 app.get('/api/subjects', async (req, res) => {

@@ -202,7 +202,9 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } else if (mounted) {
       String msg = result.error ?? 'Faculty login failed. Check email/password.';
-      if (msg.contains('roll number') || msg.contains('No registered account') || msg.contains('Invalid email') || msg.contains('not found')) {
+      if (msg.toLowerCase().contains('pending approval') || msg.toLowerCase().contains('pending verification')) {
+        msg = 'Your faculty registration is pending verification and approval by the Administrator.';
+      } else if (msg.contains('roll number') || msg.contains('No registered account') || msg.contains('Invalid email') || msg.contains('not found')) {
         msg = 'Faculty account not found for this email. Please check your email or register.';
       } else if (msg.toLowerCase().contains('password')) {
         msg = 'Incorrect password for faculty account. Please try again.';
@@ -232,11 +234,16 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (success && mounted) {
-      _showSnackBar('Faculty registered successfully! Accessing console...', isError: false);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const TeacherDashboardScreen()),
-      );
+      if (auth.token != null) {
+        _showSnackBar('Faculty registered successfully! Accessing console...', isError: false);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const TeacherDashboardScreen()),
+        );
+      } else {
+        _showSnackBar('Faculty registration submitted! Awaiting Administrator approval before login.', isError: false);
+        setState(() => _selectedMode = AuthMode.login);
+      }
     } else if (mounted) {
       _showSnackBar(auth.errorMessage ?? 'Faculty registration failed.', isError: true);
     }

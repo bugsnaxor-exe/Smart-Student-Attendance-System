@@ -184,6 +184,11 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = false;
       if (res['user'] != null) {
         _currentUser = UserModel.fromJson(res['user']);
+        if (res['token'] != null) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('auth_token', res['token']);
+          await prefs.setString('user_data', jsonEncode(res['user']));
+        }
         notifyListeners();
         return true;
       } else {

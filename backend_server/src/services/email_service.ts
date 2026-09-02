@@ -195,4 +195,73 @@ export class EmailService {
       message: `6-digit OTP code generated for ${toEmail}.`,
     };
   }
+
+  /**
+   * Dispatches an official email notification when a faculty registration is approved by the Admin.
+   */
+  public static async sendFacultyApprovalEmail(options: { toEmail: string; recipientName: string; departmentName?: string }): Promise<void> {
+    const { toEmail, recipientName, departmentName = 'Department of Master of Computer Applications' } = options;
+    const smtpUser = process.env.SMTP_USER?.trim() || process.env.EMAIL_USER?.trim() || 'sayantan05092004@gmail.com';
+    const smtpPass = process.env.SMTP_PASS?.trim() || process.env.EMAIL_PASS?.trim();
+
+    console.log(`\n📧 [FACULTY APPROVAL] Dispatched approval notification to ${toEmail} (${recipientName})`);
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #FAF7F0; margin: 0; padding: 24px; }
+          .container { max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 20px; border: 1px solid #E8E2D4; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+          .header { background-color: #0D7A68; color: #ffffff; padding: 28px 24px; text-align: center; }
+          .title { font-size: 20px; font-weight: 800; margin: 0; }
+          .body-content { padding: 32px 24px; color: #1C1E21; line-height: 1.6; }
+          .status-card { background: #ECFDF5; border: 2px solid #0D7A68; border-radius: 16px; text-align: center; padding: 20px; margin: 24px 0; }
+          .status-title { font-size: 18px; font-weight: 800; color: #065F46; }
+          .footer { padding: 20px 24px; background: #FAF7F0; border-top: 1px solid #E8E2D4; text-align: center; font-size: 11px; color: #71717A; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1 class="title">Faculty Account Approved</h1>
+          </div>
+          <div class="body-content">
+            <p style="font-size: 14px; margin-top: 0;">Hello <strong>${recipientName}</strong>,</p>
+            <p style="font-size: 13px; color: #4B5563;">Your faculty account for <strong>${departmentName}</strong> has been officially reviewed and approved by the Administrator.</p>
+            
+            <div class="status-card">
+              <div class="status-title">Account Verified & Active</div>
+              <p style="font-size: 12px; color: #047857; margin-top: 6px;">You can now log in to the AutoAttend Faculty Portal or Mobile App using your credentials.</p>
+            </div>
+
+            <p style="font-size: 12px; color: #71717A;">If you did not request this account, please contact the University IT administration immediately.</p>
+          </div>
+          <div class="footer">
+            AutoAttend • Smart Attendance System • Official Academic Verification
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    if (smtpUser && smtpPass) {
+      try {
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: { user: smtpUser, pass: smtpPass },
+        });
+
+        await transporter.sendMail({
+          from: `"AutoAttend Administration" <${smtpUser}>`,
+          to: toEmail,
+          subject: 'Account Approved: AutoAttend Faculty Console Access',
+          html: htmlContent,
+        });
+      } catch (err: any) {
+        console.warn(`⚠️ [Approval Email Error]: ${err.message}`);
+      }
+    }
+  }
 }
