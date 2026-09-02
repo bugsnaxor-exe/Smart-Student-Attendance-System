@@ -175,7 +175,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   Future<void> _loadStudentsForSemester(int semester) async {
     setState(() => _isLoadingRoster = true);
     try {
-      final res = await ApiService.getStudentsBySemester(semester);
+      final res = await ApiService.getStudentsBySemester(semester, batchYear: _selectedBatchYear, deptCode: 'MCA');
       if (res['students'] != null && mounted) {
         setState(() {
           _rosterStudents = List<Map<String, dynamic>>.from(res['students']);

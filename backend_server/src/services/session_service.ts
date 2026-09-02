@@ -227,11 +227,14 @@ export class SessionService {
 
     const activeSessions = await prisma.activeSession.findMany({
       where: {
-        semester,
         isActive: true,
         expiresAt: {
           gt: now,
         },
+        OR: [
+          { semester },
+          { subject: { departmentId } },
+        ],
       },
       include: {
         subject: {

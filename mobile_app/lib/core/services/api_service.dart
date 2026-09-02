@@ -235,9 +235,16 @@ class ApiService {
     return jsonDecode(res.body);
   }
 
-  static Future<Map<String, dynamic>> getStudentsBySemester(int semester) async {
+  static Future<Map<String, dynamic>> getStudentsBySemester(int semester, {String? batchYear, String? deptCode}) async {
+    final queryParams = <String, String>{};
+    if (batchYear != null && batchYear.isNotEmpty) queryParams['batchYear'] = batchYear;
+    if (deptCode != null && deptCode.isNotEmpty) queryParams['deptCode'] = deptCode;
+    
+    final uri = Uri.parse('$baseUrl/override/students/semester/$semester').replace(
+      queryParameters: queryParams.isNotEmpty ? queryParams : null,
+    );
     final res = await http.get(
-      Uri.parse('$baseUrl/override/students/semester/$semester'),
+      uri,
       headers: await _getHeaders(),
     );
     return jsonDecode(res.body);

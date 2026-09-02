@@ -1823,7 +1823,7 @@
       try {
         const token = localStorage.getItem('edu_faculty_token');
         const [studRes, attRes] = await Promise.all([
-          fetch(`/api/students/semester/${sem}`),
+          fetch(`/api/students/semester/${sem}?batchYear=${encodeURIComponent(currentBatchYear)}&deptCode=MCA`),
           fetch(`/api/attendance/teacher/${courseCode}?date=${todayDateStr}`, {
             headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) }
           })
@@ -2636,7 +2636,7 @@
         }
 
         try {
-          const studRes = await fetch(`/api/override/students/semester/${currentTeacherSem}`, {
+          const studRes = await fetch(`/api/override/students/semester/${currentTeacherSem}?batchYear=${encodeURIComponent(currentBatchYear)}&deptCode=MCA`, {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {}
           });
           if (studRes.ok) {

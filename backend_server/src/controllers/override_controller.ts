@@ -38,13 +38,14 @@ export class OverrideController {
         return res.status(404).json({ error: 'Subject not found.' });
       }
 
-      // 1. Get all students enrolled in this semester
+      // 1. Get all students enrolled in this department (and batch year if specified)
       const allStudents = await prisma.studentProfile.findMany({
         where: {
-          semester: subject.semester,
+          departmentId: subject.departmentId,
         },
         include: {
           user: true,
+          department: true,
         },
         orderBy: {
           classRoll: 'asc',
@@ -433,15 +434,25 @@ export class OverrideController {
    */
   public static async getStudentsBySemester(req: any, res: Response) {
     try {
+      const batchYear = (req.query.batchYear as string) || (req.query.regYear as string);
       const semester = parseInt(req.params.semester as string, 10) || 3;
+      const deptCode = ((req.query.deptCode as string) || (req.query.department as string) || 'MCA').toUpperCase();
+
       const students = await prisma.studentProfile.findMany({
-        where: { semester },
-        include: { user: true },
+        where: {
+          department: {
+            code: { equals: deptCode, mode: 'insensitive' },
+          },
+          ...(batchYear ? { regYear: batchYear } : {}),
+        },
+        include: { user: true, department: true },
         orderBy: { classRoll: 'asc' },
       });
 
       return res.json({
         semester,
+        batchYear: batchYear || '2025-2026',
+        department: deptCode,
         total: students.length,
         students: students.map((s) => ({
           id: s.id,
@@ -452,6 +463,7 @@ export class OverrideController {
           uniRoll: s.universityRoll,
           regNo: s.regNumber,
           regNumber: s.regNumber,
+          regYear: s.regYear,
           semester: s.semester,
         })),
       });
