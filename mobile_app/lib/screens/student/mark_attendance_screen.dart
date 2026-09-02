@@ -280,9 +280,17 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: Colors.red.shade200),
                         ),
-                        child: const Text(
-                          '⚠️ Fake/Mock GPS Detected. Attendance blocked.',
-                          style: TextStyle(color: AppTheme.statusDanger, fontWeight: FontWeight.w600, fontSize: 13),
+                        child: Row(
+                          children: const [
+                            Icon(Icons.warning_amber_rounded, size: 16, color: AppTheme.statusDanger),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Fake/Mock GPS Detected. Attendance blocked.',
+                                style: TextStyle(color: AppTheme.statusDanger, fontWeight: FontWeight.w600, fontSize: 13),
+                              ),
+                            ),
+                          ],
                         ),
                       )
                     else if (loc.errorMessage != null)

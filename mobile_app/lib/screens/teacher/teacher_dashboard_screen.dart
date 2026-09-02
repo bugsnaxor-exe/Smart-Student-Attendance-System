@@ -270,7 +270,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     if (_isSessionActive) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('⚠️ Session currently active for $_selectedCourseCode! Please stop the active session before switching semesters.'),
+          content: Text('Session currently active for $_selectedCourseCode! Please stop the active session before switching semesters.'),
           backgroundColor: AppTheme.statusDanger,
         ),
       );
@@ -298,7 +298,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     if (count >= 3) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('⚠️ Maximum limit reached (3/3 sessions conducted today for $_selectedCourseCode).'),
+          content: Text('Maximum limit reached (3/3 sessions conducted today for $_selectedCourseCode).'),
           backgroundColor: AppTheme.statusDanger,
         ),
       );
@@ -347,7 +347,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('⚡ 15-Min Live Session started for $_selectedCourseCode: $_selectedCourseName! Geofence broadcasted to all students.'),
+            content: Text('15-Min Live Session started for $_selectedCourseCode: $_selectedCourseName! Geofence broadcasted to all students.'),
             backgroundColor: AppTheme.seaGreen,
           ),
         );
@@ -447,7 +447,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✅ Location updated: ${pos.latitude.toStringAsFixed(5)}, ${pos.longitude.toStringAsFixed(5)} (±${pos.accuracy.toStringAsFixed(1)}m)'),
+            content: Text('Location updated: ${pos.latitude.toStringAsFixed(5)}, ${pos.longitude.toStringAsFixed(5)} (±${pos.accuracy.toStringAsFixed(1)}m)'),
             backgroundColor: AppTheme.seaGreen,
           ),
         );
@@ -502,7 +502,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                       color: AppTheme.seaGreenTint,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Center(child: Text('👨‍🏫', style: TextStyle(fontSize: 22))),
+                    child: const Center(child: Icon(Icons.person, size: 22, color: AppTheme.seaGreenDark)),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -530,9 +530,10 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Row(
-                          children: [
-                            Text('📍 ', style: TextStyle(fontSize: 13)),
+                        Row(
+                          children: const [
+                            Icon(Icons.location_on_outlined, size: 14, color: AppTheme.charcoal),
+                            SizedBox(width: 4),
                             Text('Classroom Anchor', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppTheme.charcoal)),
                           ],
                         ),
@@ -544,7 +545,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                             border: Border.all(color: isCustomLoc ? AppTheme.seaGreen : AppTheme.creamBorder),
                           ),
                           child: Text(
-                            isCustomLoc ? '🛰️ Custom GPS' : '🏫 Campus Default',
+                            isCustomLoc ? 'Custom GPS' : 'Campus Default',
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
@@ -556,7 +557,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                     ),
                     const SizedBox(height: 8),
                     if (isCustomLoc) ...[
-                      Text('🎯 Coords: ${_detectedLatitude!.toStringAsFixed(5)}°, ${_detectedLongitude!.toStringAsFixed(5)}°', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppTheme.charcoal, fontFamily: 'monospace')),
+                      Text('Coords: ${_detectedLatitude!.toStringAsFixed(5)}°, ${_detectedLongitude!.toStringAsFixed(5)}°', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppTheme.charcoal, fontFamily: 'monospace')),
                       const SizedBox(height: 2),
                       Text('Accuracy: ±${_detectedAccuracy?.toStringAsFixed(1) ?? "5.0"}m • Radius: 50m', style: const TextStyle(fontSize: 10, color: AppTheme.charcoalMuted)),
                     ] else ...[
@@ -661,7 +662,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                 const SizedBox(height: 16),
                 const Row(
                   children: [
-                    Text('📑', style: TextStyle(fontSize: 20)),
+                    Icon(Icons.table_chart_outlined, size: 20, color: AppTheme.seaGreenDark),
                     SizedBox(width: 8),
                     Text('Google Sheet Integration Settings', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppTheme.charcoal)),
                   ],
@@ -693,7 +694,14 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                               Clipboard.setData(const ClipboardData(text: _serviceAccountEmail));
                               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Service Account Email copied!')));
                             },
-                            child: const Text('Copy Email 📋', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.seaGreen)),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: const [
+                                Text('Copy Email', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.seaGreen)),
+                                SizedBox(width: 4),
+                                Icon(Icons.copy, size: 11, color: AppTheme.seaGreen),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -747,8 +755,8 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                                 setSheetState(() {
                                   _isTestingSheet = false;
                                   _sheetTestResult = res['success'] == true
-                                      ? '✅ Connected! Document: "${res['sheetTitle']}"'
-                                      : '❌ ${res['error'] ?? 'Connection failed'}';
+                                      ? 'Connected! Document: "${res['sheetTitle']}"'
+                                      : (res['error'] ?? 'Connection failed');
                                 });
                               },
                         icon: _isTestingSheet
@@ -770,7 +778,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: _sheetTestResult!.startsWith('✅') ? AppTheme.seaGreenTint : const Color(0xFFFEE2E2),
+                      color: !_sheetTestResult!.toLowerCase().contains('fail') && !_sheetTestResult!.toLowerCase().contains('error') ? AppTheme.seaGreenTint : const Color(0xFFFEE2E2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -778,7 +786,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: _sheetTestResult!.startsWith('✅') ? AppTheme.seaGreenDark : const Color(0xFF991B1B),
+                        color: !_sheetTestResult!.toLowerCase().contains('fail') && !_sheetTestResult!.toLowerCase().contains('error') ? AppTheme.seaGreenDark : const Color(0xFF991B1B),
                       ),
                     ),
                   ),
@@ -903,14 +911,21 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(color: AppTheme.seaGreen, borderRadius: BorderRadius.circular(6)),
-                  child: const Text('Verified ✅', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.verified, size: 11, color: Colors.white),
+                      SizedBox(width: 4),
+                      Text('Verified', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800)),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 12),
 
-          const Text('📜 DETAILED ATTENDANCE TIMELINE & PROOF AUDIT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.charcoalMuted)),
+          const Text('DETAILED ATTENDANCE TIMELINE & PROOF AUDIT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.charcoalMuted)),
           const SizedBox(height: 6),
 
           // Timeline Table
@@ -1095,7 +1110,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('👨‍🏫', style: TextStyle(fontSize: 12)),
+                  const Icon(Icons.person_outline, size: 13, color: AppTheme.charcoal),
                   const SizedBox(width: 4),
                   Text(
                     auth.currentUser?.name.split(' ').first ?? 'Faculty',
@@ -1235,7 +1250,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          '⚡ Attendance Session Launcher',
+                          'Attendance Session Launcher',
                           style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: AppTheme.charcoal),
                         ),
                         Container(
@@ -1454,7 +1469,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          '📊 Live Matrix Google Sheet Mirror',
+                          'Live Matrix Google Sheet Mirror',
                           style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: AppTheme.charcoal),
                         ),
                         Container(
@@ -1496,7 +1511,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                         ),
                         child: const Center(
                           child: Text(
-                            '🌱 No registered students found for this semester.\nStudents will populate automatically as they register on the mobile app.',
+                            'No registered students found for this semester.\nStudents will populate automatically as they register on the mobile app.',
                             textAlign: TextAlign.center,
                             style: TextStyle(fontSize: 11, color: AppTheme.charcoalMuted),
                           ),
@@ -1687,9 +1702,9 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
-                      children: [
-                        Text('⏱️', style: TextStyle(fontSize: 16)),
+                    Row(
+                      children: const [
+                        Icon(Icons.schedule, size: 16, color: AppTheme.charcoal),
                         SizedBox(width: 6),
                         Text(
                           'UNMARKED / ABSENT STUDENTS ROSTER',
@@ -1714,7 +1729,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                         ),
                         child: Center(
                           child: Text(
-                            '🎉 All students for Semester $_selectedSemester have recorded attendance.',
+                            'All students for Semester $_selectedSemester have recorded attendance.',
                             style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppTheme.seaGreenDark),
                           ),
                         ),

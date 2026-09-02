@@ -123,7 +123,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            isPinned ? '📌 Pinned $code ($name) to top' : '📍 Unpinned $code',
+            isPinned ? 'Pinned $code ($name) to top' : 'Unpinned $code',
             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
           ),
           backgroundColor: isPinned ? AppTheme.seaGreen : AppTheme.charcoal,
@@ -849,9 +849,13 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                                       conducted > 0 ? '$attended / $conducted classes attended' : '0 / 0 Conducted • Term Starting',
                                       style: const TextStyle(color: AppTheme.charcoalLight, fontSize: 11),
                                     ),
-                                    const Text(
-                                      'View Details ➔',
-                                      style: TextStyle(color: AppTheme.seaGreen, fontSize: 11, fontWeight: FontWeight.w700),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: const [
+                                        Text('View Details', style: TextStyle(color: AppTheme.seaGreen, fontSize: 11, fontWeight: FontWeight.w700)),
+                                        SizedBox(width: 4),
+                                        Icon(Icons.arrow_forward_rounded, size: 12, color: AppTheme.seaGreen),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -1369,9 +1373,9 @@ class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet
                           selectedIsWeekend
                               ? 'Weekend / Holiday (No lecture scheduled).'
                               : selectedIsPresent
-                                  ? 'GPS Verified: ${selectedRecord?['distanceMeters'] != null ? "${selectedRecord!['distanceMeters'].toStringAsFixed(1)}m within 50m Dept" : "Inside 50m Dept"} • Google Sheets Synced ✅'
+                                  ? 'GPS Verified: ${selectedRecord?['distanceMeters'] != null ? "${selectedRecord!['distanceMeters'].toStringAsFixed(1)}m within 50m Dept" : "Inside 50m Dept"} • Google Sheets Synced'
                                   : selectedIsHalf
-                                      ? 'Manual Override granted by Faculty • Synced to Google Sheets (H) ✅'
+                                      ? 'Manual Override granted by Faculty • Synced to Google Sheets (H)'
                                       : selectedIsAbsent
                                           ? 'Absent: No attendance marked during 15-min session window.'
                                           : 'No lecture conducted on this date.',

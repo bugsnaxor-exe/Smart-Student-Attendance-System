@@ -140,14 +140,18 @@ export class AuthService {
 
   public static async registerTeacher(input: RegisterTeacherInput) {
     const cleanEmail = input.email.toLowerCase().trim();
-    const isSuperAdmin = ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].includes(cleanEmail);
-    const role = isSuperAdmin ? 'ADMIN' : 'TEACHER';
-    const isApproved = isSuperAdmin;
+    // ALL faculty registrations through the portal/app MUST be approved by the Administrator
+    const role = 'TEACHER';
+    const isApproved = false;
 
     const existingUser = await prisma.user.findUnique({
       where: { email: cleanEmail },
       include: { teacher: true }
     });
+
+    if (existingUser) {
+      throw new Error('Email is already registered. If pending approval, please await administrator verification before signing in.');
+    }
 
     const passwordHash = await bcrypt.hash(input.password, 10);
 
@@ -167,58 +171,29 @@ export class AuthService {
       });
     }
 
-    let user;
-
-    if (existingUser) {
-      if (isSuperAdmin) {
-        // Update Admin password & ensure ADMIN role and teacher profile
-        user = await prisma.user.update({
-          where: { id: existingUser.id },
-          data: {
-            name: input.name.trim(),
-            passwordHash,
-            role: 'ADMIN',
-            ...(existingUser.teacher
-              ? { teacher: { update: { isApproved: true, approvedAt: new Date() } } }
-              : { teacher: { create: { departmentId: department.id, isApproved: true, approvedAt: new Date() } } }),
+    const user = await prisma.user.create({
+      data: {
+        name: input.name.trim(),
+        email: cleanEmail,
+        passwordHash,
+        role: 'TEACHER',
+        teacher: {
+          create: {
+            departmentId: department.id,
+            isApproved: false,
+            approvedAt: null,
           },
+        },
+      },
+      include: {
+        teacher: {
           include: {
-            teacher: {
-              include: {
-                department: true,
-                subjects: true,
-              },
-            },
-          },
-        });
-      } else {
-        throw new Error('Email is already registered. Please log in with your password.');
-      }
-    } else {
-      user = await prisma.user.create({
-        data: {
-          name: input.name.trim(),
-          email: cleanEmail,
-          passwordHash,
-          role,
-          teacher: {
-            create: {
-              departmentId: department.id,
-              isApproved,
-              approvedAt: isApproved ? new Date() : null,
-            },
+            department: true,
+            subjects: true,
           },
         },
-        include: {
-          teacher: {
-            include: {
-              department: true,
-              subjects: true,
-            },
-          },
-        },
-      });
-    }
+      },
+    });
 
     // Link assigned subject to this teacher profile if provided
     if (input.subjectCode && user.teacher) {

@@ -1148,7 +1148,14 @@ class _FacultyOtpSheetState extends State<_FacultyOtpSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('⏱️ Expires in $timerText', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.charcoalMuted)),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.timer_outlined, size: 13, color: AppTheme.charcoalMuted),
+                  const SizedBox(width: 4),
+                  Text('Expires in $timerText', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.charcoalMuted)),
+                ],
+              ),
               TextButton(
                 onPressed: _secondsRemaining <= 240 ? _resendOtp : null,
                 child: const Text('Resend Code', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.seaGreen)),
