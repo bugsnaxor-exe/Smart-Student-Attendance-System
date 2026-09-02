@@ -44,6 +44,7 @@ model StudentProfile {
   departmentId   String
   department     Department         @relation(fields: [departmentId], references: [id])
   semester       Int                // e.g. 5
+  regYear        String             @default("2025-2026") // e.g. "2025-2026", "2026-2027"
   deviceUuid     String?            // Device binding to prevent proxy
   attendances    AttendanceRecord[]
   createdAt      DateTime           @default(now())
@@ -73,6 +74,8 @@ model Subject {
   weeklyHours   String?            @default("3+1+0")  // L+T+P
   marks         String?            @default("100 (70+30)")
   semester      Int                // 1, 2, 3, 4
+  batchYear     String             @default("2025-2026") // e.g. "2025-2026", "2026-2027"
+  isActive      Boolean            @default(true)
   departmentId  String
   department    Department         @relation(fields: [departmentId], references: [id], onDelete: Cascade)
   teacherId     String?
@@ -84,7 +87,8 @@ model Subject {
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
 
-  @@unique([code, semester])
+  @@unique([code, semester, batchYear])
+  @@index([batchYear, semester])
 }
 
 model ActiveSession {

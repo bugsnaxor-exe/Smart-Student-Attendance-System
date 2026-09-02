@@ -11,10 +11,18 @@ import { AttendanceController, registerAttendanceBroadcaster } from './controlle
 import { OverrideController, registerOverrideBroadcaster } from './controllers/override_controller';
 import { GeofenceController } from './controllers/geofence_controller';
 import { SheetsController } from './controllers/sheets_controller';
+import { SyllabusController } from './controllers/syllabus_controller';
+import { prisma } from './config/database';
+import multer from 'multer';
 
 import path from 'path';
 
 dotenv.config();
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
+});
 
 const app = express();
 const server = http.createServer(app);
@@ -116,6 +124,29 @@ app.get('/api/sheets/active-sheet', SheetsController.getActiveSheet);
 app.post('/api/sheets/link-sheet', SheetsController.linkSubjectSheet);
 app.post('/api/sheets/link/:subjectId', requireAuth, requireRole(['TEACHER', 'ADMIN']), SheetsController.linkSubjectSheet);
 app.post('/api/sheets/test-connection', SheetsController.testConnection);
+
+// --- SYLLABUS & CURRICULUM MANAGEMENT ROUTES (AI Extraction & Multi-Batch) ---
+app.post('/api/admin/syllabus/parse-pdf', upload.single('syllabusPdf'), SyllabusController.parsePdf);
+app.post('/api/admin/syllabus/apply', SyllabusController.applySyllabus);
+app.get('/api/admin/syllabus/batches', SyllabusController.getBatches);
+
+// --- DYNAMIC SUBJECTS QUERY ROUTE ---
+app.get('/api/subjects', async (req, res) => {
+  try {
+    const { semester, batchYear } = req.query;
+    const where: any = { isActive: true };
+    if (semester) where.semester = Number(semester);
+    if (batchYear) where.batchYear = String(batchYear);
+
+    const subjects = await prisma.subject.findMany({
+      where,
+      orderBy: [{ semester: 'asc' }, { code: 'asc' }],
+    });
+    res.status(200).json({ subjects });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to fetch subjects.' });
+  }
+});
 
 const PORT = process.env.PORT || 4000;
 

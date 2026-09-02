@@ -40,15 +40,17 @@ async function seed() {
   if (teacherUser.teacher) {
     await prisma.subject.upsert({
       where: {
-        code_semester: {
+        code_semester_batchYear: {
           code: 'CS501',
           semester: 5,
+          batchYear: '2025-2026',
         },
       },
       create: {
         code: 'CS501',
         name: 'Operating Systems',
         semester: 5,
+        batchYear: '2025-2026',
         departmentId: dept.id,
         teacherId: teacherUser.teacher.id,
         googleSheetId: 'sample_subject_sheet_id_cs501',
@@ -59,9 +61,10 @@ async function seed() {
 
     await prisma.subject.upsert({
       where: {
-        code_semester: {
+        code_semester_batchYear: {
           code: 'CS502',
           semester: 5,
+          batchYear: '2025-2026',
         },
       },
       create: {

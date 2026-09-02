@@ -41,42 +41,85 @@ export const ALL_MCA_SUBJECTS = [
   { code: 'MCA-431', name: 'Grand Viva', type: 'Viva', credits: 8, semester: 4 },
 ];
 
+export const UNIVERSITY_DEPARTMENTS = [
+  { code: 'MCA', name: 'Master of Computer Applications (MCA)' },
+  { code: 'MCS', name: 'Master of Computer Science (MCS)' },
+  { code: 'MDS', name: 'Master of Data Science (MDS)' },
+  { code: 'MTECH', name: 'Master in Technology (M.Tech)' },
+  { code: 'MSC', name: 'Master in Science (M.Sc)' },
+  { code: 'BTECH', name: 'Bachelor in Technology (B.Tech)' },
+];
+
 export async function autoBootstrapDatabase() {
   try {
     console.log('🔄 [Bootstrap] Checking and initializing database state...');
 
-    // 1. Ensure MCA Department exists
-    let department = await prisma.department.findFirst({
-      where: { code: 'MCA' },
-    });
+    // 1. Rename any legacy department codes if present
+    const legacyMigrations = [
+      { oldCode: 'MSCCS', newCode: 'MCS', newName: 'Master of Computer Science (MCS)' },
+      { oldCode: 'MSCDS', newCode: 'MDS', newName: 'Master of Data Science (MDS)' },
+      { oldCode: 'BSC', newCode: 'BTECH', newName: 'Bachelor in Technology (B.Tech)' },
+    ];
 
-    if (!department) {
-      department = await prisma.department.create({
-        data: {
-          name: 'Master of Computer Applications',
-          code: 'MCA',
-          latitude: parseFloat(process.env.DEFAULT_DEPT_LATITUDE || '22.5726'),
-          longitude: parseFloat(process.env.DEFAULT_DEPT_LONGITUDE || '88.3639'),
-          radiusMeters: 50.0,
-        },
+    for (const leg of legacyMigrations) {
+      const oldDept = await prisma.department.findUnique({ where: { code: leg.oldCode } });
+      if (oldDept) {
+        await prisma.department.update({
+          where: { code: leg.oldCode },
+          data: { code: leg.newCode, name: leg.newName },
+        });
+        console.log(`🔄 [Bootstrap] Migrated legacy department ${leg.oldCode} -> ${leg.newCode} (${leg.newName})`);
+      }
+    }
+
+    // 2. Ensure all University Departments exist
+    const defaultLat = parseFloat(process.env.DEFAULT_DEPT_LATITUDE || '22.5726');
+    const defaultLng = parseFloat(process.env.DEFAULT_DEPT_LONGITUDE || '88.3639');
+    const defaultRadius = parseFloat(process.env.DEFAULT_GEOFENCE_RADIUS_METERS || '50.0');
+
+    let mcaDeptId = '';
+
+    for (const dept of UNIVERSITY_DEPARTMENTS) {
+      const existing = await prisma.department.findUnique({
+        where: { code: dept.code },
       });
-      console.log('✅ [Bootstrap] Created MCA Department anchor.');
+
+      if (!existing) {
+        const created = await prisma.department.create({
+          data: {
+            code: dept.code,
+            name: dept.name,
+            latitude: defaultLat,
+            longitude: defaultLng,
+            radiusMeters: defaultRadius,
+          },
+        });
+        if (dept.code === 'MCA') mcaDeptId = created.id;
+        console.log(`✅ [Bootstrap] Created department anchor: ${dept.name} [${dept.code}]`);
+      } else {
+        await prisma.department.update({
+          where: { code: dept.code },
+          data: { name: dept.name },
+        });
+        if (dept.code === 'MCA') mcaDeptId = existing.id;
+      }
     }
 
     // 2. Ensure all 31 MCA subjects exist
     for (const subj of ALL_MCA_SUBJECTS) {
       await prisma.subject.upsert({
         where: {
-          code_semester: {
+          code_semester_batchYear: {
             code: subj.code,
             semester: subj.semester,
+            batchYear: '2025-2026',
           },
         },
         update: {
           name: subj.name,
           type: subj.type,
           credits: subj.credits,
-          departmentId: department.id,
+          departmentId: mcaDeptId,
         },
         create: {
           code: subj.code,
@@ -84,7 +127,8 @@ export async function autoBootstrapDatabase() {
           type: subj.type,
           credits: subj.credits,
           semester: subj.semester,
-          departmentId: department.id,
+          batchYear: '2025-2026',
+          departmentId: mcaDeptId,
         },
       });
     }
@@ -113,7 +157,7 @@ export async function autoBootstrapDatabase() {
             role: 'ADMIN',
             teacher: {
               create: {
-                departmentId: department.id,
+                departmentId: mcaDeptId,
               },
             },
           },
@@ -125,7 +169,7 @@ export async function autoBootstrapDatabase() {
             where: { id: existing.id },
             data: {
               role: 'ADMIN',
-              ...(existing.teacher ? {} : { teacher: { create: { departmentId: department.id } } }),
+              ...(existing.teacher ? {} : { teacher: { create: { departmentId: mcaDeptId } } }),
             },
           });
           console.log(`✅ [Bootstrap] Upgraded ${email} to permanent ADMIN role.`);

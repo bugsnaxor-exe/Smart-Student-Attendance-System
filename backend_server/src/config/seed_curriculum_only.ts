@@ -1,4 +1,4 @@
-﻿import { prisma } from './database';
+import { prisma } from './database';
 
 const mcaCurriculum = [
   // --- SEMESTER I ---
@@ -66,9 +66,10 @@ async function seedCleanCurriculum() {
   for (const item of mcaCurriculum) {
     await prisma.subject.upsert({
       where: {
-        code_semester: {
+        code_semester_batchYear: {
           code: item.code,
           semester: item.semester,
+          batchYear: '2025-2026',
         },
       },
       create: {

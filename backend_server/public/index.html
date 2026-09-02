@@ -244,8 +244,15 @@
             </div>
           </div>
           <div>
-            <label class="block text-xs font-bold text-charcoal-700 uppercase tracking-wider mb-1">Department</label>
-            <input type="text" disabled value="Master of Computer Applications (MCA)" class="w-full px-3.5 py-2.5 bg-cream-100 border border-cream-200 rounded-xl text-xs font-bold text-charcoal-700 cursor-not-allowed">
+            <label class="block text-xs font-bold text-charcoal-700 uppercase tracking-wider mb-1">Department / Course Program</label>
+            <select id="reg-dept-select" class="w-full px-3 py-2.5 bg-[#FAF7F0] border border-cream-200 rounded-xl text-xs font-bold text-charcoal-900 focus:outline-none focus:border-seagreen-600 cursor-pointer">
+              <option value="MCA" selected>Master of Computer Applications (MCA)</option>
+              <option value="MCS">Master of Computer Science (MCS)</option>
+              <option value="MDS">Master of Data Science (MDS)</option>
+              <option value="MTECH">Master in Technology (M.Tech)</option>
+              <option value="MSC">Master in Science (M.Sc)</option>
+              <option value="BTECH">Bachelor in Technology (B.Tech)</option>
+            </select>
           </div>
           <div>
             <label class="block text-xs font-bold text-charcoal-700 uppercase tracking-wider mb-1">Create Password</label>
@@ -307,6 +314,10 @@
 
           <!-- Quick Action Buttons -->
           <div class="flex items-center space-x-3 flex-wrap gap-y-2">
+            <button id="btn-admin-syllabus" onclick="openSyllabusModal()" class="hidden px-4 py-2.5 rounded-xl bg-gradient-to-r from-seagreen-600 to-seagreen-700 hover:from-seagreen-500 hover:to-seagreen-600 text-white text-xs font-bold transition flex items-center space-x-1.5 shadow-sm">
+              <svg class="w-4 h-4 text-seagreen-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+              <span>Upload Syllabus (PDF)</span>
+            </button>
             <button onclick="openSheetsConfigModal()" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 transition flex items-center space-x-1.5 backdrop-blur-sm">
               <svg class="w-4 h-4 text-seagreen-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               <span>Google Sheet Settings</span>
@@ -325,7 +336,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 pb-3 border-b border-cream-100 gap-2">
           <div>
             <h3 class="text-sm font-bold text-charcoal-900"><svg class="w-4 h-4 text-seagreen-700 inline-block mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>Attendance Session Launcher</h3>
-            <p class="text-xs text-charcoal-700">Select semester & subject to broadcast real-time 15-minute GPS attendance window to student mobile apps.</p>
+            <p class="text-xs text-charcoal-700">Select batch, semester & subject to broadcast real-time 15-minute GPS attendance window to student mobile apps.</p>
           </div>
           <div class="flex items-center space-x-2">
             <span class="text-xs font-bold text-charcoal-800 bg-cream-100 px-3 py-1 rounded-full border border-cream-200 font-mono">
@@ -334,38 +345,46 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
           
-          <!-- Faculty Semester Selector -->
+          <!-- Academic Batch Selector -->
           <div class="md:col-span-3">
-            <label class="block text-xs font-bold uppercase tracking-wider text-charcoal-700 mb-1.5">1. Select Semester</label>
-            <select id="teacher-sem-select" onchange="onTeacherSemesterChange()" class="w-full h-[46px] bg-[#FAF7F0] border border-cream-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-charcoal-900 focus:outline-none focus:border-seagreen-600 cursor-pointer">
-              <option value="1">Semester 1 (10 Subjects)</option>
-              <option value="2">Semester 2 (9 Subjects)</option>
-              <option value="3" selected>Semester 3 (10 Subjects • Current)</option>
-              <option value="4">Semester 4 (2 Subjects)</option>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-charcoal-700 mb-1.5">1. Academic Batch</label>
+            <select id="teacher-batch-select" onchange="onBatchYearChange()" class="w-full h-[46px] bg-[#FAF7F0] border border-cream-200 rounded-xl px-3 py-2.5 text-xs font-bold text-charcoal-900 focus:outline-none focus:border-seagreen-600 cursor-pointer">
+              <option value="2025-2026" selected>2025-2026 Batch (Current)</option>
             </select>
           </div>
 
-          <!-- Dynamic Subject Selector (31 MCA Subjects) -->
-          <div class="md:col-span-6">
-            <label class="block text-xs font-bold uppercase tracking-wider text-charcoal-700 mb-1.5">2. Select Subject / Lecture Course</label>
-            <select id="teacher-course-select" onchange="onTeacherCourseChange()" class="w-full h-[46px] bg-[#FAF7F0] border border-cream-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-charcoal-900 focus:outline-none focus:border-seagreen-600">
+          <!-- Faculty Semester Selector -->
+          <div class="md:col-span-3">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-charcoal-700 mb-1.5">2. Semester</label>
+            <select id="teacher-sem-select" onchange="onTeacherSemesterChange()" class="w-full h-[46px] bg-[#FAF7F0] border border-cream-200 rounded-xl px-3 py-2.5 text-xs font-bold text-charcoal-900 focus:outline-none focus:border-seagreen-600 cursor-pointer">
+              <option value="1">Semester 1</option>
+              <option value="2">Semester 2</option>
+              <option value="3" selected>Semester 3 (Current)</option>
+              <option value="4">Semester 4</option>
+            </select>
+          </div>
+
+          <!-- Dynamic Subject Selector -->
+          <div class="md:col-span-4">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-charcoal-700 mb-1.5">3. Lecture Course</label>
+            <select id="teacher-course-select" onchange="onTeacherCourseChange()" class="w-full h-[46px] bg-[#FAF7F0] border border-cream-200 rounded-xl px-3 py-2.5 text-xs font-semibold text-charcoal-900 focus:outline-none focus:border-seagreen-600">
               <!-- Populated via JS -->
             </select>
           </div>
 
           <!-- Start / Stop Session Button -->
-          <div class="md:col-span-3">
-            <label class="block text-xs font-bold uppercase tracking-wider text-transparent mb-1.5 select-none hidden md:block">3. Action</label>
-            <button id="btn-trigger-session" onclick="toggleAttendanceSession()" class="w-full h-[46px] bg-seagreen-600 hover:bg-seagreen-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center space-x-2 cursor-pointer">
+          <div class="md:col-span-2">
+            <label class="block text-xs font-bold uppercase tracking-wider text-transparent mb-1.5 select-none hidden md:block">Action</label>
+            <button id="btn-trigger-session" onclick="toggleAttendanceSession()" class="w-full h-[46px] bg-seagreen-600 hover:bg-seagreen-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center space-x-1.5 cursor-pointer">
               <span id="session-btn-icon" class="flex items-center justify-center">
                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
               </span>
-              <span id="session-btn-text">Start 15-Min Session</span>
+              <span id="session-btn-text">Start</span>
             </button>
           </div>
         </div>
@@ -487,6 +506,113 @@
           <button onclick="closeSheetsConfigModal()" class="px-4 py-2 bg-cream-100 text-charcoal-700 text-xs font-bold rounded-xl hover:bg-cream-200">Cancel</button>
           <button onclick="saveModalSpreadsheetId()" class="px-5 py-2 bg-seagreen-600 text-white text-xs font-bold rounded-xl hover:bg-seagreen-700">Save & Link Sheet</button>
         </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- AI-Powered Syllabus PDF Upload & Curriculum Sync Modal -->
+  <div id="syllabus-modal" class="fixed inset-0 bg-charcoal-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-4xl w-full border border-cream-200 device-shadow max-h-[92vh] flex flex-col">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3.5 border-b border-cream-200 shrink-0">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-seagreen-50 border border-seagreen-600/30 flex items-center justify-center text-seagreen-700">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h3 class="text-base font-bold text-charcoal-900">Upload University Syllabus (PDF)</h3>
+              <span class="px-2 py-0.5 rounded-full bg-seagreen-100 text-seagreen-800 text-[10px] font-bold border border-seagreen-300">✨ Gemini AI Powered</span>
+            </div>
+            <p class="text-xs text-charcoal-600">Upload official syllabus PDF to auto-extract and sync semester-wise courses for new batches.</p>
+          </div>
+        </div>
+        <button onclick="closeSyllabusModal()" class="w-8 h-8 rounded-full bg-cream-100 hover:bg-cream-200 text-charcoal-700 flex items-center justify-center text-sm font-bold transition">✕</button>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="space-y-4 py-4 overflow-y-auto flex-1 pr-1">
+        
+        <!-- Step 1: Batch Year & File Selection Grid -->
+        <div class="p-4 bg-[#FAF7F0] rounded-2xl border border-cream-200 space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-charcoal-800 uppercase tracking-wider mb-1">Target Department *</label>
+              <select id="syllabus-dept-select" class="w-full px-2.5 py-2 bg-white border border-cream-200 rounded-xl text-xs font-bold text-charcoal-900 focus:outline-none focus:border-seagreen-600 cursor-pointer">
+                <option value="MCA" selected>Master of Computer Applications (MCA)</option>
+                <option value="MCS">Master of Computer Science (MCS)</option>
+                <option value="MDS">Master of Data Science (MDS)</option>
+                <option value="MTECH">Master in Technology (M.Tech)</option>
+                <option value="MSC">Master in Science (M.Sc)</option>
+                <option value="BTECH">Bachelor in Technology (B.Tech)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-charcoal-800 uppercase tracking-wider mb-1">Academic Batch Year *</label>
+              <input type="text" id="syllabus-batch-year" placeholder="e.g. 2026-2027" value="2026-2027" class="w-full px-3 py-2 bg-white border border-cream-200 rounded-xl text-xs font-bold text-charcoal-900 focus:outline-none focus:border-seagreen-600">
+              <span class="text-[10px] text-charcoal-500 block mt-0.5">Applied to incoming admissions.</span>
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-bold text-charcoal-800 uppercase tracking-wider mb-1">Select Syllabus PDF File *</label>
+              <input type="file" id="syllabus-pdf-file" accept="application/pdf" class="w-full px-3 py-1.5 bg-white border border-cream-200 rounded-xl text-xs text-charcoal-800 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-seagreen-600 file:text-white hover:file:bg-seagreen-700 cursor-pointer">
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-1">
+            <p class="text-[11px] text-charcoal-600">AI will parse course codes, subjects, types (Theory/Lab), credits, and hours across Semesters 1–4.</p>
+            <button id="btn-parse-pdf" onclick="handleParseSyllabusPdf()" class="px-4 py-2 bg-seagreen-600 hover:bg-seagreen-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center space-x-1.5 shrink-0">
+              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              <span>Extract with Gemini AI</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Extraction Status Box -->
+        <div id="syllabus-parse-status" class="hidden p-3 rounded-xl text-xs"></div>
+
+        <!-- Step 2: Extracted Subjects Preview Table -->
+        <div id="syllabus-preview-wrapper" class="hidden space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <h4 class="text-xs font-bold text-charcoal-900 uppercase tracking-wider">Curriculum Preview & Verification</h4>
+              <span id="extracted-count-badge" class="px-2 py-0.5 bg-seagreen-100 text-seagreen-800 rounded-full text-[10px] font-bold">0 Subjects</span>
+            </div>
+            <button onclick="addManualSubjectRow()" class="px-2.5 py-1 bg-cream-200 hover:bg-cream-300 text-charcoal-800 text-[11px] font-bold rounded-lg transition flex items-center space-x-1">
+              <span>+ Add Course Row</span>
+            </button>
+          </div>
+
+          <div class="border border-cream-200 rounded-2xl overflow-hidden shadow-sm">
+            <div class="overflow-x-auto max-h-[300px]">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-charcoal-900 text-white text-[10px] uppercase font-bold sticky top-0 z-10">
+                  <tr>
+                    <th class="p-2.5 w-24">Sem</th>
+                    <th class="p-2.5 w-28">Course Code</th>
+                    <th class="p-2.5">Subject Title</th>
+                    <th class="p-2.5 w-24">Type</th>
+                    <th class="p-2.5 w-16">Credits</th>
+                    <th class="p-2.5 w-12 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="syllabus-preview-tbody" class="divide-y divide-cream-100 bg-white">
+                  <!-- Dynamically populated rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex items-center justify-between pt-3 border-t border-cream-200 shrink-0">
+        <button onclick="closeSyllabusModal()" class="px-4 py-2 bg-cream-100 text-charcoal-700 text-xs font-bold rounded-xl hover:bg-cream-200 transition">Cancel</button>
+        <button id="btn-save-syllabus" onclick="handleApplySyllabus()" disabled class="px-5 py-2.5 bg-charcoal-300 text-white text-xs font-bold rounded-xl transition cursor-not-allowed flex items-center space-x-1.5">
+          <span>Confirm & Sync Curriculum to Database</span>
+        </button>
       </div>
 
     </div>
@@ -948,6 +1074,7 @@
       const name = document.getElementById('reg-name').value.trim();
       const email = document.getElementById('reg-email').value.trim();
       const password = document.getElementById('reg-password').value;
+      const selectedDept = document.getElementById('reg-dept-select')?.value || 'MCA';
       const selectedSem = document.getElementById('reg-sem-select')?.value || '3';
       const selectedCourse = document.getElementById('reg-course-select')?.value || 'MCA-301';
       const btn = document.getElementById('btn-reg-submit');
@@ -965,7 +1092,7 @@
             name,
             email,
             password,
-            departmentCode: 'MCA',
+            departmentCode: selectedDept,
             semester: parseInt(selectedSem, 10),
             subjectCode: selectedCourse
           })
@@ -1288,6 +1415,16 @@
         }
       }
 
+      const btnSyllabus = document.getElementById('btn-admin-syllabus');
+      if (btnSyllabus) {
+        if (isAdmin) {
+          btnSyllabus.classList.remove('hidden');
+        } else {
+          btnSyllabus.classList.add('hidden');
+        }
+      }
+      loadSyllabusBatches();
+
       if (badgeCourse) badgeCourse.textContent = courseSelect?.value || initialSubj;
 
       const navControls = document.getElementById('nav-auth-controls');
@@ -1347,12 +1484,59 @@
       updateSessionCountDisplay();
     }
 
-    function populateTeacherCourses(sem) {
+    let currentBatchYear = '2025-2026';
+
+    async function loadSyllabusBatches() {
+      try {
+        const res = await fetch('/api/admin/syllabus/batches');
+        if (res.ok) {
+          const data = await res.json();
+          const batches = data.batches || [];
+          const select = document.getElementById('teacher-batch-select');
+          if (select && batches.length > 0) {
+            select.innerHTML = batches.map(b => 
+              `<option value="${b.batchYear}" ${b.batchYear === currentBatchYear ? 'selected' : ''}>${b.batchYear} Batch (${b.totalSubjects} Subjects)</option>`
+            ).join('');
+          }
+        }
+      } catch (e) {
+        console.warn('Could not load syllabus batches:', e);
+      }
+    }
+
+    async function onBatchYearChange() {
+      const select = document.getElementById('teacher-batch-select');
+      if (!select) return;
+      currentBatchYear = select.value;
+      await populateTeacherCourses(currentTeacherSem);
+      const courseSelect = document.getElementById('teacher-course-select');
+      if (courseSelect && courseSelect.value) {
+        checkAndSyncActiveSession(courseSelect.value);
+      }
+      fetchAndRenderStudents(currentTeacherSem);
+    }
+
+    async function populateTeacherCourses(sem) {
       const courseSelect = document.getElementById('teacher-course-select');
       if (!courseSelect) return;
-      const courses = mcaSyllabus[sem] || [];
+
+      let courses = [];
+      try {
+        const res = await fetch(`/api/subjects?batchYear=${encodeURIComponent(currentBatchYear)}&semester=${sem}`);
+        if (res.ok) {
+          const data = await res.json();
+          courses = data.subjects || [];
+        }
+      } catch (e) {
+        console.warn('Could not fetch dynamic subjects:', e);
+      }
+
+      if (courses.length === 0) {
+        courses = mcaSyllabus[sem] || [];
+      }
+
       courseSelect.innerHTML = courses.map(c => `
-        <option value="${c.code}" data-name="${c.name}" data-type="${c.type}" data-credits="${c.credits}">${c.code}: ${c.name} (${c.type})</option>
+        <option value="${c.code}" data-name="${c.name}" data-type="${c.type || 'Theory'}" data-credits="${c.credits || 4}">${c.code}: ${c.name} (${c.type || 'Theory'})</option>
       `).join('');
       const badge = document.getElementById('faculty-course-badge');
       if (badge && courses.length > 0) {
@@ -2422,6 +2606,276 @@
 
     function closeExportReportModal() {
       document.getElementById('export-report-modal').classList.add('hidden');
+    }
+
+    // --- AI SYLLABUS PDF UPLOAD & CURRICULUM MANAGEMENT ---
+    let parsedSyllabusList = [];
+
+    function openSyllabusModal() {
+      document.getElementById('syllabus-modal').classList.remove('hidden');
+      const fileInput = document.getElementById('syllabus-pdf-file');
+      if (fileInput) fileInput.value = '';
+      const statusBox = document.getElementById('syllabus-parse-status');
+      if (statusBox) {
+        statusBox.classList.add('hidden');
+        statusBox.innerHTML = '';
+      }
+      const previewWrapper = document.getElementById('syllabus-preview-wrapper');
+      if (previewWrapper) previewWrapper.classList.add('hidden');
+      const saveBtn = document.getElementById('btn-save-syllabus');
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.className = 'px-5 py-2.5 bg-charcoal-300 text-white text-xs font-bold rounded-xl transition cursor-not-allowed flex items-center space-x-1.5';
+      }
+      parsedSyllabusList = [];
+    }
+
+    function closeSyllabusModal() {
+      document.getElementById('syllabus-modal').classList.add('hidden');
+    }
+
+    async function handleParseSyllabusPdf() {
+      const fileInput = document.getElementById('syllabus-pdf-file');
+      const batchYearInput = document.getElementById('syllabus-batch-year');
+      const btn = document.getElementById('btn-parse-pdf');
+      const statusBox = document.getElementById('syllabus-parse-status');
+      const previewWrapper = document.getElementById('syllabus-preview-wrapper');
+
+      if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        alert('Please select a valid syllabus PDF file to upload.');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const batchYear = batchYearInput?.value?.trim() || '2026-2027';
+
+      btn.disabled = true;
+      btn.innerHTML = `<svg class="w-4 h-4 text-white animate-spin inline-block mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> <span>Extracting with Gemini AI...</span>`;
+
+      statusBox.classList.remove('hidden');
+      statusBox.className = 'p-3 rounded-xl text-xs bg-amber-50 border border-amber-300 text-amber-900 flex items-center space-x-2';
+      statusBox.innerHTML = `<svg class="w-4 h-4 text-amber-600 animate-spin shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> <span>Gemini AI is reading and parsing course codes across all semesters...</span>`;
+
+      try {
+        const formData = new FormData();
+        formData.append('syllabusPdf', file);
+        formData.append('batchYear', batchYear);
+
+        const token = localStorage.getItem('edu_faculty_token');
+        const res = await fetch('/api/admin/syllabus/parse-pdf', {
+          method: 'POST',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.subjects && data.subjects.length > 0) {
+          parsedSyllabusList = data.subjects;
+          statusBox.className = 'p-3 rounded-xl text-xs bg-emerald-50 border border-emerald-300 text-emerald-900 flex items-center justify-between';
+          statusBox.innerHTML = `
+            <div class="flex items-center space-x-2">
+              <svg class="w-4 h-4 text-seagreen-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span><strong>Success:</strong> Extracted <strong>${data.totalCourses} courses</strong> for <em>${data.departmentName || 'MCA'}</em> (${batchYear} Batch).</span>
+            </div>
+            <span class="text-[10px] font-bold text-seagreen-800 bg-seagreen-100 px-2 py-0.5 rounded-full">Ready for Review</span>
+          `;
+
+          renderSyllabusPreviewTable(parsedSyllabusList);
+          previewWrapper.classList.remove('hidden');
+
+          const saveBtn = document.getElementById('btn-save-syllabus');
+          if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.className = 'px-5 py-2.5 bg-seagreen-600 hover:bg-seagreen-700 text-white text-xs font-bold rounded-xl transition shadow cursor-pointer flex items-center space-x-1.5';
+          }
+        } else {
+          statusBox.className = 'p-3 rounded-xl text-xs bg-rose-50 border border-rose-300 text-rose-900';
+          statusBox.innerHTML = `<strong>Error:</strong> ${data.error || 'Could not extract courses from the uploaded document.'}`;
+        }
+      } catch (err) {
+        console.error('Parse error:', err);
+        statusBox.className = 'p-3 rounded-xl text-xs bg-rose-50 border border-rose-300 text-rose-900';
+        statusBox.innerHTML = `<strong>Network Error:</strong> Failed to connect to AI parsing endpoint.`;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> <span>Extract with Gemini AI</span>`;
+      }
+    }
+
+    function renderSyllabusPreviewTable(subjects) {
+      const tbody = document.getElementById('syllabus-preview-tbody');
+      const countBadge = document.getElementById('extracted-count-badge');
+      if (!tbody) return;
+
+      if (countBadge) countBadge.textContent = `${subjects.length} Subjects`;
+
+      tbody.innerHTML = subjects.map((sub, idx) => `
+        <tr class="hover:bg-cream-50 transition" data-idx="${idx}">
+          <td class="p-2">
+            <select class="row-sem w-full px-1.5 py-1 bg-white border border-cream-200 rounded text-xs font-bold text-charcoal-900">
+              <option value="1" ${sub.semester === 1 ? 'selected' : ''}>Sem 1</option>
+              <option value="2" ${sub.semester === 2 ? 'selected' : ''}>Sem 2</option>
+              <option value="3" ${sub.semester === 3 ? 'selected' : ''}>Sem 3</option>
+              <option value="4" ${sub.semester === 4 ? 'selected' : ''}>Sem 4</option>
+            </select>
+          </td>
+          <td class="p-2">
+            <input type="text" value="${sub.code}" class="row-code w-full px-2 py-1 bg-white border border-cream-200 rounded text-xs font-mono font-bold text-charcoal-900 uppercase">
+          </td>
+          <td class="p-2">
+            <input type="text" value="${sub.name}" class="row-name w-full px-2 py-1 bg-white border border-cream-200 rounded text-xs text-charcoal-900">
+          </td>
+          <td class="p-2">
+            <select class="row-type w-full px-1.5 py-1 bg-white border border-cream-200 rounded text-xs font-medium text-charcoal-900">
+              <option value="Theory" ${sub.type === 'Theory' ? 'selected' : ''}>Theory</option>
+              <option value="Practical" ${sub.type === 'Practical' ? 'selected' : ''}>Practical / Lab</option>
+              <option value="Bridge Course" ${sub.type === 'Bridge Course' ? 'selected' : ''}>Bridge Course</option>
+              <option value="Project" ${sub.type === 'Project' ? 'selected' : ''}>Project</option>
+              <option value="Viva" ${sub.type === 'Viva' ? 'selected' : ''}>Viva</option>
+            </select>
+          </td>
+          <td class="p-2">
+            <input type="number" value="${sub.credits || 4}" min="1" max="10" class="row-credits w-full px-2 py-1 bg-white border border-cream-200 rounded text-xs font-bold text-charcoal-900 text-center">
+          </td>
+          <td class="p-2 text-center">
+            <button onclick="deleteSubjectRow(this)" title="Delete Row" class="p-1 rounded text-rose-600 hover:bg-rose-50 transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function addManualSubjectRow() {
+      const tbody = document.getElementById('syllabus-preview-tbody');
+      if (!tbody) return;
+
+      const tr = document.createElement('tr');
+      tr.className = 'hover:bg-cream-50 transition';
+      tr.innerHTML = `
+        <td class="p-2">
+          <select class="row-sem w-full px-1.5 py-1 bg-white border border-cream-200 rounded text-xs font-bold text-charcoal-900">
+            <option value="1">Sem 1</option>
+            <option value="2">Sem 2</option>
+            <option value="3" selected>Sem 3</option>
+            <option value="4">Sem 4</option>
+          </select>
+        </td>
+        <td class="p-2">
+          <input type="text" placeholder="MCA-301" class="row-code w-full px-2 py-1 bg-white border border-cream-200 rounded text-xs font-mono font-bold text-charcoal-900 uppercase">
+        </td>
+        <td class="p-2">
+          <input type="text" placeholder="Subject Name" class="row-name w-full px-2 py-1 bg-white border border-cream-200 rounded text-xs text-charcoal-900">
+        </td>
+        <td class="p-2">
+          <select class="row-type w-full px-1.5 py-1 bg-white border border-cream-200 rounded text-xs font-medium text-charcoal-900">
+            <option value="Theory" selected>Theory</option>
+            <option value="Practical">Practical / Lab</option>
+            <option value="Bridge Course">Bridge Course</option>
+            <option value="Project">Project</option>
+            <option value="Viva">Viva</option>
+          </select>
+        </td>
+        <td class="p-2">
+          <input type="number" value="4" min="1" max="10" class="row-credits w-full px-2 py-1 bg-white border border-cream-200 rounded text-xs font-bold text-charcoal-900 text-center">
+        </td>
+        <td class="p-2 text-center">
+          <button onclick="deleteSubjectRow(this)" title="Delete Row" class="p-1 rounded text-rose-600 hover:bg-rose-50 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+
+      const countBadge = document.getElementById('extracted-count-badge');
+      if (countBadge) countBadge.textContent = `${tbody.querySelectorAll('tr').length} Subjects`;
+
+      const saveBtn = document.getElementById('btn-save-syllabus');
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.className = 'px-5 py-2.5 bg-seagreen-600 hover:bg-seagreen-700 text-white text-xs font-bold rounded-xl transition shadow cursor-pointer flex items-center space-x-1.5';
+      }
+    }
+
+    function deleteSubjectRow(btn) {
+      const row = btn.closest('tr');
+      if (row) {
+        row.remove();
+        const tbody = document.getElementById('syllabus-preview-tbody');
+        const countBadge = document.getElementById('extracted-count-badge');
+        if (countBadge && tbody) countBadge.textContent = `${tbody.querySelectorAll('tr').length} Subjects`;
+      }
+    }
+
+    async function handleApplySyllabus() {
+      const batchYearInput = document.getElementById('syllabus-batch-year');
+      const batchYear = batchYearInput?.value?.trim() || '2026-2027';
+      const deptSelect = document.getElementById('syllabus-dept-select');
+      const departmentCode = deptSelect?.value || 'MCA';
+      const tbody = document.getElementById('syllabus-preview-tbody');
+      const rows = tbody?.querySelectorAll('tr') || [];
+
+      if (rows.length === 0) {
+        alert('Please extract or add at least one subject before applying.');
+        return;
+      }
+
+      const subjects = [];
+      rows.forEach(row => {
+        const sem = parseInt(row.querySelector('.row-sem')?.value || '1', 10);
+        const code = row.querySelector('.row-code')?.value?.trim().toUpperCase() || '';
+        const name = row.querySelector('.row-name')?.value?.trim() || '';
+        const type = row.querySelector('.row-type')?.value || 'Theory';
+        const credits = parseInt(row.querySelector('.row-credits')?.value || '4', 10);
+
+        if (code && name) {
+          subjects.push({ semester: sem, code, name, type, credits });
+        }
+      });
+
+      if (subjects.length === 0) {
+        alert('Please ensure all course codes and names are filled in.');
+        return;
+      }
+
+      const saveBtn = document.getElementById('btn-save-syllabus');
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = `<span>Saving to Database...</span>`;
+
+      try {
+        const token = localStorage.getItem('edu_faculty_token');
+        const res = await fetch('/api/admin/syllabus/apply', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({
+            batchYear,
+            departmentCode,
+            subjects
+          })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          alert(`[Success] ${data.message}\n\nTotal Courses Saved: ${data.totalSubjectsSaved}\nBatch: ${batchYear}`);
+          closeSyllabusModal();
+          currentBatchYear = batchYear;
+          await loadSyllabusBatches();
+          await populateTeacherCourses(currentTeacherSem);
+        } else {
+          alert(data.error || 'Failed to apply syllabus to database.');
+        }
+      } catch (err) {
+        console.error('Apply error:', err);
+        alert('Network error while saving curriculum.');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = `<span>Confirm & Sync Curriculum to Database</span>`;
+      }
     }
   </script>
 

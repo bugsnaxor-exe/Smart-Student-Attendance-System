@@ -31,6 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _studentRegNoController = TextEditingController();
   final _studentRegYearController = TextEditingController(text: '2025-2026');
   int _studentSemester = 3;
+  String _studentDepartment = 'MCA';
 
   // Faculty Controllers
   final _facultyEmailController = TextEditingController();
@@ -39,6 +40,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
   int _facultySemester = 3;
   String _facultySubjectCode = 'MCA-301';
+  String _facultyDepartment = 'MCA';
+
+  final List<Map<String, String>> _universityDepartments = [
+    {'code': 'MCA', 'name': 'Master of Computer Applications (MCA)'},
+    {'code': 'MCS', 'name': 'Master of Computer Science (MCS)'},
+    {'code': 'MDS', 'name': 'Master of Data Science (MDS)'},
+    {'code': 'MTECH', 'name': 'Master in Technology (M.Tech)'},
+    {'code': 'MSC', 'name': 'Master in Science (M.Sc)'},
+    {'code': 'BTECH', 'name': 'Bachelor in Technology (B.Tech)'},
+  ];
 
   final Map<int, List<Map<String, String>>> _mcaSyllabus = {
     1: [
@@ -155,7 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
       classRoll: classRoll,
       universityRoll: uniRoll,
       regNumber: regNumber,
-      departmentCode: 'MCA',
+      departmentCode: _studentDepartment,
       semester: _studentSemester,
     );
 
@@ -215,7 +226,7 @@ class _LoginScreenState extends State<LoginScreen> {
       name: name,
       email: email,
       password: password,
-      departmentCode: 'MCA',
+      departmentCode: _facultyDepartment,
       semester: _facultySemester,
       subjectCode: _facultySubjectCode,
     );
@@ -577,6 +588,28 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 10),
 
+        DropdownButtonFormField<String>(
+          value: _studentDepartment,
+          dropdownColor: Colors.white,
+          isExpanded: true,
+          style: const TextStyle(fontSize: 12, color: AppTheme.charcoal, fontWeight: FontWeight.w700),
+          decoration: const InputDecoration(
+            labelText: 'Department / Course Program',
+            prefixIcon: Icon(Icons.school_outlined, size: 18),
+            contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          ),
+          items: _universityDepartments
+              .map((d) => DropdownMenuItem(
+                    value: d['code'],
+                    child: Text(d['name']!, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                  ))
+              .toList(),
+          onChanged: (val) {
+            if (val != null) setState(() => _studentDepartment = val);
+          },
+        ),
+        const SizedBox(height: 10),
+
         Row(
           children: [
             Expanded(
@@ -768,16 +801,25 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 10),
 
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(color: const Color(0xFFF1EDE4), borderRadius: BorderRadius.circular(10)),
-          child: const Row(
-            children: [
-              Icon(Icons.business_outlined, size: 18, color: AppTheme.charcoalMuted),
-              SizedBox(width: 8),
-              Text('Department: MCA Department', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.charcoal)),
-            ],
+        DropdownButtonFormField<String>(
+          value: _facultyDepartment,
+          dropdownColor: Colors.white,
+          isExpanded: true,
+          style: const TextStyle(fontSize: 12, color: AppTheme.charcoal, fontWeight: FontWeight.w700),
+          decoration: const InputDecoration(
+            labelText: 'Department / Course Program',
+            prefixIcon: Icon(Icons.business_outlined, size: 18),
+            contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
           ),
+          items: _universityDepartments
+              .map((d) => DropdownMenuItem(
+                    value: d['code'],
+                    child: Text(d['name']!, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                  ))
+              .toList(),
+          onChanged: (val) {
+            if (val != null) setState(() => _facultyDepartment = val);
+          },
         ),
         const SizedBox(height: 10),
 

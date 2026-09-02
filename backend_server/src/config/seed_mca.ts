@@ -99,9 +99,10 @@ export async function seedMCACurriculum() {
 
     await prisma.subject.upsert({
       where: {
-        code_semester: {
+        code_semester_batchYear: {
           code: item.code,
           semester: item.semester,
+          batchYear: '2025-2026',
         },
       },
       create: {
