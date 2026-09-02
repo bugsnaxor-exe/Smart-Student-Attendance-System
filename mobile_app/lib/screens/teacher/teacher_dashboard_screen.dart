@@ -1679,7 +1679,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                                 ),
                                 ElevatedButton.icon(
                                   onPressed: () => _handleGrantFull(s),
-                                  icon: const Icon(Icons.star_rounded, size: 14, color: Colors.amber),
+                                  icon: const Icon(Icons.how_to_reg_rounded, size: 14, color: Color(0xFF6EE7B7)),
                                   label: const Text('Grant Full', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppTheme.charcoal,
