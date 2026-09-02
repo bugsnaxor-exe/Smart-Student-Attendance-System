@@ -90,8 +90,7 @@ flowchart TD
 | **Faculty Approval Gate** | ✅ Approve / Reject Teachers | ❌ None | ❌ None |
 | **Syllabus PDF Upload (Gemini AI)** | ✅ Full Ingestion & Parsing | ❌ None | ❌ None |
 | **Start Attendance Session** | ✅ Any Subject (Sem 1–4) | ✅ Assigned Subject Only | ❌ None |
-| **Dynamic Rolling QR Display** | ✅ Web Portal & App | ✅ Web Portal & App | ❌ None |
-| **Scan QR Code & Check In** | ❌ None | ❌ None | ✅ Mobile Camera + GPS |
+| **Mark Live Attendance** | ❌ None | ❌ None | ✅ One-Tap GPS (50m Radius) |
 | **Manual Attendance Override (`P`)** | ✅ Web Portal | ✅ Web Portal & Mobile App | ❌ None |
 | **Connect Personal Google Sheet** | ✅ Master & Subject Sheets | ✅ Own Subject Sheet | ❌ None |
 | **View Audit Reports & Export** | ✅ Full Department | ✅ Assigned Subject | ❌ None |
@@ -243,24 +242,25 @@ sequenceDiagram
 
 ---
 
-### 4.3 Student Mobile App Workflow
+### 4.3 Student Mobile App Workflow (Pure GPS Geofence Check-In)
 
 ```
-[ Open Student App ] ──▶ [ Hardware Device Auto-Bound ] ──▶ [ Tap 'Scan QR' ]
-                                                                   │
-                                                                   ▼
-[ Live Attendance Logged ] ◀── [ Server Validates GPS & Token ] ◀──┘
+[ Open Student App ] ──▶ [ Live Active Session Banner Pops Up ] ──▶ [ Tap 'Mark Now' ]
+                                                                           │
+                                                                           ▼
+[ Live Attendance Logged ] ◀── [ Backend Validates GPS <= 50m ] ◀── [ Captures GPS Location ]
 ```
 
 1. **Sign In**: Enter University Roll Number (e.g. `12000126042`) and password.
 2. **Device Registration**: The app automatically binds your phone's hardware UUID to your profile.
-3. **Taking Attendance**:
-   * When the teacher displays the QR code, tap **Scan Attendance QR** on your dashboard.
-   * Grant Camera and GPS location permissions.
-   * Point the camera at the rotating QR code.
+3. **Taking Attendance (One-Tap GPS)**:
+   * When the teacher starts the class session, a live banner appears on your dashboard: **`Live Attendance Session! [Subject Name] (15-min auto cutoff)`**.
+   * Tap the green **`[ Mark Now ]`** button.
+   * The app reads your live phone GPS coordinates.
+   * Tap **`[ Submit Attendance ]`**.
 4. **Instant Verification**:
-   * The app sends your GPS coordinates, device signature, and rolling token.
-   * A green confirmation screen appears: *"Attendance Recorded Successfully (2 Counts Present)"*.
+   * The server checks that your live GPS is within **50 meters** of the teacher / department location.
+   * A confirmation screen appears: *"Attendance Recorded Successfully (Full Attendance - 2 Counts Present)"*.
 5. **History & Analytics**:
    * Tap any course in your app to view total classes held, classes attended, and real-time attendance percentage.
 
@@ -278,18 +278,13 @@ sequenceDiagram
     participant GS as 📊 Google Sheets API v4
 
     Note over T,B: 1. Launching Session
-    T->>B: POST /api/sessions/start (Subject: MCA-101, GPS Coords)
-    B->>DB: Create ActiveSession (Status: ACTIVE, Code: MCA-101)
-    B-->>T: 200 OK (SessionId, Dynamic Rolling QR Token)
-    
-    loop Every 15 Seconds
-        T->>B: GET /api/sessions/qr-token/:sessionId
-        B-->>T: New Rolling Token Payload
-    end
+    T->>B: POST /api/sessions/start (Subject: MCA-101, GPS Anchor Coords)
+    B->>DB: Create ActiveSession (Status: ACTIVE, Code: MCA-101, 15-min Window)
+    B-->>T: 200 OK (Session Started)
 
-    Note over S,B: 2. Student Scan & Geofence Verification
-    S->>B: POST /api/attendance/mark (Token, Lat, Lng, DeviceUuid)
-    B->>B: Compute Haversine Distance (<= 50m?)
+    Note over S,B: 2. Student One-Tap GPS Check-In
+    S->>B: POST /api/attendance/mark (Subject: MCA-101, Lat, Lng, DeviceUuid)
+    B->>B: Compute Haversine Distance (Student vs Teacher GPS <= 50m?)
     B->>B: Verify 15-Min Cutoff & Device Hardware Signature
     B->>DB: Create AttendanceRecord (Status: Full, Synced: false)
 
