@@ -118,12 +118,40 @@ DO NOT include markdown backticks or commentary. Return ONLY the raw JSON object
 ${textSample}
 `;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-      });
+      // 3. Call Gemini Model with fallback chain
+      const candidateModels = [
+        'gemini-3.6-flash',
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash',
+        'gemini-1.5-pro'
+      ];
 
-      const responseText = response.text || '';
+      let responseText = '';
+      let lastError: any = null;
+
+      for (const modelName of candidateModels) {
+        try {
+          console.log(`🤖 [Gemini AI] Attempting extraction with model: ${modelName}...`);
+          const response = await ai.models.generateContent({
+            model: modelName,
+            contents: prompt,
+          });
+          responseText = response.text || '';
+          if (responseText.trim()) {
+            console.log(`✅ [Gemini AI] Successfully extracted response using ${modelName}`);
+            break;
+          }
+        } catch (err: any) {
+          console.warn(`⚠️ [Gemini AI] Model ${modelName} returned notice:`, err.message || err);
+          lastError = err;
+        }
+      }
+
+      if (!responseText.trim()) {
+        throw new Error(lastError?.message || 'Failed to generate extraction from Gemini AI models.');
+      }
+
       // Clean possible markdown code fence ```json ... ```
       let cleanJsonStr = responseText.trim();
       if (cleanJsonStr.startsWith('```')) {
