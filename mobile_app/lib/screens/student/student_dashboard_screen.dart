@@ -570,13 +570,12 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                       child: Row(
                         children: [1, 2, 3, 4].map((sem) {
                           final isSelected = _selectedSemester == sem;
-                          final isCurrent = (student?.semester ?? 3) == sem;
 
                           return Padding(
                             padding: const EdgeInsets.only(right: 8.0),
                             child: ChoiceChip(
                               label: Text(
-                                'Semester $sem${isCurrent ? " (Current)" : ""}',
+                                'Semester $sem',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,

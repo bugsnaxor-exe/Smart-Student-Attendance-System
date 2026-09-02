@@ -1256,7 +1256,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                       items: const [
                         DropdownMenuItem(value: 1, child: Text('Semester 1 (10 Subjects)')),
                         DropdownMenuItem(value: 2, child: Text('Semester 2 (9 Subjects)')),
-                        DropdownMenuItem(value: 3, child: Text('Semester 3 (10 Subjects • Current)')),
+                        DropdownMenuItem(value: 3, child: Text('Semester 3 (10 Subjects)')),
                         DropdownMenuItem(value: 4, child: Text('Semester 4 (2 Subjects)')),
                       ],
                       onChanged: _isSessionActive ? null : (val) => val != null ? _onSemesterChanged(val) : null,
