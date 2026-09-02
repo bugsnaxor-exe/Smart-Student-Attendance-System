@@ -1,4 +1,3 @@
-const pdfParse = require('pdf-parse');
 import { GoogleGenAI } from '@google/genai';
 
 export interface ParsedSubject {
@@ -13,6 +12,41 @@ export interface ParsedSubject {
 
 export class SyllabusParserService {
   /**
+   * Helper to robustly extract text from PDF buffer supporting both pdf-parse v1 & v2.
+   */
+  private static async extractPdfText(pdfBuffer: Buffer): Promise<string> {
+    const pdfParsePkg = require('pdf-parse');
+    
+    // 1. pdf-parse v2 Class API (e.g. pdf-parse@2.4.5)
+    if (pdfParsePkg && typeof pdfParsePkg.PDFParse === 'function') {
+      const parser = new pdfParsePkg.PDFParse({ data: pdfBuffer });
+      const result = await parser.getText();
+      return result?.text || '';
+    }
+    
+    // 2. Default export with PDFParse class
+    if (pdfParsePkg?.default && typeof pdfParsePkg.default.PDFParse === 'function') {
+      const parser = new pdfParsePkg.default.PDFParse({ data: pdfBuffer });
+      const result = await parser.getText();
+      return result?.text || '';
+    }
+
+    // 3. pdf-parse v1 Functional API (e.g. pdf-parse@1.1.1)
+    if (typeof pdfParsePkg === 'function') {
+      const data = await pdfParsePkg(pdfBuffer);
+      return data?.text || '';
+    }
+
+    // 4. Default functional export
+    if (typeof pdfParsePkg?.default === 'function') {
+      const data = await pdfParsePkg.default(pdfBuffer);
+      return data?.text || '';
+    }
+
+    throw new Error('Could not initialize PDF parser engine.');
+  }
+
+  /**
    * Extracts text from uploaded PDF buffer, then prompts Gemini to extract structured semester-wise subjects.
    */
   public static async parseSyllabusPdf(pdfBuffer: Buffer): Promise<{
@@ -24,8 +58,7 @@ export class SyllabusParserService {
   }> {
     try {
       // 1. Extract text from PDF buffer
-      const pdfData = await pdfParse(pdfBuffer);
-      const fullText = pdfData.text || '';
+      const fullText = await this.extractPdfText(pdfBuffer);
 
       if (!fullText.trim()) {
         return {
