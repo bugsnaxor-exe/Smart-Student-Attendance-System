@@ -153,9 +153,9 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // 2. Validate University Roll: 11 digits OR 2 digits/course/6 digits
-    if (!RegExp(r'^(\d{11}|\d{2}/[A-Za-z0-9_.\-\s]+/\d{6})$', caseSensitive: false).hasMatch(uniRoll)) {
-      _showSnackBar("University Roll Number must be an 11-digit number (e.g. 12000126042) or format '2 digits/course/6 digits' (e.g. 90/MCA/250028).", isError: true);
+    // 2. Validate University Roll: Exactly 8 digits
+    if (!RegExp(r'^\d{8}$').hasMatch(uniRoll)) {
+      _showSnackBar('University Roll Number must be exactly 8 digits (e.g. 25000028).', isError: true);
       return;
     }
 
@@ -621,13 +621,16 @@ class _LoginScreenState extends State<LoginScreen> {
             Expanded(
               child: TextField(
                 controller: _studentUniRollController,
-                maxLength: 15,
-                inputFormatters: [LengthLimitingTextInputFormatter(15)],
-                textCapitalization: TextCapitalization.characters,
+                maxLength: 8,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(8),
+                ],
                 style: const TextStyle(fontSize: 13),
                 decoration: const InputDecoration(
-                  labelText: 'University Roll',
-                  hintText: '12000126042',
+                  labelText: 'University Roll (8 digits)',
+                  hintText: 'e.g. 25000028',
                   counterText: '',
                 ),
               ),

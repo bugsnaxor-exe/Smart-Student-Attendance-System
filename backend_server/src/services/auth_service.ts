@@ -57,9 +57,9 @@ export class AuthService {
       throw new Error('Registration Number must be 7 to 11 digits (e.g. 2080033).');
     }
 
-    // University Roll Number: 11 digits (e.g. 12000126042) or 2 digits/course/6 digits (e.g. 90/MCA/250028)
-    if (!/^(\d{11}|\d{2}\/[A-Za-z0-9_.\-\s]+\/\d{6})$/i.test(cleanUniRoll)) {
-      throw new Error("University Roll Number must be an 11-digit number (e.g. 12000126042) or format '2 digits/course/6 digits' (e.g. 90/MCA/250028).");
+    // University Roll Number: exactly 8 digits
+    if (!/^\d{8}$/.test(cleanUniRoll)) {
+      throw new Error('University Roll Number must be exactly 8 digits (e.g. 25000028).');
     }
 
     // 2. Check existing email / university roll / registration number
