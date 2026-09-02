@@ -49,30 +49,49 @@ export class SheetsController {
   /**
    * Teacher links their Google Sheet ID to subjects across database.
    */
-  public static async linkSubjectSheet(req: AuthRequest, res: Response) {
+  public static async linkSubjectSheet(req: any, res: Response) {
     try {
       const { subjectId } = req.params;
-      const { googleSheetId, spreadsheetId, sheetTabName = 'Attendance' } = req.body;
+      const { googleSheetId, spreadsheetId, sheetTabName = 'Attendance', subjectCode } = req.body;
       const targetSheetId = googleSheetId || spreadsheetId;
 
       if (!targetSheetId) {
         return res.status(400).json({ error: 'googleSheetId or spreadsheetId is required.' });
       }
 
-      // Update all department subjects with this sheet ID so it persists across all semesters
-      await prisma.subject.updateMany({
-        data: {
-          googleSheetId: targetSheetId,
-          sheetTabName,
-        },
-      });
+      const targetCode = subjectCode || subjectId;
+
+      if (targetCode && targetCode !== 'all') {
+        // Update specific subject code (e.g., 'MCA-101', 'MCA-203')
+        await prisma.subject.updateMany({
+          where: {
+            OR: [
+              { code: targetCode },
+              { id: targetCode }
+            ]
+          },
+          data: {
+            googleSheetId: targetSheetId,
+            sheetTabName,
+          },
+        });
+      } else {
+        // Update all department subjects
+        await prisma.subject.updateMany({
+          data: {
+            googleSheetId: targetSheetId,
+            sheetTabName,
+          },
+        });
+      }
 
       // Test header initialization on Google Sheets
       const headerCheck = await GoogleSheetsService.ensureSheetHeaders(targetSheetId, sheetTabName);
 
       return res.json({
-        message: `Google Sheet connected successfully!`,
+        message: `Google Sheet connected successfully for ${targetCode || 'all subjects'}!`,
         googleSheetId: targetSheetId,
+        subjectCode: targetCode || 'all',
         sheetTabName,
         sheetVerified: headerCheck,
       });

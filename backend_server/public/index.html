@@ -2506,11 +2506,19 @@
       localStorage.setItem('teacher_sheet_id', sheetId);
       document.getElementById('sheet-id-input').value = sheetId;
       updateSheetConnectionStatus(sheetId);
+
+      const courseSelect = document.getElementById('teacher-course-select');
+      const subjectCode = courseSelect?.value || localStorage.getItem('faculty_assigned_subject') || localStorage.getItem('faculty_active_subject');
+      const token = localStorage.getItem('edu_faculty_token');
+
       try {
         await fetch('/api/sheets/link-sheet', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ googleSheetId: sheetId })
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({ googleSheetId: sheetId, subjectCode })
         });
       } catch (e) {}
       closeSheetsConfigModal();
