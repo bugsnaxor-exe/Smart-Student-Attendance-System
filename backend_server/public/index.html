@@ -562,9 +562,9 @@
 
           <div class="flex items-center justify-between pt-1">
             <p class="text-[11px] text-charcoal-600">AI will parse course codes, subjects, types (Theory/Lab), credits, and hours across Semesters 1–4.</p>
-            <button id="btn-parse-pdf" onclick="handleParseSyllabusPdf()" class="px-4 py-2 bg-seagreen-600 hover:bg-seagreen-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center space-x-1.5 shrink-0">
+            <button id="btn-parse-pdf" onclick="handleParseSyllabusPdf()" class="px-4 py-2 bg-seagreen-600 hover:bg-seagreen-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center space-x-1.5 shrink-0 cursor-pointer">
               <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-              <span>Extract with Gemini AI</span>
+              <span>Extract</span>
             </button>
           </div>
         </div>
@@ -2699,7 +2699,7 @@
         statusBox.innerHTML = `<strong>Network Error:</strong> Failed to connect to AI parsing endpoint.`;
       } finally {
         btn.disabled = false;
-        btn.innerHTML = `<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> <span>Extract with Gemini AI</span>`;
+        btn.innerHTML = `<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> <span>Extract</span>`;
       }
     }
 
