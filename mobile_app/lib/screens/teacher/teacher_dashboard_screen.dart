@@ -99,6 +99,22 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     super.initState();
     _sheetIdController.text = _linkedSheetId;
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      final userEmail = auth.currentUser?.email.toLowerCase() ?? '';
+      final isSuperAdmin = auth.currentUser?.role == 'ADMIN' || ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].contains(userEmail);
+
+      if (!isSuperAdmin) {
+        final teacherSubjects = auth.currentUser?.teacher?.subjects;
+        if (teacherSubjects != null && teacherSubjects.isNotEmpty) {
+          final firstSubj = teacherSubjects.first;
+          setState(() {
+            _selectedSemester = firstSubj.semester;
+            _selectedCourseCode = firstSubj.code;
+            _selectedCourseName = firstSubj.name;
+          });
+        }
+      }
+
       final attendance = Provider.of<AttendanceProvider>(context, listen: false);
       attendance.connectRealTimeStream();
       _fetchActiveSheetFromBackend();
@@ -1243,66 +1259,122 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                     ),
                     const SizedBox(height: 14),
 
-                    // Semester Dropdown
-                    const Text('1. SELECT SEMESTER', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.charcoalMuted)),
-                    const SizedBox(height: 6),
-                    DropdownButtonFormField<int>(
-                      value: _selectedSemester,
-                      isExpanded: true,
-                      dropdownColor: Colors.white,
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppTheme.charcoal),
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: const Color(0xFFFAF7F0),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.creamBorder)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: 1, child: Text('Semester 1 (10 Subjects)')),
-                        DropdownMenuItem(value: 2, child: Text('Semester 2 (9 Subjects)')),
-                        DropdownMenuItem(value: 3, child: Text('Semester 3 (10 Subjects)')),
-                        DropdownMenuItem(value: 4, child: Text('Semester 4 (2 Subjects)')),
-                      ],
-                      onChanged: _isSessionActive ? null : (val) => val != null ? _onSemesterChanged(val) : null,
-                    ),
-                    const SizedBox(height: 12),
+                    Builder(builder: (context) {
+                      final auth = Provider.of<AuthProvider>(context, listen: false);
+                      final userEmail = auth.currentUser?.email.toLowerCase() ?? '';
+                      final isSuperAdmin = auth.currentUser?.role == 'ADMIN' || ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].contains(userEmail);
 
-                    // Subject Dropdown
-                    const Text('2. SELECT SUBJECT / LECTURE COURSE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.charcoalMuted)),
-                    const SizedBox(height: 6),
-                    DropdownButtonFormField<String>(
-                      value: _selectedCourseCode,
-                      isExpanded: true,
-                      dropdownColor: Colors.white,
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppTheme.charcoal),
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: const Color(0xFFFAF7F0),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.creamBorder)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      ),
-                      items: courses.map((c) {
-                        return DropdownMenuItem<String>(
-                          value: c['code'],
-                          child: Text('${c['code']}: ${c['name']} (Theory • Sem $_selectedSemester)', overflow: TextOverflow.ellipsis),
-                        );
-                      }).toList(),
-                      onChanged: _isSessionActive
-                          ? null
-                          : (val) {
-                              if (val != null) {
-                                final matched = courses.firstWhere((c) => c['code'] == val);
-                                setState(() {
-                                  _selectedCourseCode = val;
-                                  _selectedCourseName = matched['name'];
-                                  _attendanceStatusByUniRoll.clear();
-                                });
-                                _fetchTodaySessionCounts();
-                                _fetchTodayCheckIns();
-                                _checkOngoingSession();
-                              }
-                            },
-                    ),
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (!isSuperAdmin)
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFEF3C7),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: const Color(0xFFF59E0B)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.lock_outline_rounded, size: 14, color: Color(0xFF92400E)),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      'Locked to Registered Subject (${_selectedCourseCode ?? "MCA-301"})',
+                                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF92400E)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          // Semester Dropdown
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('1. SELECT SEMESTER', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.charcoalMuted)),
+                              if (!isSuperAdmin)
+                                const Text('Admin Only', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: AppTheme.charcoalMuted)),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          DropdownButtonFormField<int>(
+                            value: _selectedSemester,
+                            isExpanded: true,
+                            dropdownColor: Colors.white,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: isSuperAdmin ? AppTheme.charcoal : AppTheme.charcoalMuted,
+                            ),
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: isSuperAdmin ? const Color(0xFFFAF7F0) : const Color(0xFFF3F4F6),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.creamBorder)),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            ),
+                            items: const [
+                              DropdownMenuItem(value: 1, child: Text('Semester 1 (10 Subjects)')),
+                              DropdownMenuItem(value: 2, child: Text('Semester 2 (9 Subjects)')),
+                              DropdownMenuItem(value: 3, child: Text('Semester 3 (10 Subjects)')),
+                              DropdownMenuItem(value: 4, child: Text('Semester 4 (2 Subjects)')),
+                            ],
+                            onChanged: (_isSessionActive || !isSuperAdmin) ? null : (val) => val != null ? _onSemesterChanged(val) : null,
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Subject Dropdown
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('2. SELECT SUBJECT / LECTURE COURSE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.charcoalMuted)),
+                              if (!isSuperAdmin)
+                                const Text('Assigned Only', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: AppTheme.charcoalMuted)),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          DropdownButtonFormField<String>(
+                            value: _selectedCourseCode,
+                            isExpanded: true,
+                            dropdownColor: Colors.white,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: isSuperAdmin ? AppTheme.charcoal : AppTheme.charcoalMuted,
+                            ),
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: isSuperAdmin ? const Color(0xFFFAF7F0) : const Color(0xFFF3F4F6),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.creamBorder)),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            ),
+                            items: courses.map((c) {
+                              return DropdownMenuItem<String>(
+                                value: c['code'],
+                                child: Text('${c['code']}: ${c['name']} (Theory • Sem $_selectedSemester)', overflow: TextOverflow.ellipsis),
+                              );
+                            }).toList(),
+                            onChanged: (_isSessionActive || !isSuperAdmin)
+                                ? null
+                                : (val) {
+                                    if (val != null) {
+                                      final matched = courses.firstWhere((c) => c['code'] == val);
+                                      setState(() {
+                                        _selectedCourseCode = val;
+                                        _selectedCourseName = matched['name'];
+                                        _attendanceStatusByUniRoll.clear();
+                                      });
+                                      _fetchTodaySessionCounts();
+                                      _fetchTodayCheckIns();
+                                      _checkOngoingSession();
+                                    }
+                                  },
+                          ),
+                        ],
+                      );
+                    }),
                     const SizedBox(height: 14),
 
                     // Start / Stop Session Button (Full Width)

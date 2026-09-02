@@ -159,6 +159,16 @@ export class SessionController {
       }
 
       const teacherId = teacherProfile.id;
+      const teacherUser = await prisma.user.findUnique({ where: { id: teacherProfile.userId } });
+      const userEmail = (teacherUser?.email || '').toLowerCase().trim();
+      const isSuperAdmin = req.user?.role === 'ADMIN' || teacherUser?.role === 'ADMIN' || ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].includes(userEmail);
+
+      // Check if non-admin teacher is approved
+      if (!isSuperAdmin && teacherProfile && !teacherProfile.isApproved) {
+        return res.status(403).json({
+          error: 'Your faculty account is pending verification and approval by the Administrator / HOD.',
+        });
+      }
 
       // If subject doesn't exist in DB, auto-create it from catalog
       if (!subject) {
@@ -192,14 +202,31 @@ export class SessionController {
         });
       }
 
-      if (subject.teacherId !== teacherId) {
+      // Check subject assignment lock for regular faculty
+      if (!isSuperAdmin && teacherProfile) {
+        const assignedSubjects = await prisma.subject.findMany({
+          where: { teacherId: teacherProfile.id },
+        });
+        const isAssigned = assignedSubjects.some(
+          (s) => s.id === subject!.id || s.code.toLowerCase() === cleanCode.toLowerCase()
+        );
+        if (!isAssigned) {
+          const assignedNames = assignedSubjects.map((s) => s.code).join(', ') || 'None';
+          return res.status(403).json({
+            error: `Access Denied: You are only authorized to start attendance sessions for your assigned subject (${assignedNames}). Global catalog access is restricted to Administrators.`,
+          });
+        }
+      }
+
+      // If super admin and subject has no teacher assigned yet, attach teacher
+      if (isSuperAdmin && !subject.teacherId) {
         try {
           await prisma.subject.update({
             where: { id: subject.id },
             data: { teacherId },
           });
         } catch (err) {
-          console.warn('Could not reassign subject teacher:', err);
+          console.warn('Could not assign subject teacher:', err);
         }
       }
 

@@ -1595,6 +1595,9 @@
       const courseSelect = document.getElementById('teacher-course-select');
       if (!courseSelect) return;
 
+      const isSayantan = ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].includes(loggedInFaculty?.email?.toLowerCase());
+      const isAdmin = loggedInFaculty?.role === 'ADMIN' || isSayantan;
+
       let courses = [];
       try {
         const res = await fetch(`/api/subjects?batchYear=${encodeURIComponent(currentBatchYear)}&semester=${sem}`);
@@ -1610,9 +1613,28 @@
         courses = mcaSyllabus[sem] || [];
       }
 
+      if (!isAdmin) {
+        // Restrict regular faculty strictly to assigned registered course
+        const assignedSubj = loggedInFaculty?.teacher?.subjects?.[0]?.code || localStorage.getItem('faculty_assigned_subject') || localStorage.getItem('faculty_active_subject');
+        if (assignedSubj) {
+          const matched = courses.filter(c => c.code.toLowerCase() === assignedSubj.toLowerCase());
+          if (matched.length > 0) {
+            courses = matched;
+          }
+        }
+      }
+
       courseSelect.innerHTML = courses.map(c => `
         <option value="${c.code}" data-name="${c.name}" data-type="${c.type || 'Theory'}" data-credits="${c.credits || 4}">${c.code}: ${c.name} (${c.type || 'Theory'})</option>
       `).join('');
+
+      if (!isAdmin) {
+        courseSelect.disabled = true;
+        courseSelect.classList.add('opacity-75', 'cursor-not-allowed');
+      } else {
+        courseSelect.disabled = false;
+        courseSelect.classList.remove('opacity-75', 'cursor-not-allowed');
+      }
 
       const badge = document.getElementById('faculty-course-badge');
       if (badge && courses.length > 0) {
