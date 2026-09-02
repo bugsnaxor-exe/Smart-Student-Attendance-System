@@ -326,7 +326,7 @@ export class AttendanceController {
           else if (record.status === 'Half') myScore += 0.5;
         }
 
-        const percentage = totalSubjectSessions > 0 ? (myScore / totalSubjectSessions) * 100 : 100.0;
+        const percentage = totalSubjectSessions > 0 ? (myScore / totalSubjectSessions) * 100 : 0.0;
 
         totalClassesConducted += totalSubjectSessions;
         totalWeightedAttended += myScore;
@@ -343,14 +343,14 @@ export class AttendanceController {
           classesConducted: totalSubjectSessions,
           classesAttended: myScore,
           percentage: Math.round(percentage * 10) / 10,
-          statusCategory: percentage >= 75 ? 'Safe' : percentage >= 60 ? 'Warning' : 'Defaulter',
+          statusCategory: totalSubjectSessions > 0 ? (percentage >= 75 ? 'Safe' : percentage >= 60 ? 'Warning' : 'Defaulter') : 'No Classes Yet',
         };
       });
 
       const overallPercentage =
         totalClassesConducted > 0
           ? Math.round((totalWeightedAttended / totalClassesConducted) * 1000) / 10
-          : 100.0;
+          : 0.0;
 
       return res.json({
         student: {
@@ -366,7 +366,7 @@ export class AttendanceController {
           overallPercentage,
           totalClassesConducted,
           totalClassesAttended: totalWeightedAttended,
-          statusCategory: overallPercentage >= 75 ? 'Safe' : overallPercentage >= 60 ? 'Warning' : 'Defaulter',
+          statusCategory: totalClassesConducted > 0 ? (overallPercentage >= 75 ? 'Safe' : overallPercentage >= 60 ? 'Warning' : 'Defaulter') : 'No Classes Yet',
         },
         subjects: subjectBreakdown,
       });
@@ -485,7 +485,7 @@ export class AttendanceController {
         else if (record.status === 'Half') myScore += 0.5;
       }
 
-      const percentage = totalSubjectSessions > 0 ? Math.round((myScore / totalSubjectSessions) * 1000) / 10 : 100.0;
+      const percentage = totalSubjectSessions > 0 ? Math.round((myScore / totalSubjectSessions) * 1000) / 10 : 0.0;
 
       return res.json({
         subject: {
@@ -502,7 +502,7 @@ export class AttendanceController {
           classesConducted: totalSubjectSessions,
           classesAttended: myScore,
           percentage,
-          statusCategory: percentage >= 75 ? 'Safe' : percentage >= 60 ? 'Warning' : 'Defaulter',
+          statusCategory: totalSubjectSessions > 0 ? (percentage >= 75 ? 'Safe' : percentage >= 60 ? 'Warning' : 'Defaulter') : 'No Classes Yet',
         },
         conductedDates,
         history: records.map((r) => ({

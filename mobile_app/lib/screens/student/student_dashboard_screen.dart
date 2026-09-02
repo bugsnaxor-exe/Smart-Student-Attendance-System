@@ -255,7 +255,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     await _checkLocationPermission();
   }
 
-  Color _getStatusColor(double percentage) {
+  Color _getStatusColor(double percentage, {int conducted = 1}) {
+    if (conducted == 0) return AppTheme.charcoalMuted;
     if (percentage >= 75.0) return AppTheme.seaGreen;
     if (percentage >= 60.0) return AppTheme.statusWarning;
     return AppTheme.statusDanger;
@@ -494,9 +495,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                             radius: 46.0,
                             lineWidth: 8.0,
                             animation: true,
-                            percent: ((stats?.overallPercentage ?? 100.0) / 100).clamp(0.0, 1.0),
+                            percent: ((stats?.overallPercentage ?? 0.0) / 100).clamp(0.0, 1.0),
                             center: Text(
-                              "${stats?.overallPercentage.toStringAsFixed(1) ?? '100'}%",
+                              "${(stats?.totalClassesConducted ?? 0) > 0 ? stats?.overallPercentage.toStringAsFixed(1) : '0.0'}%",
                               style: const TextStyle(
                                 fontWeight: FontWeight.w800,
                                 fontSize: 16,
@@ -504,7 +505,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                               ),
                             ),
                             circularStrokeCap: CircularStrokeCap.round,
-                            progressColor: _getStatusColor(stats?.overallPercentage ?? 100.0),
+                            progressColor: _getStatusColor(stats?.overallPercentage ?? 0.0, conducted: stats?.totalClassesConducted ?? 0),
                             backgroundColor: const Color(0xFFF1EDE4),
                           ),
                           Column(
@@ -523,13 +524,13 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
                                 decoration: BoxDecoration(
-                                  color: _getStatusColor(stats?.overallPercentage ?? 100.0).withOpacity(0.12),
+                                  color: _getStatusColor(stats?.overallPercentage ?? 0.0, conducted: stats?.totalClassesConducted ?? 0).withOpacity(0.12),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
-                                  stats?.statusCategory ?? 'Safe Zone (≥ 75%)',
+                                  stats?.statusCategory ?? ((stats?.totalClassesConducted ?? 0) > 0 ? 'Safe Zone (≥ 75%)' : 'No Classes Yet'),
                                   style: TextStyle(
-                                    color: _getStatusColor(stats?.overallPercentage ?? 100.0),
+                                    color: _getStatusColor(stats?.overallPercentage ?? 0.0, conducted: stats?.totalClassesConducted ?? 0),
                                     fontWeight: FontWeight.w700,
                                     fontSize: 11,
                                   ),
@@ -666,7 +667,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                           liveStat = null;
                         }
 
-                        final percentage = liveStat?.percentage ?? 100.0;
+                        final percentage = liveStat?.percentage ?? 0.0;
                         final attended = liveStat?.classesAttended ?? 0;
                         final conducted = liveStat?.classesConducted ?? 0;
                         final teacher = (liveStat?.teacherName != null && liveStat!.teacherName.trim().isNotEmpty)
@@ -944,7 +945,7 @@ class _SubjectCalendarBottomSheetState extends State<_SubjectCalendarBottomSheet
   final Map<String, Map<String, dynamic>> _recordsByDate = {};
   final Set<String> _conductedDates = {};
   String _realTeacherName = '';
-  double _realPercentage = 100.0;
+  double _realPercentage = 0.0;
   num _realAttended = 0;
   num _realConducted = 0;
 

@@ -785,9 +785,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         halfCount++;
       }
     }
-    final totalCount = _rosterStudents.length;
-    final totalWeighted = (fullCount * 1.0) + (halfCount * 0.5);
-    final pct = totalCount > 0 ? ((totalWeighted / totalCount) * 100).toStringAsFixed(1) : '100.0';
+    final pct = (totalCount > 0 && (fullCount + halfCount) > 0) ? ((totalWeighted / totalCount) * 100).toStringAsFixed(1) : '0.0';
 
     final todayStr = '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}';
 

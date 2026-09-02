@@ -2353,8 +2353,8 @@
               </td>
             </tr>
           `;
-          document.getElementById('report-pct-text').textContent = '100.0%';
-          document.getElementById('report-stats-text').textContent = 'Enrolled: 0 • Classes Conducted: 1';
+          document.getElementById('report-pct-text').textContent = '0.0%';
+          document.getElementById('report-stats-text').textContent = 'Enrolled: 0 • Classes Conducted: 0';
           return;
         }
 
@@ -2403,7 +2403,7 @@
 
         const totalEnrolled = studentsList.length;
         const totalWeighted = (fullCount * 1.0) + (halfCount * 0.5);
-        const pct = totalEnrolled > 0 ? ((totalWeighted / totalEnrolled) * 100).toFixed(1) : '100.0';
+        const pct = (totalEnrolled > 0 && (fullCount + halfCount) > 0) ? ((totalWeighted / totalEnrolled) * 100).toFixed(1) : '0.0';
 
         document.getElementById('report-pct-text').textContent = `${pct}%`;
         document.getElementById('report-stats-text').textContent = `Enrolled: ${totalEnrolled} • Present: ${fullCount} • Half Override: ${halfCount} • Status: Verified`;
