@@ -20,10 +20,12 @@ class LoginResult {
 
 class AuthProvider extends ChangeNotifier {
   UserModel? _currentUser;
+  String? _token;
   bool _isLoading = false;
   String? _errorMessage;
 
   UserModel? get currentUser => _currentUser;
+  String? get token => _token;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _currentUser != null;
@@ -39,6 +41,7 @@ class AuthProvider extends ChangeNotifier {
       if (userJson != null && token != null && token.isNotEmpty) {
         final Map<String, dynamic> decoded = jsonDecode(userJson);
         _currentUser = UserModel.fromJson(decoded);
+        _token = token;
         notifyListeners();
       }
     } catch (e) {
@@ -66,6 +69,7 @@ class AuthProvider extends ChangeNotifier {
 
       if (res['user'] != null) {
         _currentUser = UserModel.fromJson(res['user']);
+        _token = res['token'];
         notifyListeners();
         return LoginResult(success: true);
       } else {
@@ -92,6 +96,7 @@ class AuthProvider extends ChangeNotifier {
 
       if (res['user'] != null) {
         _currentUser = UserModel.fromJson(res['user']);
+        _token = res['token'];
         notifyListeners();
         return true;
       } else {
@@ -185,6 +190,7 @@ class AuthProvider extends ChangeNotifier {
       if (res['user'] != null) {
         _currentUser = UserModel.fromJson(res['user']);
         if (res['token'] != null) {
+          _token = res['token'];
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('auth_token', res['token']);
           await prefs.setString('user_data', jsonEncode(res['user']));
@@ -209,6 +215,7 @@ class AuthProvider extends ChangeNotifier {
     await prefs.remove('auth_token');
     await prefs.remove('user_data');
     _currentUser = null;
+    _token = null;
     notifyListeners();
   }
 }
