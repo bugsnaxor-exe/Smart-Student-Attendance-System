@@ -78,8 +78,24 @@ export class EmailService {
     // 1. If Brevo REST API Key (starts with xkeysib-)
     if (brevoKey.startsWith('xkeysib-')) {
       try {
+        let activeSenderEmail = brevoSmtpUser;
+        try {
+          const sendersRes = await fetch('https://api.brevo.com/v3/senders', {
+            headers: { 'accept': 'application/json', 'api-key': brevoKey },
+          });
+          if (sendersRes.ok) {
+            const sendersData = (await sendersRes.json()) as any;
+            const activeSender = sendersData.senders?.find((s: any) => s.active === true);
+            if (activeSender && activeSender.email) {
+              activeSenderEmail = activeSender.email;
+            }
+          }
+        } catch {
+          // fallback to brevoSmtpUser
+        }
+
         const payload = JSON.stringify({
-          sender: { name: 'AutoAttend Security', email: 'sayantan05072004@gmail.com' },
+          sender: { name: 'Smart Attendance 2FA', email: activeSenderEmail },
           to: [{ email: toEmail, name: recipientName }],
           subject: `🔐 Your Faculty Login OTP: ${otpCode}`,
           htmlContent: htmlContent,
@@ -96,7 +112,7 @@ export class EmailService {
         });
 
         if (res.ok) {
-          console.log(`✅ [Brevo REST API] OTP Email dispatched to ${toEmail}`);
+          console.log(`✅ [Brevo REST API] OTP Email dispatched to ${toEmail} from verified sender ${activeSenderEmail}`);
           return { success: true, message: `6-digit verification code sent to ${toEmail}` };
         } else {
           const errBody = await res.text();
@@ -245,6 +261,53 @@ export class EmailService {
       </body>
       </html>
     `;
+
+    const brevoKey = process.env.BREVO_API_KEY?.trim() || '';
+
+    // 1. Brevo REST API dispatch
+    if (brevoKey.startsWith('xkeysib-')) {
+      try {
+        let activeSenderEmail = 'sayantan05092004@gmail.com';
+        try {
+          const sendersRes = await fetch('https://api.brevo.com/v3/senders', {
+            headers: { 'accept': 'application/json', 'api-key': brevoKey },
+          });
+          if (sendersRes.ok) {
+            const sendersData = (await sendersRes.json()) as any;
+            const activeSender = sendersData.senders?.find((s: any) => s.active === true);
+            if (activeSender && activeSender.email) {
+              activeSenderEmail = activeSender.email;
+            }
+          }
+        } catch {
+          // fallback
+        }
+
+        const payload = JSON.stringify({
+          sender: { name: 'AutoAttend Administration', email: activeSenderEmail },
+          to: [{ email: toEmail, name: recipientName }],
+          subject: 'Account Approved: AutoAttend Faculty Console Access',
+          htmlContent: htmlContent,
+        });
+
+        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'accept': 'application/json',
+            'api-key': brevoKey,
+            'content-type': 'application/json',
+          },
+          body: payload,
+        });
+
+        if (res.ok) {
+          console.log(`✅ [Brevo REST API] Approval notification sent to ${toEmail}`);
+          return;
+        }
+      } catch (err: any) {
+        console.warn(`⚠️ [Brevo Approval Error]: ${err.message}`);
+      }
+    }
 
     if (smtpUser && smtpPass) {
       try {
