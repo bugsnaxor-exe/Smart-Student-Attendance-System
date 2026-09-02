@@ -313,25 +313,38 @@
           </div>
 
           <!-- Quick Action Buttons -->
-          <div class="flex items-center space-x-3 flex-wrap gap-y-2">
-            <button id="btn-admin-approvals" onclick="openFacultyApprovalsModal()" class="hidden px-4 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold border border-amber-500/40 transition flex items-center space-x-1.5 backdrop-blur-sm shadow-sm">
+          <div class="flex items-center space-x-2.5 flex-wrap gap-y-2">
+            <button id="btn-admin-approvals" onclick="openFacultyApprovalsModal()" class="hidden px-3.5 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold border border-amber-500/40 transition flex items-center space-x-1.5 backdrop-blur-sm shadow-sm cursor-pointer">
               <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
               </svg>
               <span>Faculty Approvals</span>
               <span id="faculty-pending-badge" class="hidden ml-1 px-2 py-0.5 text-[10px] font-extrabold bg-amber-500 text-charcoal-900 rounded-full">0</span>
             </button>
-            <button id="btn-admin-syllabus" onclick="openSyllabusModal()" class="hidden px-4 py-2.5 rounded-xl bg-gradient-to-r from-seagreen-600 to-seagreen-700 hover:from-seagreen-500 hover:to-seagreen-600 text-white text-xs font-bold transition flex items-center space-x-1.5 shadow-sm">
+            <button id="btn-admin-syllabus" onclick="openSyllabusModal()" class="hidden px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-seagreen-600 to-seagreen-700 hover:from-seagreen-500 hover:to-seagreen-600 text-white text-xs font-bold transition flex items-center space-x-1.5 shadow-sm cursor-pointer">
               <svg class="w-4 h-4 text-seagreen-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
               <span>Upload Syllabus (PDF)</span>
             </button>
-            <button onclick="openSheetsConfigModal()" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 transition flex items-center space-x-1.5 backdrop-blur-sm">
+            <button onclick="openLocationSettingsModal()" class="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 transition flex items-center space-x-1.5 backdrop-blur-sm shadow-sm cursor-pointer" title="Configure Geofence & GPS Anchor">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              <span>Location Settings</span>
+            </button>
+            <button onclick="openSheetsConfigModal()" class="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 transition flex items-center space-x-1.5 backdrop-blur-sm cursor-pointer">
               <svg class="w-4 h-4 text-seagreen-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               <span>Google Sheet Settings</span>
             </button>
-            <button onclick="openExportReportModal()" class="px-4 py-2.5 rounded-xl bg-seagreen-600 hover:bg-seagreen-500 text-white text-xs font-bold transition flex items-center space-x-1.5 shadow-sm">
+            <button onclick="openExportReportModal()" class="px-3.5 py-2.5 rounded-xl bg-seagreen-600 hover:bg-seagreen-500 text-white text-xs font-bold transition flex items-center space-x-1.5 shadow-sm cursor-pointer">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               <span>Export Audit PDF</span>
+            </button>
+            <button onclick="logoutFaculty()" class="px-3.5 py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 hover:text-rose-200 text-xs font-bold border border-rose-500/40 transition flex items-center space-x-1.5 backdrop-blur-sm shadow-sm cursor-pointer" title="Sign out of Faculty Console">
+              <svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+              </svg>
+              <span>Logout</span>
             </button>
           </div>
         </div>
@@ -554,6 +567,73 @@
           <span>Refresh Requests</span>
         </button>
         <button onclick="closeFacultyApprovalsModal()" class="px-5 py-2 bg-charcoal-900 hover:bg-charcoal-800 text-white text-xs font-bold rounded-xl transition cursor-pointer">Close</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Location Settings Modal -->
+  <div id="location-settings-modal" class="fixed inset-0 bg-charcoal-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full border border-cream-200 device-shadow flex flex-col">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3.5 border-b border-cream-200 shrink-0">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-500/30 flex items-center justify-center text-emerald-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-charcoal-900">GPS Location & Geofence</h3>
+            <p class="text-xs text-charcoal-600">Manage classroom location anchor and 50m radius verification.</p>
+          </div>
+        </div>
+        <button onclick="closeLocationSettingsModal()" class="w-8 h-8 rounded-full bg-cream-100 hover:bg-cream-200 text-charcoal-700 flex items-center justify-center text-sm font-bold transition cursor-pointer">✕</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="py-4 space-y-4">
+        <div class="flex items-center justify-between p-3.5 bg-[#FAF7F0] rounded-2xl border border-cream-200">
+          <div>
+            <span class="text-xs font-bold text-charcoal-900 block">Anchor Mode</span>
+            <span class="text-[11px] text-charcoal-500">How student scan distances are calculated</span>
+          </div>
+          <span id="modal-location-mode-badge" class="px-2.5 py-1 text-xs font-bold rounded-full bg-charcoal-100 text-charcoal-700 border border-charcoal-200">
+            Campus Default
+          </span>
+        </div>
+
+        <div id="modal-location-coords-display" class="bg-cream-50 p-4 rounded-2xl border border-cream-200 text-xs">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="p-3 bg-seagreen-50 rounded-2xl border border-seagreen-200/60 flex items-start space-x-2.5 text-xs text-seagreen-900">
+          <svg class="w-4 h-4 text-seagreen-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+          <div class="space-y-0.5">
+            <span class="font-bold">Strict 50-Meter Radius Protection</span>
+            <p class="text-[11px] text-seagreen-800">Students outside this radius are prevented from submitting QR attendance.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="pt-3 border-t border-cream-200 space-y-2">
+        <button type="button" id="modal-btn-detect-location" onclick="detectFacultyLocation(event)" class="w-full py-2.5 px-4 bg-seagreen-600 hover:bg-seagreen-500 text-white rounded-xl text-xs font-bold transition flex items-center justify-center space-x-2 cursor-pointer shadow-sm">
+          <span id="modal-detect-loc-icon">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </span>
+          <span id="modal-detect-loc-text">Detect Live GPS Position</span>
+        </button>
+        <button type="button" onclick="resetFacultyLocation(event)" class="w-full py-2 px-4 bg-cream-100 hover:bg-cream-200 text-charcoal-700 rounded-xl text-xs font-semibold transition cursor-pointer">
+          Reset to Campus Default (50m)
+        </button>
       </div>
 
     </div>
@@ -1241,6 +1321,31 @@
       `;
     }
 
+    function openLocationSettingsModal() {
+      const modal = document.getElementById('location-settings-modal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        const coordsEl = document.getElementById('modal-location-coords-display');
+        if (coordsEl) coordsEl.innerHTML = getLocationDisplayHtml();
+        const modeBadge = document.getElementById('modal-location-mode-badge');
+        const lat = localStorage.getItem('faculty_detected_lat');
+        if (modeBadge) {
+          if (lat) {
+            modeBadge.className = 'px-2.5 py-1 text-xs font-bold rounded-full bg-seagreen-100 text-seagreen-800 border border-seagreen-300';
+            modeBadge.innerHTML = '<svg class="w-3.5 h-3.5 text-seagreen-700 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Custom Live GPS';
+          } else {
+            modeBadge.className = 'px-2.5 py-1 text-xs font-bold rounded-full bg-charcoal-100 text-charcoal-700 border border-charcoal-200';
+            modeBadge.innerHTML = '<svg class="w-3.5 h-3.5 text-charcoal-700 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>Campus Default';
+          }
+        }
+      }
+    }
+
+    function closeLocationSettingsModal() {
+      const modal = document.getElementById('location-settings-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
     function toggleLocationDropdown(event) {
       if (event) event.stopPropagation();
       const dropdown = document.getElementById('faculty-location-dropdown');
@@ -1272,6 +1377,10 @@
       const btnIcon = document.getElementById('detect-loc-icon');
       const btn = document.getElementById('btn-detect-location');
 
+      const modalBtnText = document.getElementById('modal-detect-loc-text');
+      const modalBtnIcon = document.getElementById('modal-detect-loc-icon');
+      const modalBtn = document.getElementById('modal-btn-detect-location');
+
       if (!navigator.geolocation) {
         alert('[!] Geolocation is not supported by your browser.');
         return;
@@ -1280,6 +1389,10 @@
       if (btnText) btnText.textContent = 'Acquiring GPS...';
       if (btnIcon) btnIcon.innerHTML = '<svg class="w-3.5 h-3.5 text-charcoal-600 animate-spin inline-block mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>';
       if (btn) btn.disabled = true;
+
+      if (modalBtnText) modalBtnText.textContent = 'Acquiring GPS Coordinates...';
+      if (modalBtnIcon) modalBtnIcon.innerHTML = '<svg class="w-4 h-4 text-white animate-spin inline-block mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>';
+      if (modalBtn) modalBtn.disabled = true;
 
       navigator.geolocation.getCurrentPosition(
         async (position) => {
@@ -1297,17 +1410,30 @@
           if (btnIcon) btnIcon.innerHTML = '<svg class="w-3.5 h-3.5 text-seagreen-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
           if (btn) btn.disabled = false;
 
-          // Update Dropdown display
+          if (modalBtnText) modalBtnText.textContent = 'Live GPS Updated!';
+          if (modalBtnIcon) modalBtnIcon.innerHTML = '<svg class="w-4 h-4 text-white inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+          if (modalBtn) modalBtn.disabled = false;
+
+          // Update Dropdown display & Modal display
           const coordsEl = document.getElementById('location-coords-display');
           if (coordsEl) coordsEl.innerHTML = getLocationDisplayHtml();
+          const modalCoordsEl = document.getElementById('modal-location-coords-display');
+          if (modalCoordsEl) modalCoordsEl.innerHTML = getLocationDisplayHtml();
+
           const modeBadge = document.getElementById('location-mode-badge');
           if (modeBadge) {
             modeBadge.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-seagreen-100 text-seagreen-800 border border-seagreen-300';
-            modeBadge.innerHTML = '<svg class="w-3.5 h-3.5 text-indigo-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>Custom GPS';
+            modeBadge.innerHTML = '<svg class="w-3.5 h-3.5 text-seagreen-700 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Custom Live GPS';
           }
+          const modalModeBadge = document.getElementById('modal-location-mode-badge');
+          if (modalModeBadge) {
+            modalModeBadge.className = 'px-2.5 py-1 text-xs font-bold rounded-full bg-seagreen-100 text-seagreen-800 border border-seagreen-300';
+            modalModeBadge.innerHTML = '<svg class="w-3.5 h-3.5 text-seagreen-700 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Custom Live GPS';
+          }
+
           const ind = document.getElementById('teacher-loc-indicator');
           if (ind) {
-            ind.className = 'w-2 h-2 rounded-full bg-seagreen-500 animate-pulse';
+            ind.className = 'w-2.5 h-2.5 rounded-full bg-seagreen-600 animate-pulse';
             ind.title = 'Live GPS Detected';
           }
 
@@ -1338,14 +1464,20 @@
 
           setTimeout(() => {
             if (btnText) btnText.textContent = 'Detect Current Location';
-            if (btnIcon) btnIcon.innerHTML = '<svg class="w-3.5 h-3.5 text-indigo-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>';
+            if (btnIcon) btnIcon.innerHTML = '<svg class="w-3.5 h-3.5 text-seagreen-700 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>';
+            if (modalBtnText) modalBtnText.textContent = 'Detect Live GPS Position';
+            if (modalBtnIcon) modalBtnIcon.innerHTML = '<svg class="w-4 h-4 text-white inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>';
           }, 2500);
         },
         (error) => {
           console.error('Geolocation error:', error);
           if (btnText) btnText.textContent = 'Detect Current Location';
-          if (btnIcon) btnIcon.innerHTML = '<svg class="w-3.5 h-3.5 text-indigo-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>';
+          if (btnIcon) btnIcon.innerHTML = '<svg class="w-3.5 h-3.5 text-seagreen-700 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>';
           if (btn) btn.disabled = false;
+
+          if (modalBtnText) modalBtnText.textContent = 'Detect Live GPS Position';
+          if (modalBtnIcon) modalBtnIcon.innerHTML = '<svg class="w-4 h-4 text-white inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>';
+          if (modalBtn) modalBtn.disabled = false;
 
           let msg = 'Could not access device location.';
           if (error.code === 1) msg = 'Location permission was denied. Please allow location access in your browser settings.';
@@ -1366,14 +1498,23 @@
 
       const coordsEl = document.getElementById('location-coords-display');
       if (coordsEl) coordsEl.innerHTML = getLocationDisplayHtml();
+      const modalCoordsEl = document.getElementById('modal-location-coords-display');
+      if (modalCoordsEl) modalCoordsEl.innerHTML = getLocationDisplayHtml();
+
       const modeBadge = document.getElementById('location-mode-badge');
       if (modeBadge) {
         modeBadge.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-charcoal-100 text-charcoal-700 border border-charcoal-200';
         modeBadge.innerHTML = '<svg class="w-3.5 h-3.5 text-charcoal-700 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>Campus Default';
       }
+      const modalModeBadge = document.getElementById('modal-location-mode-badge');
+      if (modalModeBadge) {
+        modalModeBadge.className = 'px-2.5 py-1 text-xs font-bold rounded-full bg-charcoal-100 text-charcoal-700 border border-charcoal-200';
+        modalModeBadge.innerHTML = '<svg class="w-3.5 h-3.5 text-charcoal-700 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>Campus Default';
+      }
+
       const ind = document.getElementById('teacher-loc-indicator');
       if (ind) {
-        ind.className = 'w-2 h-2 rounded-full bg-charcoal-400';
+        ind.className = 'w-2.5 h-2.5 rounded-full bg-charcoal-400';
         ind.title = 'Campus Default Location';
       }
     }
