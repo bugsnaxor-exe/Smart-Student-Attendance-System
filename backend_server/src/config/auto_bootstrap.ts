@@ -138,7 +138,6 @@ export async function autoBootstrapDatabase() {
     const defaultPasswordHash = '$2a$10$WCRNbFWPdYheHWNkP/FXOO1Eg3Z5UXyu498/1NU9SSTOOPSpKoCD6';
     const adminEmails = [
       'sayantan05072004@gmail.com',
-      'sayantan05092004@gmail.com',
       'sayantan.faculty@smartattend.edu',
     ];
 

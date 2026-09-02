@@ -104,7 +104,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = Provider.of<AuthProvider>(context, listen: false);
       final userEmail = auth.currentUser?.email.toLowerCase() ?? '';
-      final isSuperAdmin = auth.currentUser?.role == 'ADMIN' || ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].contains(userEmail);
+      final isSuperAdmin = auth.currentUser?.role == 'ADMIN' || ['sayantan05072004@gmail.com', 'sayantan.faculty@smartattend.edu'].contains(userEmail);
 
       if (!isSuperAdmin) {
         final teacherSubjects = auth.currentUser?.teacher?.subjects;
@@ -1208,7 +1208,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                       style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900),
                     ),
                     Text(
-                      auth.currentUser?.email ?? 'sayantan05092004@gmail.com',
+                      auth.currentUser?.email ?? 'sayantan05072004@gmail.com',
                       style: const TextStyle(color: Colors.white60, fontSize: 11, fontFamily: 'monospace'),
                     ),
                     const SizedBox(height: 14),
@@ -1290,7 +1290,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                     Builder(builder: (context) {
                       final auth = Provider.of<AuthProvider>(context, listen: false);
                       final userEmail = auth.currentUser?.email.toLowerCase() ?? '';
-                      final isSuperAdmin = auth.currentUser?.role == 'ADMIN' || ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].contains(userEmail);
+                      final isSuperAdmin = auth.currentUser?.role == 'ADMIN' || ['sayantan05072004@gmail.com', 'sayantan.faculty@smartattend.edu'].contains(userEmail);
 
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1480,7 +1480,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                     Builder(builder: (context) {
                       final auth = Provider.of<AuthProvider>(context, listen: false);
                       final userEmail = auth.currentUser?.email.toLowerCase() ?? '';
-                      final isSuperAdmin = auth.currentUser?.role == 'ADMIN' || ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].contains(userEmail);
+                      final isSuperAdmin = auth.currentUser?.role == 'ADMIN' || ['sayantan05072004@gmail.com', 'sayantan.faculty@smartattend.edu'].contains(userEmail);
 
                       return SizedBox(
                         width: double.infinity,

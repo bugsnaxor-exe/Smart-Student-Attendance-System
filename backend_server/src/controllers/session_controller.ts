@@ -161,7 +161,7 @@ export class SessionController {
       const teacherId = teacherProfile.id;
       const teacherUser = await prisma.user.findUnique({ where: { id: teacherProfile.userId } });
       const userEmail = (teacherUser?.email || '').toLowerCase().trim();
-      const isSuperAdmin = req.user?.role === 'ADMIN' || teacherUser?.role === 'ADMIN' || ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].includes(userEmail);
+      const isSuperAdmin = req.user?.role === 'ADMIN' || teacherUser?.role === 'ADMIN' || ['sayantan05072004@gmail.com', 'sayantan.faculty@smartattend.edu'].includes(userEmail);
 
       // Check if non-admin teacher is approved
       if (!isSuperAdmin && teacherProfile && !teacherProfile.isApproved) {

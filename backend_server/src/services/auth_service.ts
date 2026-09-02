@@ -295,7 +295,7 @@ export class AuthService {
       throw new Error('Invalid University Roll Number or Class Roll.');
     }
 
-    const isSayantan = ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].includes(user.email.toLowerCase());
+    const isSayantan = ['sayantan05072004@gmail.com', 'sayantan.faculty@smartattend.edu'].includes(user.email.toLowerCase());
 
     let isMatch = await bcrypt.compare(password, user.passwordHash);
 
@@ -411,7 +411,7 @@ export class AuthService {
       throw new Error('User account not found.');
     }
 
-    const isSayantan = ['sayantan05072004@gmail.com', 'sayantan05092004@gmail.com', 'sayantan.faculty@smartattend.edu'].includes(user.email.toLowerCase());
+    const isSayantan = ['sayantan05072004@gmail.com', 'sayantan.faculty@smartattend.edu'].includes(user.email.toLowerCase());
     if (isSayantan && user.role !== 'ADMIN') {
       await prisma.user.update({
         where: { id: user.id },

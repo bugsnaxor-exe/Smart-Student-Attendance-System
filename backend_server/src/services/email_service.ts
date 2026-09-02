@@ -16,7 +16,7 @@ export class EmailService {
     const { toEmail, recipientName = 'Faculty Member', otpCode, expiresInMinutes = 5 } = options;
 
     const brevoKey = process.env.BREVO_API_KEY?.trim() || '';
-    const brevoSmtpUser = process.env.BREVO_SMTP_USER?.trim() || process.env.EMAIL_USER?.trim() || 'sayantan05092004@gmail.com';
+    const brevoSmtpUser = process.env.BREVO_SMTP_USER?.trim() || process.env.EMAIL_USER?.trim() || 'sayantan05072004@gmail.com';
     const resendApiKey = process.env.RESEND_API_KEY?.trim() || '';
     const smtpUser = process.env.SMTP_USER?.trim() || process.env.EMAIL_USER?.trim();
     const smtpPass = process.env.SMTP_PASS?.trim() || process.env.EMAIL_PASS?.trim();
@@ -79,7 +79,7 @@ export class EmailService {
     if (brevoKey.startsWith('xkeysib-')) {
       try {
         const payload = JSON.stringify({
-          sender: { name: 'AutoAttend Security', email: 'sayantan05092004@gmail.com' },
+          sender: { name: 'AutoAttend Security', email: 'sayantan05072004@gmail.com' },
           to: [{ email: toEmail, name: recipientName }],
           subject: `🔐 Your Faculty Login OTP: ${otpCode}`,
           htmlContent: htmlContent,
@@ -201,7 +201,7 @@ export class EmailService {
    */
   public static async sendFacultyApprovalEmail(options: { toEmail: string; recipientName: string; departmentName?: string }): Promise<void> {
     const { toEmail, recipientName, departmentName = 'Department of Master of Computer Applications' } = options;
-    const smtpUser = process.env.SMTP_USER?.trim() || process.env.EMAIL_USER?.trim() || 'sayantan05092004@gmail.com';
+    const smtpUser = process.env.SMTP_USER?.trim() || process.env.EMAIL_USER?.trim() || 'sayantan05072004@gmail.com';
     const smtpPass = process.env.SMTP_PASS?.trim() || process.env.EMAIL_PASS?.trim();
 
     console.log(`\n📧 [FACULTY APPROVAL] Dispatched approval notification to ${toEmail} (${recipientName})`);
